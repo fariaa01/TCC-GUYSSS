@@ -1,0 +1,189 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Layout base */
+body {
+  height: 100vh;
+  background: #ECF0F1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  position: relative;
+  width: 900px;
+  height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: #fff;
+}
+
+/* Partes com estrutura semelhante */
+.painel-azul,
+.secao-formulario {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+}
+
+/* Específicos do painel azul */
+.painel-azul {
+  left: 0;
+  background: #2f58e2;
+  color: #fff;
+  align-items: center;
+  z-index: 2;
+  transition: left 0.6s ease-in-out;
+}
+.container.cadastro .painel-azul { left: 50%; }
+
+/* Específicos das seções de formulário */
+.secao-formulario {
+  z-index: 1;
+  transition: opacity 0.4s;
+  background: #fff; /* remove duplicação do login/cadastro */
+}
+.formulario-login { left: 50%; }
+.formulario-cadastro { left: 0; }
+
+/* Visibilidade (remove duplicações) */
+.formulario-cadastro,
+.container.cadastro .formulario-login {
+  opacity: 0;
+  pointer-events: none;
+}
+.container.cadastro .formulario-cadastro {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Conteúdo dos formulários */
+.conteudo-formulario { max-width: 320px; width: 100%; }
+.conteudo-formulario input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.botoes-formulario {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+.botoes-formulario button {
+  padding: 10px 20px;
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  background: #2f58e2;
+  color: #fff;
+}
+
+.text-alternative {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+}
+.text-alternative a {
+  color: #2f58e2;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.3s;
+  cursor: pointer;
+}
+.text-alternative a:hover {
+  color: #1d3fcc;
+  text-decoration: underline;
+}
+
+/* Tipografia básica */
+h1 { margin-bottom: 20px; font-size: 36px; }
+p  { font-size: 16px; max-width: 400px; }
+
+/* Medidor de senha */
+.password-meter { margin-top: 8px; }
+.meter-bar {
+  height: 8px;
+  background: var(--muted-border, #e6eaee);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.meter-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width .25s ease, background-color .25s ease;
+  width: 0%;
+}
+.meter-bar > span.w0   { width: 0%; }
+.meter-bar > span.w20  { width: 20%; }
+.meter-bar > span.w40  { width: 40%; }
+.meter-bar > span.w60  { width: 60%; }
+.meter-bar > span.w80  { width: 80%; }
+.meter-bar > span.w100 { width: 100%; }
+
+.meter-bar > span.c-weak      { background-color: #e74c3c; }
+.meter-bar > span.c-fair      { background-color: #f39c12; }
+.meter-bar > span.c-medium    { background-color: #f1c40f; }
+.meter-bar > span.c-strong    { background-color: #27ae60; }
+.meter-bar > span.c-excellent { background-color: #2ecc71; }
+
+.meter-label { font-size: 0.85rem; margin-top: 6px; color: #6b7280; }
+.pwd-hints {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem .75rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.pwd-hints li.ok,
+.match-msg.ok { color: #27ae60; }
+.pwd-hints li.ok { text-decoration: line-through; }
+
+.match-msg { font-size: 0.8rem; margin-top: 4px; color: #6b7280; }
+.match-msg.error { color: #e74c3c; }
+
+.input-invalid { border-color: #e74c3c !important; outline-color: #e74c3c; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+
+.input-group { position: relative; }
+.input-group > input { padding-right: 44px; } 
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  padding: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+.toggle-password:hover,
+.toggle-password:focus-visible { opacity: 1; outline: none; }
+.toggle-password .icon-eye-off { display: none; }
+.toggle-password.is-visible .icon-eye { display: none; }
+.toggle-password.is-visible .icon-eye-off { display: inline; }

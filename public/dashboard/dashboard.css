@@ -1,0 +1,156 @@
+ * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #ECF0F1;
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .sidebar {
+      background: #148f77;
+      color: white;
+      width: 230px;
+      padding: 20px;
+      min-height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 1000;
+      transform: translateX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar h2 {
+      margin-bottom: 30px;
+      font-size: 22px;
+    }
+
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .sidebar nav a:hover {
+      background: #1abc9c;
+    }
+
+    .sidebar:not(.open) {
+      transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      margin-left: 230px;
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.sidebar-hidden {
+      margin-left: 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .toggle-btn {
+      background: transparent;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .btn-sair {
+      background: #e74c3c;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .card i {
+      font-size: 24px;
+      color: #2c3e50;
+    }
+
+    .grafico-container {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 100%;
+      margin-top: 20px;
+    }
+
+    .grafico-container canvas {
+      width: 100% !important;
+      height: 400px !important; 
+      display: block;
+      margin: auto;
+    }
+
+    hr.separador {
+      border: none;
+      height: 3px;
+      background: linear-gradient(to right, #1abc9c, #2ecc707e);
+      margin: 40px auto;
+      width: 90%;
+      border-radius: 10px;
+      opacity: 0.8;
+    }
+
+    .rotate {
+      animation: rotateIcon 0.4s ease;
+    }
+
+    @keyframes rotateIcon {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(180deg);
+      }
+    }
+

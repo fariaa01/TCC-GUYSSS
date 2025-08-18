@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= empresaNome %> — Cardápio</title>
+  <link rel="stylesheet" href="/cardapio/cardapio.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <h1><%= empresaNome %></h1>
+      <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
+    </header>
+    <% 
+      const temCategorias = (typeof categorias !== 'undefined' && Array.isArray(categorias) && categorias.length > 0);
+      const listaChips = temCategorias ? categorias : ['Todos','Drinks','Pizza','Salad','Spicy','Sweets'];
+    %>
+    <nav class="filtros" aria-label="Categorias do cardápio">
+      <% listaChips.forEach(function(c, idx){ %>
+        <button class="chip <%= idx === 0 ? 'is-active' : '' %>" type="button"><%= c %></button>
+      <% }) %>
+      <button class="btn-primary" type="button">Ver tudo</button>
+    </nav>
+
+    <% if (!itens || !itens.length) { %>
+      <p class="vazio">Este restaurante ainda não tem itens no cardápio.</p>
+    <% } else { %>
+      <div class="grid-cards">
+        <% itens.forEach(function(i){ %>
+          <div class="card" data-cat="<%= i.categoria || 'Outros' %>">
+            <% if (i.desconto) { %>
+              <span class="badge"><%= i.desconto %>%</span>
+            <% } %>
+            <% if (typeof i.avaliacao !== 'undefined' && i.avaliacao !== null) { %>
+              <span class="price-badge"><%= Number(i.avaliacao).toFixed(1) %> ★</span>
+            <% } %>
+
+            <% if (i.imagem) { %>
+              <img src="/uploads/<%= i.imagem %>" alt="<%= i.nome_prato %>">
+            <% } else { %>
+              <div class="img-placeholder" aria-label="Sem imagem"></div>
+            <% } %>
+
+            <div class="card-body">
+              <h3 class="titulo"><%= i.nome_prato %></h3>
+              <% if (i.descricao) { %>
+                <p class="desc"><%= i.descricao %></p>
+              <% } else { %>
+                <p class="desc muted">Sem descrição.</p>
+              <% } %>
+
+              <div class="card-footer">
+                <strong class="preco">R$ <%= Number(i.preco).toFixed(2).replace('.', ',') %></strong>
+                <form method="POST" action="/carrinho/adicionar" class="acao">
+                  <input type="hidden" name="item_id" value="<%= i.id %>">
+                  <button type="submit" class="btn" aria-label="Adicionar <%= i.nome_prato %> ao carrinho">
+                    Adicionar
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>

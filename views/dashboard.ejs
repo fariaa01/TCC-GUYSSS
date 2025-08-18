@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/dashboard/dashboard.css" />
+  <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="layout" data-aos="zoom-in-left">
+    <aside id="sidebar" class="sidebar open">
+      <h2 id="nomeEmpresa"><%= nome_empresa || 'Meu Sistema' %></h2>
+      <nav>
+        <a href="/estoque"><i class="fas fa-boxes"></i> Estoque</a>
+        <a href="/funcionarios"><i class="fas fa-users"></i> Funcionários</a>
+        <a href="/financeiro"><i class="fas fa-dollar-sign"></i> Financeiro</a>
+        <a href="/relatorios"><i class="fas fa-file-alt"></i> Relatórios</a>
+        <a href="/menu"><i class="fas fa-address-book"></i> menu</a>
+      </nav>
+    </aside>
+
+    <main class="main-content" id="mainContent">
+      <header>
+        <button id="toggleSidebar" class="toggle-btn">
+          <i class="fas fa-bars"></i>
+        </button>
+        <form action="/logout" method="POST">
+          <button class="btn-sair">Sair</button>
+        </form>
+      </header>
+
+      <h1>Visão Geral</h1>
+
+      <div class="cards" data-aos="zoom-in-left">
+        <div class="card"><i class="fas fa-dollar-sign"></i> <p>Vendas do Mês<br><strong>R$ <%= total_entrada %></strong></p></div>
+        <div class="card"><i class="fas fa-wallet"></i> <p>Gastos do Mês<br><strong>R$ <%= total_saida %></strong></p></div>
+        <div class="card"><i class="fas fa-box-open"></i> <p>Produtos em Baixa<br><strong><%= produtos_em_baixa %> itens</strong></p></div>
+        <div class="card"><i class="fas fa-user-check"></i> <p>Funcionários Ativos<br><strong><%= total_func %> funcionários</strong></p></div>
+        
+      </div>
+
+      <hr class="separador">
+
+      <div class="grafico-container" data-aos="zoom-in-left">
+        <canvas id="grafico"></canvas>
+      </div>
+    </main>
+  </div>
+
+  <script nonce="<%= cspNonce %>">
+     document.addEventListener('DOMContentLoaded', async () => {
+      const nomeAtual = "<%= nome_empresa || '' %>";
+
+      if (!nomeAtual.trim()) {
+        const { value: nomeEmpresa } = await Swal.fire({
+          title: 'Bem-vindo!',
+          text: 'Digite o nome da sua empresa para personalizar o sistema:',
+          input: 'text',
+          inputPlaceholder: 'Ex: Food Truck do João',
+          confirmButtonText: 'Salvar',
+          confirmButtonColor: '#148f77',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          inputValidator: (value) => {
+            if (!value || value.trim() === '') {
+              return 'Por favor, digite um nome válido!';
+            }
+          }
+        });
+
+        if (nomeEmpresa && nomeEmpresa.trim()) {
+          try {
+            const res = await fetch('/empresa/atualizar-nome-empresa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ nome_empresa: nomeEmpresa.trim() })
+            });
+
+            const result = await res.json();
+            if (result.sucesso) {
+              setTimeout(() => location.reload(), 300);
+            } else {
+              Swal.fire('Erro', 'Não foi possível salvar o nome.', 'error');
+            }
+          } catch (e) {
+            Swal.fire('Erro', 'Erro de conexão ao salvar.', 'error');
+          }
+        }
+      }
+    });
+
+    
+    const dadosEntradas = JSON.parse('<%= JSON.stringify(entradas) %>');
+    const dadosSaidas = JSON.parse('<%= JSON.stringify(saidas) %>');
+
+    const ctx = document.getElementById('grafico');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+        datasets: [
+          {
+            label: 'Entradas',
+            data: dadosEntradas,
+            borderColor: 'green',
+            backgroundColor: 'rgba(0, 128, 0, 0.2)',
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'Saídas',
+            data: dadosSaidas,
+            borderColor: 'red',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { font: { size: 14 } } },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                if (context.parsed.y !== null) {
+                  label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('toggleSidebar');
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const icon = toggleBtn.querySelector('i');
+
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        mainContent.classList.toggle('sidebar-hidden');
+        icon.classList.add('rotate');
+        setTimeout(() => icon.classList.remove('rotate'), 400);
+      });
+    });
+  </script>
+
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script nonce="<%= cspNonce %>">AOS.init({ duration: 800, once: true });</script>
+</body>
+</html>

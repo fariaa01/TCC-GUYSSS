@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Financeiro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="/financeiro/financeiro.css"/>
+  <script  nonce="<%= cspNonce %>"src="/financeiro/financeiro.js" defer></script>
+</head>
+<body>
+  <% /* Fallbacks para nunca quebrar */ %>
+  <% const TAB = (typeof tab !== 'undefined' && tab) ? tab : 'pagar'; %>
+  <% const START = (typeof start !== 'undefined' && start) ? start : (new Date()).toISOString().slice(0,10); %>
+  <% const END   = (typeof end   !== 'undefined' && end)   ? end   : (new Date()).toISOString().slice(0,10); %>
+  <% const CP = (typeof pagarContas   !== 'undefined' && Array.isArray(pagarContas))   ? pagarContas   : []; %>
+  <% const CT = (typeof pagarTotais   !== 'undefined' && pagarTotais)                  ? pagarTotais   : {previsto:0,vencido:0,pago:0}; %>
+  <% const CR = (typeof receberContas !== 'undefined' && Array.isArray(receberContas)) ? receberContas : []; %>
+  <% const RT = (typeof receberTotais !== 'undefined' && receberTotais)                ? receberTotais : {previsto:0,vencido:0,recebido:0}; %>
+  <% const LAN = (typeof lancamentos  !== 'undefined' && Array.isArray(lancamentos))   ? lancamentos  : []; %>
+
+  <div class="container">
+    <h2>Financeiro</h2>
+
+    <form class="top-bar" method="GET" action="/financeiro" id="form-filtros" novalidate>
+      <input type="hidden" name="tab" value="<%= TAB %>"/>
+      <div>
+        <label class="sr-only" for="start">De</label>
+        <input type="date" id="start" name="start" value="<%= START %>" required />
+      </div>
+      <div>
+        <label class="sr-only" for="end">Até</label>
+        <input type="date" id="end" name="end" value="<%= END %>" required />
+      </div>
+      <div>
+        <input id="busca" type="search" placeholder="Filtrar por texto (cliente, categoria, descrição...)" autocomplete="off"/>
+      </div>
+      <button type="submit" class="btn-add">
+        <i class="fas fa-filter"></i> Filtrar período
+      </button>
+      <button type="button" class="btn-add" id="btn-exportar">
+        <i class="fas fa-file-arrow-down"></i> Exportar CSV
+      </button>
+      <button type="button" class="btn-add" id="btn-imprimir">
+        <i class="fas fa-print"></i> Imprimir
+      </button>
+    </form>
+
+    <!-- Abas -->
+    <nav class="tabs" role="tablist" aria-label="Abas do Financeiro">
+      <a class="<%= TAB==='pagar'?'active':'' %>" role="tab" aria-selected="<%= TAB==='pagar' %>"
+         href="/financeiro?tab=pagar&start=<%= START %>&end=<%= END %>">
+        <i class="fas fa-file-invoice-dollar"></i> Pagar
+      </a>
+      <a class="<%= TAB==='receber'?'active':'' %>" role="tab" aria-selected="<%= TAB==='receber' %>"
+         href="/financeiro?tab=receber&start=<%= START %>&end=<%= END %>">
+        <i class="fas fa-hand-holding-dollar"></i> Receber
+      </a>
+      <a class="<%= TAB==='lancamentos'?'active':'' %>" role="tab" aria-selected="<%= TAB==='lancamentos' %>"
+         href="/financeiro?tab=lancamentos&start=<%= START %>&end=<%= END %>">
+        <i class="fas fa-list"></i> Lançamentos
+      </a>
+    </nav>
+
+    <!-- ===== A Pagar ===== -->
+    <% if (TAB === 'pagar') { %>
+      <section class="panel">
+        <div class="cards">
+          <div class="card previsto"><p>Previstas</p><strong><%= CT.previsto %></strong></div>
+          <div class="card vencido"><p>Vencidas</p><strong><%= CT.vencido %></strong></div>
+          <div class="card pago"><p>Pagas</p><strong><%= CT.pago %></strong></div>
+        </div>
+
+        <!-- Botão abre modal -->
+        <div>
+          <button type="button" class="btn-add" data-modal-target="#modal-gerar-pagar">
+            <i class="fas fa-wand-magic-sparkles"></i> Gerar contas do mês
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="tabela-pagar">
+            <thead>
+              <tr>
+                <th>Competência</th>
+                <th>Vencimento</th>
+                <th>Categoria</th>
+                <th>Centro de custo</th>
+                <th>Status</th>
+                <th>Valor</th>
+                <th style="width: 180px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% CP.forEach(c => { %>
+                <tr class="<%= c.status %>">
+                  <td data-col="competencia"><%= (c.competencia instanceof Date ? c.competencia.toISOString().slice(0,10) : String(c.competencia||'').slice(0,10)) %></td>
+                  <td data-col="vencimento"><%= (c.vencimento  instanceof Date ? c.vencimento.toISOString().slice(0,10)  : String(c.vencimento ||'').slice(0,10)) %></td>
+                  <td data-col="categoria"><%= c.categoria %> <%= c.subcategoria ? ('/ '+c.subcategoria) : '' %></td>
+                  <td data-col="centro"><%= c.centro_custo || '-' %></td>
+                  <td data-col="status"><span class="badge <%= c.status %>"><%= c.status %></span></td>
+                  <td data-col="valor">R$ <%= Number(c.valor||0).toFixed(2) %></td>
+                  <td>
+                    <% if (c.status !== 'pago') { %>
+                      <button class="btn-editar" data-action="abrir-modal-pagar"
+                              data-id="<%= c.id %>"
+                              data-forma="<%= c.forma_pagamento || '' %>">
+                        <i class="fas fa-receipt"></i> Marcar como pago
+                      </button>
+                    <% } else { %>
+                      <span class="badge pago"><i class="fas fa-check"></i> Pago</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+
+    <!-- ===== A Receber ===== -->
+    <% if (TAB === 'receber') { %>
+      <section class="panel">
+        <div class="cards">
+          <div class="card previsto"><p>Previstos</p><strong><%= RT.previsto %></strong></div>
+          <div class="card vencido"><p>Vencidos</p><strong><%= RT.vencido %></strong></div>
+          <div class="card pago"><p>Recebidos</p><strong><%= RT.recebido %></strong></div>
+        </div>
+
+        <!-- Botão abre modal -->
+        <div>
+          <button type="button" class="btn-add" data-modal-target="#modal-gerar-receber">
+            <i class="fas fa-wand-magic-sparkles"></i> Gerar recebíveis do mês
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="tabela-receber">
+            <thead>
+              <tr>
+                <th>Competência</th>
+                <th>Vencimento</th>
+                <th>Cliente</th>
+                <th>Categoria</th>
+                <th>Status</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% CR.forEach(r => { %>
+                <tr class="<%= r.status %>">
+                  <td data-col="competencia"><%= (r.competencia instanceof Date ? r.competencia.toISOString().slice(0,10) : String(r.competencia||'').slice(0,10)) %></td>
+                  <td data-col="vencimento"><%= (r.vencimento  instanceof Date ? r.vencimento.toISOString().slice(0,10)  : String(r.vencimento ||'').slice(0,10)) %></td>
+                  <td data-col="cliente"><%= r.cliente || '-' %></td>
+                  <td data-col="categoria"><%= r.categoria %> <%= r.subcategoria ? ('/ '+r.subcategoria) : '' %></td>
+                  <td data-col="status"><span class="badge <%= r.status %>"><%= r.status %></span></td>
+                  <td data-col="valor">R$ <%= Number(r.valor||0).toFixed(2) %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+
+    <!-- ===== Lançamentos ===== -->
+    <% if (TAB === 'lancamentos') { %>
+      <section class="panel">
+        <% const somaEnt = LAN.filter(x=>x.tipo==='entrada').reduce((a,b)=>a+Number(b.valor||0),0); %>
+        <% const somaSai = LAN.filter(x=>x.tipo==='saida'  ).reduce((a,b)=>a+Number(b.valor||0),0); %>
+        <div class="cards">
+          <div class="card entrada"><p>Entradas</p><strong>R$ <%= somaEnt.toFixed(2) %></strong></div>
+          <div class="card saida"><p>Saídas</p><strong>R$ <%= somaSai.toFixed(2) %></strong></div>
+          <div class="card saldo"><p>Saldo</p><strong>R$ <%= (somaEnt - somaSai).toFixed(2) %></strong></div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="tabela-lancamentos">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Tipo</th>
+                <th>Categoria</th>
+                <th>Subcategoria</th>
+                <th>Forma</th>
+                <th>Descrição</th>
+                <th>Centro de custo</th>
+                <th>Origem</th>
+                <th>Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% LAN.forEach(l => { %>
+                <tr>
+                  <td data-col="data"><%= (l.data instanceof Date ? l.data.toISOString().slice(0,10) : String(l.data||'').slice(0,10)) %></td>
+                  <td data-col="tipo"><span class="badge <%= l.tipo %>"><%= l.tipo %></span></td>
+                  <td data-col="categoria"><%= l.categoria || '-' %></td>
+                  <td data-col="subcategoria"><%= l.subcategoria || '-' %></td>
+                  <td data-col="forma"><%= l.forma_pagamento || '-' %></td>
+                  <td data-col="descricao"><%= l.descricao || '-' %></td>
+                  <td data-col="centro"><%= l.centro_custo || '-' %></td>
+                  <td data-col="origem"><%= l.origem ? (l.origem + (l.origem_id ? ('#'+l.origem_id) : '')) : '-' %></td>
+                  <td data-col="valor">R$ <%= Number(l.valor||0).toFixed(2) %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <% } %>
+  </div>
+
+  <!-- Modal Marcar como Pago -->
+  <div class="modal" id="modal-pagar" aria-hidden="true" aria-labelledby="modal-pagar-title" role="dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-receipt"></i>
+        <h3 id="modal-pagar-title" class="modal-title">Marcar como pago</h3>
+        <button class="close" id="fechar-modal" aria-label="Fechar">&times;</button>
+      </div>
+      <form id="form-pagar" method="POST" action="#">
+        <input type="hidden" name="_method" value="POST"/>
+        <div class="grid-2">
+          <label>Forma de pagamento
+            <input type="text" name="forma_pagamento" id="forma_pagamento" placeholder="PIX, Boleto, Cartão..." required />
+          </label>
+          <label>Data do pagamento
+            <input type="date" name="data_pagamento" id="data_pagamento" value="<%= (new Date()).toISOString().slice(0,10) %>" required />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn-add"><i class="fas fa-check"></i> Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Gerar Contas a Pagar -->
+  <div class="modal" id="modal-gerar-pagar" aria-hidden="true" aria-labelledby="modal-gerar-pagar-title" role="dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-wand-magic-sparkles"></i>
+        <h3 id="modal-gerar-pagar-title" class="modal-title">Gerar contas do mês</h3>
+        <button class="close" data-modal-close aria-label="Fechar">&times;</button>
+      </div>
+      <form class="form-grid" method="POST" action="/contas-a-pagar/gerar-parcelas-mes" id="form-gerar-pagar">
+        <div class="grid-2">
+          <label>Competência (mês/ano)
+            <input type="month" name="competencia" required />
+          </label>
+          <label>Dia padrão de vencimento
+            <input type="number" name="dia_vencimento" min="1" max="31" placeholder="Ex.: 5"/>
+          </label>
+          <label>Forma de pagamento
+            <input type="text" name="forma_pagamento" placeholder="PIX, Boleto, Cartão..."/>
+          </label>
+          <label>Centro de custo
+            <input type="text" name="centro_custo" placeholder="Administrativo"/>
+          </label>
+          <label class="checkbox span-2">
+            <input type="checkbox" name="sobrescrever" value="1"/> Regerar se já existir
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn-add"><i class="fas fa-rotate"></i> Gerar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Gerar Recebíveis -->
+  <div class="modal" id="modal-gerar-receber" aria-hidden="true" aria-labelledby="modal-gerar-receber-title" role="dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <i class="fas fa-wand-magic-sparkles"></i>
+        <h3 id="modal-gerar-receber-title" class="modal-title">Gerar recebíveis do mês</h3>
+        <button class="close" data-modal-close aria-label="Fechar">&times;</button>
+      </div>
+      <form class="form-grid" method="POST" action="/contas-a-receber/gerar-parcelas-mes" id="form-gerar-receber">
+        <div class="grid-2">
+          <label>Competência (mês/ano)
+            <input type="month" name="competencia" required />
+          </label>
+          <label>Dia padrão de recebimento
+            <input type="number" name="dia_recebimento" min="1" max="31" placeholder="Ex.: 10"/>
+          </label>
+          <label>Forma de recebimento
+            <input type="text" name="forma_pagamento" placeholder="PIX, Cartão..."/>
+          </label>
+          <label>Centro de receita
+            <input type="text" name="centro_custo" placeholder="Vendas"/>
+          </label>
+          <label class="checkbox span-2">
+            <input type="checkbox" name="sobrescrever" value="1"/> Regerar se já existir
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+          <button type="submit" class="btn-add"><i class="fas fa-rotate"></i> Gerar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

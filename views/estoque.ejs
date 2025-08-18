@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Estoque</title>
+  <link rel="stylesheet" href="/estoque/estoque.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Gestão de Estoque</h2>
+
+    <div class="filtros-container">
+      <form method="GET" action="/estoque" class="filtros-form">
+        <select name="categoria">
+          <option value="">Todas as Categorias</option>
+          <% (categoriasUnicas || []).forEach(c => { %>
+            <option value="<%= c %>" <%= filtrosAtuais?.categoria === c ? "selected" : "" %>><%= c %></option>
+          <% }) %>
+        </select>
+
+        <select name="fornecedor">
+          <option value="">Todos os Fornecedores</option>
+          <% (fornecedoresUnicos || []).forEach(f => { %>
+            <option value="<%= f %>" <%= filtrosAtuais?.fornecedor === f ? "selected" : "" %>><%= f %></option>
+          <% }) %>
+        </select>
+
+        <select name="validade">
+          <option value="">Todas as Validades</option>
+          <option value="vencido"  <%= filtrosAtuais?.validade === 'vencido'  ? "selected" : "" %>>Vencidos</option>
+          <option value="proximo"  <%= filtrosAtuais?.validade === 'proximo'  ? "selected" : "" %>>Próx. 7 dias</option>
+        </select>
+
+        <button type="submit" class="btn-filtrar">Filtrar</button>
+      </form>
+    </div>
+
+    <div class="search-add-bar">
+      <div class="search-bar">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="buscaProduto" placeholder="Buscar produto..." />
+      </div>
+
+      <div class="actions">
+        <button class="btn-add" id="btnCadastrarProduto" title="Cadastrar Produto">
+          <i class="fas fa-plus-circle"></i> Cadastrar Produto
+        </button>
+
+        <button class="btn-add" id="btnNovoProduto" title="Adicionar ao Estoque">
+          <i class="fas fa-plus"></i> Adicionar Produto
+        </button>
+
+        <button class="btn-add" id="btnCadastrarFornecedor" title="Cadastrar Fornecedor">
+          <i class="fas fa-truck"></i> Cadastrar Fornecedor
+        </button>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Quantidade</th>
+          <th>Qtd. Mínima</th>
+          <th>Unidade</th>
+          <th>Valor</th>
+          <th>Validade</th>
+          <th>Fornecedor</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (produtos || []).forEach(p => {
+          const hoje = new Date();
+          const validade = p.validade ? new Date(p.validade) : null;
+          const diasParaVencer = validade ? (validade - hoje) / (1000 * 60 * 60 * 24) : null;
+
+          let classeLinha = '';
+          if (Number(p.quantidade) < Number(p.quantidade_minima)) classeLinha += 'estoque-baixo ';
+          if (validade && validade < hoje) {
+            classeLinha += 'validade-vencida ';
+          } else if (validade && diasParaVencer <= 7) {
+            classeLinha += 'validade-proxima ';
+          }
+        %>
+          <tr class="<%= classeLinha.trim() %>">
+            <td data-label="Produto"><%= p.produto %></td>
+            <td data-label="Categoria"><%= p.categoria || '' %></td>
+            <td data-label="Quantidade"><%= p.quantidade %></td>
+            <td data-label="Qtd. Mínima"><%= p.quantidade_minima %></td>
+            <td data-label="Unidade"><%= p.unidade_medida %></td>
+            <td data-label="Valor">R$ <%= Number(p.valor || 0).toFixed(2) %></td>
+            <td data-label="Validade">
+              <%= p.validade ? new Date(p.validade).toISOString().split('T')[0] : '' %>
+            </td>
+            <td data-label="Fornecedor"><%= p.fornecedor || '' %></td>
+            <td data-label="Ações">
+              <a href="/estoque/delete/<%= p.id %>" class="btn-excluir" onclick="confirmarExclusao('<%= p.id %>')">
+                <i class="fas fa-trash-alt"></i>
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <a href="/dashboard" class="btn-voltar">⬅ Voltar</a>
+  </div>
+
+  <div id="modalProduto" class="modal">
+    <div class="modal-content">
+      <span id="fecharModal" class="close">&times;</span>
+      <h3>Novo Produto (Estoque)</h3>
+
+      <form method="POST" action="/estoque/create">
+        <select name="produto" id="selectProdutoCadastro" required>
+          <option value="">Selecione o Produto</option>
+          <% (produtosCadastrados || []).forEach(prod => { %>
+            <option
+              value="<%= prod.nome %>"
+              data-categoria="<%= prod.categoria || '' %>"
+              data-unidade="<%= prod.unidade_padrao || '' %>"
+            ><%= prod.nome %></option>
+          <% }) %>
+        </select>
+
+        <select name="categoria" id="selectCategoria" required>
+          <option value="">Selecione a Categoria</option>
+          <option value="Alimento">Alimento</option>
+          <option value="Bebida">Bebida</option>
+          <option value="Sobremesa">Sobremesa</option>
+          <option value="Insumo">Insumo</option>
+          <option value="Outro">Outro</option>
+        </select>
+
+        <input type="number" step="0.01" name="quantidade" placeholder="Quantidade" required />
+        <input type="number" step="0.01" name="quantidade_minima" placeholder="Quantidade Mínima" required />
+
+        <select name="unidade_medida" id="selectUnidade" required>
+          <option value="">Unidade de Medida</option>
+          <option value="g">Grama (g)</option>
+          <option value="kg">Quilograma (kg)</option>
+          <option value="ml">Mililitro (ml)</option>
+          <option value="l">Litro (L)</option>
+          <option value="un">Unidade (un)</option>
+        </select>
+
+        <input type="number" step="0.01" name="valor" placeholder="Valor (R$)" required />
+        <input type="date" name="validade" placeholder="Validade" />
+
+        <select name="fornecedor" required>
+          <option value="">Selecione o Fornecedor</option>
+          <% (fornecedoresCadastrados || []).forEach(f => { %>
+            <option value="<%= f.nome %>"><%= f.nome %></option>
+          <% }) %>
+        </select>
+
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalCadastroProduto" class="modal">
+    <div class="modal-content">
+      <span id="fecharModalCadastro" class="close">&times;</span>
+      <h3>Cadastrar Produto</h3>
+
+      <form method="POST" action="/produtos/create">
+        <input type="text" name="nome" placeholder="Nome do Produto" required />
+
+        <select name="categoria">
+          <option value="">Categoria (opcional)</option>
+          <option value="Alimento">Alimento</option>
+          <option value="Bebida">Bebida</option>
+          <option value="Sobremesa">Sobremesa</option>
+          <option value="Insumo">Insumo</option>
+          <option value="Outro">Outro</option>
+        </select>
+
+        <select name="unidade_padrao">
+          <option value="">Unidade Padrão (opcional)</option>
+          <option value="g">Grama (g)</option>
+          <option value="kg">Quilograma (kg)</option>
+          <option value="ml">Mililitro (ml)</option>
+          <option value="l">Litro (L)</option>
+          <option value="un">Unidade (un)</option>
+        </select>
+
+        <input type="text" name="marca" placeholder="Marca (opcional)" />
+        <input type="text" name="ean" placeholder="EAN (opcional)" />
+
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalCadastroFornecedor" class="modal">
+    <div class="modal-content">
+      <span id="fecharModalFornecedor" class="close">&times;</span>
+      <h3>Cadastrar Fornecedor</h3>
+
+      <form method="POST" action="/fornecedores/create">
+        <input type="text" name="nome" placeholder="Nome do Fornecedor" required />
+        <input type="email" name="email" placeholder="E-mail (opcional)" />
+        <input type="text" name="cnpj" id="cnpjFornecedor" placeholder="CNPJ (somente números)" inputmode="numeric" />
+        <input type="text" name="telefone" id="telefoneFornecedor" placeholder="Telefone (opcional)" inputmode="tel" />
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+  </div>
+
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
+  <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script nonce="<%= cspNonce %>" src="/estoque/estoque.js"></script>
+</body>
+</html>

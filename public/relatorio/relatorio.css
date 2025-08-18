@@ -1,0 +1,247 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    background: #ECF0F1;
+    padding: 20px;
+  }
+
+  .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    margin: 30px auto 2rem auto;
+    max-width: 1500px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 2rem 1.5rem;
+    width: calc(25% - 1.5rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.1rem;
+  }
+
+  .card i {
+    font-size: 2.2rem;
+    margin-bottom: 0.5rem;
+    color: #007bff;
+  }
+
+  @media (max-width: 1200px) {
+    .card {
+      width: calc(33.333% - 1.5rem);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .card {
+      width: calc(50% - 1.5rem);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .card {
+      width: 100%;
+    }
+  }
+
+  h1 {
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+
+  .filtros-relatorio {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+
+  .grafico-container {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 2rem;
+    margin-top: 2rem;
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .separador {
+    border: none;
+    height: 3px;
+    background: linear-gradient(to right, #1abc9c, #2ecc707e);
+    margin: 40px auto;
+    width: 70%;
+    border-radius: 10px;
+    opacity: 0.8;
+  }
+
+  #grafico {
+  width: 100%;
+  height: 500px !important;
+  max-height: 600px;
+}
+  .btn-voltar {
+    background-color: #3489dd;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: background 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 120px;
+    margin: 0 auto;
+  }
+
+  .btn-filtrar {
+    margin-top: 2px;
+    padding: 5px 8px;
+    background: #3489dd;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    border: none;
+    transition: background 0.3s;
+  }
+
+  select, input[type="date"] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    font-size: 1rem;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: border 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+  }
+
+  select:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: #3489dd;
+    box-shadow: 0 0 0 3px rgba(52, 137, 221, 0.2);
+  }
+
+  label {
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+  .graficos-lado-a-lado {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-top: 2rem;
+  padding: 0 2rem;
+}
+
+.graficos-lado-a-lado .grafico-container {
+  flex: 1 1 48%;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  max-width: 700px;
+  min-width: 300px;
+  height: 460px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.graficos-lado-a-lado canvas {
+  flex: 1;
+  height: 100% !important;
+}
+
+.grafico-pizza-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+.grafico-pizza-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  padding: 1rem 0;
+}
+
+#graficoCategoria {
+  width: 100% !important;
+  max-width: 360px;
+  height: 360px !important;
+  margin: 0 auto;
+}
+
+  .filtros-container {
+      background: #ffffff;
+      padding: 20px;
+      margin: 20px auto 30px auto;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      max-width: 1500px;
+    }
+
+    .filtros-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .filtros-form select {
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      font-family: 'Segoe UI', sans-serif;
+      background: white;
+      color: #333;
+      min-width: 200px;
+    }
+
+    .filtros-form .btn-filtrar {
+      background: #3498db;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .filtros-form .btn-filtrar:hover {
+      background: #215e9c;
+    }

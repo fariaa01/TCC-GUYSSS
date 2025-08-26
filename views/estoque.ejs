@@ -6,34 +6,115 @@
   <title>Gestão de Estoque</title>
   <link rel="stylesheet" href="/estoque/estoque.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 </head>
 <body>
   <div class="container">
     <h2>Gestão de Estoque</h2>
 
-    <div class="filtros-container">
+    <% const filtrosAtivos =
+         (filtrosAtuais?.produto && filtrosAtuais.produto !== '') ||
+         (filtrosAtuais?.categoria && filtrosAtuais.categoria !== '') ||
+         (filtrosAtuais?.fornecedor && filtrosAtuais.fornecedor !== '') ||
+         (filtrosAtuais?.validade && filtrosAtuais.validade !== '') ||
+         (filtrosAtuais?.status && filtrosAtuais.status !== '') ||
+         false; %>
+
+    <% if (totalAlerts > 0) { %>
+      <section class="alert-panel" aria-label="Alertas de estoque e validade">
+        <% if (cntVencidos > 0) { %>
+          <a class="alert-card alert-danger" href="/estoque?validade=vencido" title="Ver itens vencidos">
+            <div class="alert-icon"><i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i></div>
+            <div class="alert-content">
+              <strong><%= cntVencidos %></strong>
+              <span>itens vencidos</span>
+            </div>
+            <i class="fa-solid fa-chevron-right alert-arrow" aria-hidden="true"></i>
+          </a>
+        <% } %>
+
+        <% if (cntProx7 > 0) { %>
+          <a class="alert-card alert-warn" href="/estoque?validade=proximo" title="Ver itens que vencem em 7 dias">
+            <div class="alert-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div>
+            <div class="alert-content">
+              <strong><%= cntProx7 %></strong>
+              <span>vencem em 7 dias</span>
+            </div>
+            <i class="fa-solid fa-chevron-right alert-arrow" aria-hidden="true"></i>
+          </a>
+        <% } %>
+
+        <% if (cntBaixo > 0) { %>
+          <a class="alert-card alert-alert" href="/estoque?status=abaixoMinimo" title="Ver itens abaixo do mínimo">
+            <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
+            <div class="alert-content">
+              <strong><%= cntBaixo %></strong>
+              <span>abaixo do mínimo</span>
+            </div>
+            <i class="fa-solid fa-chevron-right alert-arrow" aria-hidden="true"></i>
+          </a>
+        <% } %>
+      </section>
+    <% } %>
+
+    <div class="filtros-container filtros-modern">
       <form method="GET" action="/estoque" class="filtros-form">
-        <select name="categoria">
-          <option value="">Todas as Categorias</option>
-          <% (categoriasUnicas || []).forEach(c => { %>
-            <option value="<%= c %>" <%= filtrosAtuais?.categoria === c ? "selected" : "" %>><%= c %></option>
-          <% }) %>
-        </select>
+        <div class="filtro-group">
+          <label for="f-prod">Produto</label>
+          <div class="select-modern">
+            <select id="f-prod" name="produto">
+              <option value="">Todos os Produtos</option>
+              <% (nomesProdutos || []).forEach(n => { %>
+                <option value="<%= n %>" <%= filtrosAtuais?.produto === n ? "selected" : "" %>><%= n %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
 
-        <select name="fornecedor">
-          <option value="">Todos os Fornecedores</option>
-          <% (fornecedoresUnicos || []).forEach(f => { %>
-            <option value="<%= f %>" <%= filtrosAtuais?.fornecedor === f ? "selected" : "" %>><%= f %></option>
-          <% }) %>
-        </select>
+        <div class="filtro-group">
+          <label for="f-cat">Categoria</label>
+          <div class="select-modern">
+            <select id="f-cat" name="categoria">
+              <option value="">Todas as Categorias</option>
+              <% (categoriasUnicas || []).forEach(c => { %>
+                <option value="<%= c %>" <%= filtrosAtuais?.categoria === c ? "selected" : "" %>><%= c %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
 
-        <select name="validade">
-          <option value="">Todas as Validades</option>
-          <option value="vencido"  <%= filtrosAtuais?.validade === 'vencido'  ? "selected" : "" %>>Vencidos</option>
-          <option value="proximo"  <%= filtrosAtuais?.validade === 'proximo'  ? "selected" : "" %>>Próx. 7 dias</option>
-        </select>
+        <div class="filtro-group">
+          <label for="f-for">Fornecedor</label>
+          <div class="select-modern">
+            <select id="f-for" name="fornecedor">
+              <option value="">Todos os Fornecedores</option>
+              <% (fornecedoresUnicos || []).forEach(f => { %>
+                <option value="<%= f %>" <%= filtrosAtuais?.fornecedor === f ? "selected" : "" %>><%= f %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
 
-        <button type="submit" class="btn-filtrar">Filtrar</button>
+        <div class="filtro-group">
+          <label for="f-val">Validade</label>
+          <div class="select-modern">
+            <select id="f-val" name="validade">
+              <option value="">Todas as Validades</option>
+              <option value="vencido"  <%= filtrosAtuais?.validade === 'vencido'  ? "selected" : "" %>>Vencidos</option>
+              <option value="proximo"  <%= filtrosAtuais?.validade === 'proximo'  ? "selected" : "" %>>Próx. 7 dias</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filtro-actions">
+          <button type="submit" class="btn btn-filtrar">
+            <i class="fa fa-filter"></i> Filtrar
+          </button>
+
+          <% if (filtrosAtivos) { %>
+            <a class="btn btn-filtrar" href="/estoque" title="Limpar filtros">Limpar filtros</a>
+          <% } %>
+        </div>
       </form>
     </div>
 
@@ -58,6 +139,13 @@
       </div>
     </div>
 
+    <!-- Removido inline style e trocado por classe .is-hidden -->
+    <div id="resumoProduto" class="resumo-produto is-hidden">
+      <span class="resumo-titulo">Total de "<span id="resumoNome"></span>"</span>
+      <span class="resumo-quantidade"><strong id="resumoQtd"></strong> <span id="resumoUnid"></span></span>
+      <span class="resumo-valor is-hidden" id="resumoValorWrap"> | Valor total: R$ <strong id="resumoValor"></strong></span>
+    </div>
+
     <table>
       <thead>
         <tr>
@@ -69,6 +157,7 @@
           <th>Valor</th>
           <th>Validade</th>
           <th>Fornecedor</th>
+          <th>Status</th> 
           <th>Ações</th>
         </tr>
       </thead>
@@ -86,7 +175,16 @@
             classeLinha += 'validade-proxima ';
           }
         %>
-          <tr class="<%= classeLinha.trim() %>">
+          <tr class="<%= classeLinha.trim() %>"
+              data-id="<%= p.id %>"
+              data-produto="<%= p.produto %>"
+              data-categoria="<%= p.categoria || '' %>"
+              data-quantidade="<%= p.quantidade %>"
+              data-quantidade_minima="<%= p.quantidade_minima %>"
+              data-unidade_medida="<%= p.unidade_medida %>"
+              data-valor="<%= Number(p.valor || 0).toFixed(2) %>"
+              data-validade="<%= p.validade ? new Date(p.validade).toISOString().split('T')[0] : '' %>"
+              data-fornecedor="<%= p.fornecedor || '' %>">
             <td data-label="Produto"><%= p.produto %></td>
             <td data-label="Categoria"><%= p.categoria || '' %></td>
             <td data-label="Quantidade"><%= p.quantidade %></td>
@@ -97,8 +195,68 @@
               <%= p.validade ? new Date(p.validade).toISOString().split('T')[0] : '' %>
             </td>
             <td data-label="Fornecedor"><%= p.fornecedor || '' %></td>
-            <td data-label="Ações">
-              <a href="/estoque/delete/<%= p.id %>" class="btn-excluir" onclick="confirmarExclusao('<%= p.id %>')">
+
+            <td data-label="Status">
+              <div class="badges">
+                <%
+                  const qtd = Number(p.quantidade);
+                  const min = Number(p.quantidade_minima);
+                  const abaixoMin = qtd < min;
+                  const temValidade = !!validade;
+                  const dias = temValidade ? Math.ceil((validade - hoje) / (1000*60*60*24)) : null;
+                  const badges = [];
+
+                  if (temValidade && validade < hoje) {
+                    badges.push({
+                      cls: 'badge badge--danger',
+                      icon: 'fa-solid fa-calendar-xmark',
+                      text: 'Vencido',
+                      tip: `Vencido em ${validade.toISOString().split('T')[0]}`
+                    });
+                  } else if (temValidade && dias <= 7) {
+                    badges.push({
+                      cls: 'badge badge--warn',
+                      icon: 'fa-solid fa-hourglass-half',
+                      text: `Vence em ${dias} dia${Math.abs(dias)===1?'':'s'}`,
+                      tip: `Validade: ${validade.toISOString().split('T')[0]}`
+                    });
+                  }
+
+                  if (abaixoMin) {
+                    badges.push({
+                      cls: 'badge badge--alert',
+                      icon: 'fa-solid fa-triangle-exclamation',
+                      text: 'Abaixo do mínimo',
+                      tip: `Qtd: ${qtd} | Mín: ${min}`
+                    });
+                  }
+
+                  if (badges.length === 0) {
+                    badges.push({
+                      cls: 'badge badge--ok',
+                      icon: 'fa-solid fa-circle-check',
+                      text: 'OK',
+                      tip: 'Estoque e validade sem alertas'
+                    });
+                  }
+                %>
+
+                <% badges.forEach(b => { %>
+                  <span class="<%= b.cls %>" data-tip="<%= b.tip %>">
+                    <i class="<%= b.icon %>" aria-hidden="true"></i> <%= b.text %>
+                  </span>
+                <% }) %>
+              </div>
+            </td>
+
+            <td data-label="Ações" class="acoes">
+              <button class="btn-editar" type="button" title="Editar" data-role="editar">
+                <i class="fas fa-pen"></i>
+              </button>
+              <a href="/estoque/delete/<%= p.id %>"
+                 class="btn-excluir"
+                 data-role="excluir"
+                 data-id="<%= p.id %>">
                 <i class="fas fa-trash-alt"></i>
               </a>
             </td>
@@ -112,7 +270,7 @@
 
   <div id="modalProduto" class="modal">
     <div class="modal-content">
-      <span id="fecharModal" class="close">&times;</span>
+      <span id="fecharModal" class="close" aria-label="Fechar">&times;</span>
       <h3>Novo Produto (Estoque)</h3>
 
       <form method="POST" action="/estoque/create">
@@ -158,14 +316,15 @@
           <% }) %>
         </select>
 
-        <button type="submit">Cadastrar</button>
+        <button type="submit" class="btn-primary">Cadastrar</button>
+        <button type="button" class="btn-secondary" id="cancelarModalProduto">Cancelar</button>
       </form>
     </div>
   </div>
 
   <div id="modalCadastroProduto" class="modal">
     <div class="modal-content">
-      <span id="fecharModalCadastro" class="close">&times;</span>
+      <span id="fecharModalCadastro" class="close" aria-label="Fechar">&times;</span>
       <h3>Cadastrar Produto</h3>
 
       <form method="POST" action="/produtos/create">
@@ -192,14 +351,15 @@
         <input type="text" name="marca" placeholder="Marca (opcional)" />
         <input type="text" name="ean" placeholder="EAN (opcional)" />
 
-        <button type="submit">Cadastrar</button>
+        <button type="submit" class="btn-primary">Cadastrar</button>
+        <button type="button" class="btn-secondary" id="cancelarModalCadastroProduto">Cancelar</button>
       </form>
     </div>
   </div>
 
   <div id="modalCadastroFornecedor" class="modal">
     <div class="modal-content">
-      <span id="fecharModalFornecedor" class="close">&times;</span>
+      <span id="fecharModalFornecedor" class="close" aria-label="Fechar">&times;</span>
       <h3>Cadastrar Fornecedor</h3>
 
       <form method="POST" action="/fornecedores/create">
@@ -207,7 +367,74 @@
         <input type="email" name="email" placeholder="E-mail (opcional)" />
         <input type="text" name="cnpj" id="cnpjFornecedor" placeholder="CNPJ (somente números)" inputmode="numeric" />
         <input type="text" name="telefone" id="telefoneFornecedor" placeholder="Telefone (opcional)" inputmode="tel" />
-        <button type="submit">Cadastrar</button>
+
+        <button type="submit" class="btn-primary">Cadastrar</button>
+        <button type="button" class="btn-secondary" id="cancelarModalFornecedor">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalEditarEstoque" class="modal-editar">
+    <div class="modal-content-editar">
+      <span class="close" id="fecharModalEditar" aria-label="Fechar">&times;</span>
+      <h3>Editar Estoque</h3>
+      <form method="POST" id="formEditarEstoque">
+        <input type="hidden" name="id" id="edit_id" />
+
+        <label>Produto</label>
+        <select name="produto" id="edit_produto" required>
+          <option value="">Selecione o Produto</option>
+          <% (produtosCadastrados || []).forEach(prod => { %>
+            <option
+              value="<%= prod.nome %>"
+              data-categoria="<%= prod.categoria || '' %>"
+              data-unidade="<%= prod.unidade_padrao || '' %>"
+            ><%= prod.nome %></option>
+          <% }) %>
+        </select>
+
+        <label>Categoria</label>
+        <select name="categoria" id="edit_categoria" required>
+          <option value="">Selecione a Categoria</option>
+          <option value="Alimento">Alimento</option>
+          <option value="Bebida">Bebida</option>
+          <option value="Sobremesa">Sobremesa</option>
+          <option value="Insumo">Insumo</option>
+          <option value="Outro">Outro</option>
+        </select>
+
+        <label>Quantidade</label>
+        <input type="number" step="0.01" name="quantidade" id="edit_quantidade" required />
+
+        <label>Quantidade Mínima</label>
+        <input type="number" step="0.01" name="quantidade_minima" id="edit_quantidade_minima" required />
+
+        <label>Unidade</label>
+        <select name="unidade_medida" id="edit_unidade_medida" required>
+          <option value="">Unidade de Medida</option>
+          <option value="g">Grama (g)</option>
+          <option value="kg">Quilograma (kg)</option>
+          <option value="ml">Mililitro (ml)</option>
+          <option value="l">Litro (L)</option>
+          <option value="un">Unidade (un)</option>
+        </select>
+
+        <label>Valor (R$)</label>
+        <input type="number" step="0.01" name="valor" id="edit_valor" required />
+
+        <label>Validade</label>
+        <input type="date" name="validade" id="edit_validade" />
+
+        <label>Fornecedor</label>
+        <select name="fornecedor" id="edit_fornecedor" required>
+          <option value="">Selecione o Fornecedor</option>
+          <% (fornecedoresCadastrados || []).forEach(f => { %>
+            <option value="<%= f.nome %>"><%= f.nome %></option>
+          <% }) %>
+        </select>
+
+        <button type="submit" class="btn-primary-editar">Salvar alterações</button>
+        <button type="button" class="btn-secondary-editar" id="cancelarModalEditar">Cancelar</button>
       </form>
     </div>
   </div>
@@ -215,5 +442,6 @@
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script nonce="<%= cspNonce %>" src="/estoque/estoque.js"></script>
+  <script nonce="<%= cspNonce %>" src="/estoque/edicaoRapida.js"></script>
 </body>
 </html>

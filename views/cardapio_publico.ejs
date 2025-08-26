@@ -14,7 +14,7 @@
     </header>
     <% 
       const temCategorias = (typeof categorias !== 'undefined' && Array.isArray(categorias) && categorias.length > 0);
-      const listaChips = temCategorias ? categorias : ['Todos','Drinks','Pizza','Salad','Spicy','Sweets'];
+      const listaChips = temCategorias ? categorias : ['Todos','Bebidas','Hamburguer','Salada','Apimentados','Doces'];
     %>
     <nav class="filtros" aria-label="Categorias do cardápio">
       <% listaChips.forEach(function(c, idx){ %>

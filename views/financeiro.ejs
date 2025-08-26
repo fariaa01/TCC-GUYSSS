@@ -1,308 +1,304 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Financeiro</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="/financeiro/financeiro.css"/>
-  <script  nonce="<%= cspNonce %>"src="/financeiro/financeiro.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão Financeira</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="/financeiro/financeiro.css" />
 </head>
 <body>
-  <% /* Fallbacks para nunca quebrar */ %>
-  <% const TAB = (typeof tab !== 'undefined' && tab) ? tab : 'pagar'; %>
-  <% const START = (typeof start !== 'undefined' && start) ? start : (new Date()).toISOString().slice(0,10); %>
-  <% const END   = (typeof end   !== 'undefined' && end)   ? end   : (new Date()).toISOString().slice(0,10); %>
-  <% const CP = (typeof pagarContas   !== 'undefined' && Array.isArray(pagarContas))   ? pagarContas   : []; %>
-  <% const CT = (typeof pagarTotais   !== 'undefined' && pagarTotais)                  ? pagarTotais   : {previsto:0,vencido:0,pago:0}; %>
-  <% const CR = (typeof receberContas !== 'undefined' && Array.isArray(receberContas)) ? receberContas : []; %>
-  <% const RT = (typeof receberTotais !== 'undefined' && receberTotais)                ? receberTotais : {previsto:0,vencido:0,recebido:0}; %>
-  <% const LAN = (typeof lancamentos  !== 'undefined' && Array.isArray(lancamentos))   ? lancamentos  : []; %>
-
   <div class="container">
-    <h2>Financeiro</h2>
 
-    <form class="top-bar" method="GET" action="/financeiro" id="form-filtros" novalidate>
-      <input type="hidden" name="tab" value="<%= TAB %>"/>
+    <header class="page-head">
       <div>
-        <label class="sr-only" for="start">De</label>
-        <input type="date" id="start" name="start" value="<%= START %>" required />
+        <h1>Gestão Financeira</h1>
+        <p class="subtitle">Entradas, saídas e fixos com filtros rápidos.</p>
       </div>
-      <div>
-        <label class="sr-only" for="end">Até</label>
-        <input type="date" id="end" name="end" value="<%= END %>" required />
+      <div class="head-actions">
+        <a href="/dashboard" class="btn btn--info">
+          <i class="fas fa-arrow-left"></i>
+          Voltar
+        </a>
+        <button class="btn btn--primary" id="btnNovoLancamento">
+          <i class="fas fa-plus-circle"></i>
+          Adicionar Lançamento
+        </button>
       </div>
-      <div>
-        <input id="busca" type="search" placeholder="Filtrar por texto (cliente, categoria, descrição...)" autocomplete="off"/>
-      </div>
-      <button type="submit" class="btn-add">
-        <i class="fas fa-filter"></i> Filtrar período
-      </button>
-      <button type="button" class="btn-add" id="btn-exportar">
-        <i class="fas fa-file-arrow-down"></i> Exportar CSV
-      </button>
-      <button type="button" class="btn-add" id="btn-imprimir">
-        <i class="fas fa-print"></i> Imprimir
-      </button>
-    </form>
+    </header>
 
-    <!-- Abas -->
-    <nav class="tabs" role="tablist" aria-label="Abas do Financeiro">
-      <a class="<%= TAB==='pagar'?'active':'' %>" role="tab" aria-selected="<%= TAB==='pagar' %>"
-         href="/financeiro?tab=pagar&start=<%= START %>&end=<%= END %>">
-        <i class="fas fa-file-invoice-dollar"></i> Pagar
-      </a>
-      <a class="<%= TAB==='receber'?'active':'' %>" role="tab" aria-selected="<%= TAB==='receber' %>"
-         href="/financeiro?tab=receber&start=<%= START %>&end=<%= END %>">
-        <i class="fas fa-hand-holding-dollar"></i> Receber
-      </a>
-      <a class="<%= TAB==='lancamentos'?'active':'' %>" role="tab" aria-selected="<%= TAB==='lancamentos' %>"
-         href="/financeiro?tab=lancamentos&start=<%= START %>&end=<%= END %>">
-        <i class="fas fa-list"></i> Lançamentos
-      </a>
-    </nav>
+    <section class="cards">
+      <div class="card kpi entrada">
+        <span class="kpi-label">Total de Entradas</span>
+        <span class="kpi-value">R$ <%= Number(totalEntradas || 0).toFixed(2) %></span>
+      </div>
+      <div class="card kpi saida">
+        <span class="kpi-label">Total de Saídas</span>
+        <span class="kpi-value">R$ <%= Number(totalSaidas || 0).toFixed(2) %></span>
+      </div>
+      <div class="card kpi registros">
+        <span class="kpi-label">Lançamentos</span>
+        <span class="kpi-value"><%= (dados && dados.length) ? dados.length : 0 %></span>
+      </div>
+      <%
+        const _fixosArr = (typeof gastosFixos !== 'undefined' && Array.isArray(gastosFixos)) ? gastosFixos : [];
+        const _totalFixosCalc = _fixosArr.reduce((acc, g) => acc + Number(g.valor || 0), 0);
+        const _totalFixos = (typeof totalFixos !== 'undefined') ? Number(totalFixos || 0) : _totalFixosCalc;
 
-    <!-- ===== A Pagar ===== -->
-    <% if (TAB === 'pagar') { %>
-      <section class="panel">
-        <div class="cards">
-          <div class="card previsto"><p>Previstas</p><strong><%= CT.previsto %></strong></div>
-          <div class="card vencido"><p>Vencidas</p><strong><%= CT.vencido %></strong></div>
-          <div class="card pago"><p>Pagas</p><strong><%= CT.pago %></strong></div>
+        const _saldoBase = Number((typeof saldoFinal !== 'undefined' ? saldoFinal : (Number(totalEntradas||0) - Number(totalSaidas||0))) || 0);
+        const _saldoComFixos = (typeof saldoComFixos !== 'undefined') ? Number(saldoComFixos || 0) : (_saldoBase - _totalFixos);
+      %>
+      <div class="card kpi fixos">
+        <span class="kpi-label">Gastos Fixos</span>
+        <span class="kpi-value">R$ <%= _totalFixos.toFixed(2) %></span>
+      </div>
+      <div class="card kpi saldo">
+        <span class="kpi-label">Saldo Final (com fixos)</span>
+        <span class="kpi-value">R$ <%= _saldoComFixos.toFixed(2) %></span>
+      </div>
+    </section>
+
+    <%
+      const categoriasUnicas = Array.from(new Set((dados || []).map(d => d?.categoria).filter(Boolean))).sort();
+    %>
+    <section class="filter-bar">
+      <div class="filter-line">
+        <div class="filter-item grow">
+          <label for="busca">Buscar</label>
+          <div class="input-icon">
+            <i class="fas fa-magnifying-glass search-icon"></i>
+            <input id="busca" type="text" placeholder="Pesquisar por categoria ou tipo..." />
+          </div>
         </div>
 
-        <!-- Botão abre modal -->
-        <div>
-          <button type="button" class="btn-add" data-modal-target="#modal-gerar-pagar">
-            <i class="fas fa-wand-magic-sparkles"></i> Gerar contas do mês
+        <div class="filter-item">
+          <label for="filtroCategoria">Categoria</label>
+          <select id="filtroCategoria">
+            <option value="">Todas</option>
+            <% categoriasUnicas.forEach(c => { %>
+              <option value="<%= c %>"><%= c %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="filter-item">
+          <label>Período</label>
+          <div class="range">
+            <input id="filtroDataInicio" type="date" />
+            <span class="range-sep">—</span>
+            <input id="filtroDataFim" type="date" />
+          </div>
+        </div>
+
+        <div class="filter-item actions">
+          <button class="btn btn--ghost" id="btnHoje">Hoje</button>
+          <button class="btn btn--ghost" id="btn7d">7 dias</button>
+          <button class="btn btn--ghost" id="btn30d">30 dias</button>
+          <button class="btn btn--ghost" id="btnMes">Mês atual</button>
+          <button class="btn btn--ghost" id="btnLimparFiltros">Limpar</button>
+        </div>
+      </div>
+
+      <div class="chip-row" role="tablist" aria-label="Filtro por tipo">
+        <button class="chip is-active" data-tipo="todos">Todos</button>
+        <button class="chip" data-tipo="entrada"><i class="fa-solid fa-circle-arrow-down"></i> Entradas</button>
+        <button class="chip" data-tipo="saida"><i class="fa-solid fa-circle-arrow-up"></i> Saídas</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title"><i class="fas fa-receipt"></i> Lançamentos</h2>
+        <div class="panel-actions">
+          <button class="btn btn--primary" id="btnNovoLancamento2">
+            <i class="fas fa-plus-circle"></i>
+            Adicionar
           </button>
         </div>
+      </div>
 
-        <div class="table-wrapper">
-          <table id="tabela-pagar">
-            <thead>
-              <tr>
-                <th>Competência</th>
-                <th>Vencimento</th>
-                <th>Categoria</th>
-                <th>Centro de custo</th>
-                <th>Status</th>
-                <th>Valor</th>
-                <th style="width: 180px;">Ações</th>
+      <div class="table-wrap">
+        <table id="tabela">
+          <thead>
+            <tr>
+              <th class="sticky">Data</th>
+              <th class="sticky">Categoria</th>
+              <th class="sticky">Tipo</th>
+              <th class="sticky">Valor</th>
+              <th class="sticky center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (dados && dados.length) { %>
+            <% dados.forEach(d => {
+                 const dt = new Date(d.data);
+                 const dataFmt = isNaN(dt) ? String(d.data).slice(0,10) : dt.toLocaleDateString('pt-BR');
+                 const dataISO = isNaN(dt) ? String(d.data).slice(0,10) : (dt.toISOString().slice(0,10));
+            %>
+              <tr data-categoria="<%= d.categoria %>" data-tipo="<%= d.tipo %>" data-data="<%= dataISO %>">
+                <td data-col="data"><%= dataFmt %></td>
+                <td data-col="categoria"><%= d.categoria %></td>
+                <td data-col="tipo">
+                  <span class="badge <%= d.tipo === 'entrada' ? 'ok' : 'danger' %>">
+                    <%= d.tipo %>
+                  </span>
+                </td>
+                <td data-col="valor">R$ <%= Number(d.valor || 0).toFixed(2) %></td>
+                <td class="center">
+                  <button type="button" class="btn btn--danger btn--icon" title="Excluir" onclick="confirmarExclusaoLancamento('<%= d.id %>')">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              <% CP.forEach(c => { %>
-                <tr class="<%= c.status %>">
-                  <td data-col="competencia"><%= (c.competencia instanceof Date ? c.competencia.toISOString().slice(0,10) : String(c.competencia||'').slice(0,10)) %></td>
-                  <td data-col="vencimento"><%= (c.vencimento  instanceof Date ? c.vencimento.toISOString().slice(0,10)  : String(c.vencimento ||'').slice(0,10)) %></td>
-                  <td data-col="categoria"><%= c.categoria %> <%= c.subcategoria ? ('/ '+c.subcategoria) : '' %></td>
-                  <td data-col="centro"><%= c.centro_custo || '-' %></td>
-                  <td data-col="status"><span class="badge <%= c.status %>"><%= c.status %></span></td>
-                  <td data-col="valor">R$ <%= Number(c.valor||0).toFixed(2) %></td>
-                  <td>
-                    <% if (c.status !== 'pago') { %>
-                      <button class="btn-editar" data-action="abrir-modal-pagar"
-                              data-id="<%= c.id %>"
-                              data-forma="<%= c.forma_pagamento || '' %>">
-                        <i class="fas fa-receipt"></i> Marcar como pago
-                      </button>
-                    <% } else { %>
-                      <span class="badge pago"><i class="fas fa-check"></i> Pago</span>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    <% } %>
+            <% }) %>
+          <% } else { %>
+            <tr class="empty-row">
+              <td colspan="5">
+                <div class="empty">
+                  <i class="fa-regular fa-folder-open"></i>
+                  <p>Nenhum lançamento encontrado.</p>
+                  <button class="btn btn--primary" id="btnEmptyAdd">Adicionar Lançamento</button>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-    <!-- ===== A Receber ===== -->
-    <% if (TAB === 'receber') { %>
-      <section class="panel">
-        <div class="cards">
-          <div class="card previsto"><p>Previstos</p><strong><%= RT.previsto %></strong></div>
-          <div class="card vencido"><p>Vencidos</p><strong><%= RT.vencido %></strong></div>
-          <div class="card pago"><p>Recebidos</p><strong><%= RT.recebido %></strong></div>
-        </div>
+    <hr class="divider" />
 
-        <!-- Botão abre modal -->
-        <div>
-          <button type="button" class="btn-add" data-modal-target="#modal-gerar-receber">
-            <i class="fas fa-wand-magic-sparkles"></i> Gerar recebíveis do mês
-          </button>
-        </div>
+    <section class="section-head">
+      <div>
+        <h2>Gastos Fixos</h2>
+        <p class="subtitle">Despesas recorrentes que impactam seu saldo final.</p>
+      </div>
+      <div class="head-actions">
+        <input id="buscaFixos" class="input" type="text" placeholder="Buscar por nome ou recorrência..." />
+        <button class="btn btn--primary" id="btnNovoGastoFixo">
+          <i class="fas fa-plus-circle"></i>
+          Adicionar Gasto Fixo
+        </button>
+      </div>
+    </section>
 
-        <div class="table-wrapper">
-          <table id="tabela-receber">
-            <thead>
+    <section class="panel">
+      <div class="table-wrap">
+        <table id="tabelaFixos">
+          <thead>
+            <tr>
+              <th class="sticky">Nome</th>
+              <th class="sticky">Valor</th>
+              <th class="sticky">Recorrência</th>
+              <th class="sticky">Início</th>
+              <th class="sticky">Fim</th>
+              <th class="sticky center">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+          <% if (_fixosArr.length) { %>
+            <% _fixosArr.forEach(f => {
+                 const di = new Date(f.data_inicio);
+                 const df = f.data_fim ? new Date(f.data_fim) : null;
+                 const diFmt = isNaN(di) ? String(f.data_inicio).slice(0,10) : di.toLocaleDateString('pt-BR');
+                 const dfFmt = df && !isNaN(df) ? df.toLocaleDateString('pt-BR') : (f.data_fim ? String(f.data_fim).slice(0,10) : '-');
+            %>
               <tr>
-                <th>Competência</th>
-                <th>Vencimento</th>
-                <th>Cliente</th>
-                <th>Categoria</th>
-                <th>Status</th>
-                <th>Valor</th>
+                <td data-col="nome"><%= f.nome %></td>
+                <td data-col="valor">R$ <%= Number(f.valor || 0).toFixed(2) %></td>
+                <td data-col="recorrencia" class="cap"><%= f.recorrencia %></td>
+                <td data-col="inicio"><%= diFmt %></td>
+                <td data-col="fim"><%= dfFmt %></td>
+                <td class="center">
+                  <button type="button" class="btn btn--danger btn--icon" title="Excluir" onclick="confirmarExclusaoGastoFixo('<%= f.id %>')">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              <% CR.forEach(r => { %>
-                <tr class="<%= r.status %>">
-                  <td data-col="competencia"><%= (r.competencia instanceof Date ? r.competencia.toISOString().slice(0,10) : String(r.competencia||'').slice(0,10)) %></td>
-                  <td data-col="vencimento"><%= (r.vencimento  instanceof Date ? r.vencimento.toISOString().slice(0,10)  : String(r.vencimento ||'').slice(0,10)) %></td>
-                  <td data-col="cliente"><%= r.cliente || '-' %></td>
-                  <td data-col="categoria"><%= r.categoria %> <%= r.subcategoria ? ('/ '+r.subcategoria) : '' %></td>
-                  <td data-col="status"><span class="badge <%= r.status %>"><%= r.status %></span></td>
-                  <td data-col="valor">R$ <%= Number(r.valor||0).toFixed(2) %></td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    <% } %>
-
-    <!-- ===== Lançamentos ===== -->
-    <% if (TAB === 'lancamentos') { %>
-      <section class="panel">
-        <% const somaEnt = LAN.filter(x=>x.tipo==='entrada').reduce((a,b)=>a+Number(b.valor||0),0); %>
-        <% const somaSai = LAN.filter(x=>x.tipo==='saida'  ).reduce((a,b)=>a+Number(b.valor||0),0); %>
-        <div class="cards">
-          <div class="card entrada"><p>Entradas</p><strong>R$ <%= somaEnt.toFixed(2) %></strong></div>
-          <div class="card saida"><p>Saídas</p><strong>R$ <%= somaSai.toFixed(2) %></strong></div>
-          <div class="card saldo"><p>Saldo</p><strong>R$ <%= (somaEnt - somaSai).toFixed(2) %></strong></div>
-        </div>
-
-        <div class="table-wrapper">
-          <table id="tabela-lancamentos">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Tipo</th>
-                <th>Categoria</th>
-                <th>Subcategoria</th>
-                <th>Forma</th>
-                <th>Descrição</th>
-                <th>Centro de custo</th>
-                <th>Origem</th>
-                <th>Valor</th>
-              </tr>
-            </thead>
-            <tbody>
-              <% LAN.forEach(l => { %>
-                <tr>
-                  <td data-col="data"><%= (l.data instanceof Date ? l.data.toISOString().slice(0,10) : String(l.data||'').slice(0,10)) %></td>
-                  <td data-col="tipo"><span class="badge <%= l.tipo %>"><%= l.tipo %></span></td>
-                  <td data-col="categoria"><%= l.categoria || '-' %></td>
-                  <td data-col="subcategoria"><%= l.subcategoria || '-' %></td>
-                  <td data-col="forma"><%= l.forma_pagamento || '-' %></td>
-                  <td data-col="descricao"><%= l.descricao || '-' %></td>
-                  <td data-col="centro"><%= l.centro_custo || '-' %></td>
-                  <td data-col="origem"><%= l.origem ? (l.origem + (l.origem_id ? ('#'+l.origem_id) : '')) : '-' %></td>
-                  <td data-col="valor">R$ <%= Number(l.valor||0).toFixed(2) %></td>
-                </tr>
-              <% }) %>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    <% } %>
+            <% }) %>
+          <% } else { %>
+            <tr class="empty-row">
+              <td colspan="6">
+                <div class="empty">
+                  <i class="fa-regular fa-folder-open"></i>
+                  <p>Nenhum gasto fixo cadastrado.</p>
+                  <button class="btn btn--primary" id="btnEmptyAddFixo">Adicionar Gasto Fixo</button>
+                </div>
+              </td>
+            </tr>
+          <% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <!-- Modal Marcar como Pago -->
-  <div class="modal" id="modal-pagar" aria-hidden="true" aria-labelledby="modal-pagar-title" role="dialog">
+  <!-- Modal Lançamento -->
+  <div id="modalLancamento" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <i class="fas fa-receipt"></i>
-        <h3 id="modal-pagar-title" class="modal-title">Marcar como pago</h3>
-        <button class="close" id="fechar-modal" aria-label="Fechar">&times;</button>
-      </div>
-      <form id="form-pagar" method="POST" action="#">
-        <input type="hidden" name="_method" value="POST"/>
-        <div class="grid-2">
-          <label>Forma de pagamento
-            <input type="text" name="forma_pagamento" id="forma_pagamento" placeholder="PIX, Boleto, Cartão..." required />
-          </label>
-          <label>Data do pagamento
-            <input type="date" name="data_pagamento" id="data_pagamento" value="<%= (new Date()).toISOString().slice(0,10) %>" required />
-          </label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-          <button type="submit" class="btn-add"><i class="fas fa-check"></i> Confirmar</button>
+      <button id="fecharModal" class="close" aria-label="Fechar">&times;</button>
+      <h3>Novo Lançamento</h3>
+
+      <form method="POST" action="/financeiro/create" id="formLancamento">
+        <select name="tipo" required>
+          <option value="">Selecione</option>
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+        </select>
+
+        <select name="categoria" required>
+          <option value="">Selecione</option>
+          <option value="Alimento">Alimento</option>
+          <option value="Bebida">Bebida</option>
+          <option value="Transporte">Transporte</option>
+          <option value="Outros">Outros</option>
+        </select>
+
+        <input type="number" name="valor" placeholder="Valor" step="0.01" inputmode="decimal" required />
+        <input type="date" name="data" required />
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn-secondary" id="cancelarLancamento">Cancelar</button>
+          <button type="submit" class="btn-primary">Adicionar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal Gerar Contas a Pagar -->
-  <div class="modal" id="modal-gerar-pagar" aria-hidden="true" aria-labelledby="modal-gerar-pagar-title" role="dialog">
+  <!-- Modal Gasto Fixo -->
+  <div id="modalGastoFixo" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <i class="fas fa-wand-magic-sparkles"></i>
-        <h3 id="modal-gerar-pagar-title" class="modal-title">Gerar contas do mês</h3>
-        <button class="close" data-modal-close aria-label="Fechar">&times;</button>
-      </div>
-      <form class="form-grid" method="POST" action="/contas-a-pagar/gerar-parcelas-mes" id="form-gerar-pagar">
-        <div class="grid-2">
-          <label>Competência (mês/ano)
-            <input type="month" name="competencia" required />
-          </label>
-          <label>Dia padrão de vencimento
-            <input type="number" name="dia_vencimento" min="1" max="31" placeholder="Ex.: 5"/>
-          </label>
-          <label>Forma de pagamento
-            <input type="text" name="forma_pagamento" placeholder="PIX, Boleto, Cartão..."/>
-          </label>
-          <label>Centro de custo
-            <input type="text" name="centro_custo" placeholder="Administrativo"/>
-          </label>
-          <label class="checkbox span-2">
-            <input type="checkbox" name="sobrescrever" value="1"/> Regerar se já existir
-          </label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-          <button type="submit" class="btn-add"><i class="fas fa-rotate"></i> Gerar</button>
+      <button id="fecharModalFixo" class="close" aria-label="Fechar">&times;</button>
+      <h3>Novo Gasto Fixo</h3>
+
+      <form id="formGastoFixo" method="POST" action="/gastos-fixos">
+        <input type="text" name="nome" placeholder="Ex: Aluguel, Internet..." required />
+        <input type="number" name="valor" placeholder="Valor" step="0.01" inputmode="decimal" required />
+
+        <label style="font-size:.9rem; opacity:.8; margin-top:8px;">Recorrência</label>
+        <select name="recorrencia" required>
+          <option value="mensal">Mensal</option>
+          <option value="semanal">Semanal</option>
+          <option value="anual">Anual</option>
+        </select>
+
+        <label style="font-size:.9rem; opacity:.8; margin-top:8px;">Período</label>
+        <input type="date" name="data_inicio" required />
+        <input type="date" name="data_fim" placeholder="Opcional" />
+
+        <textarea name="observacao" placeholder="Observações (opcional)" rows="3"></textarea>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+          <button type="button" class="btn-secondary" id="cancelarGastoFixo">Cancelar</button>
+          <button type="submit" class="btn-primary">Adicionar</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal Gerar Recebíveis -->
-  <div class="modal" id="modal-gerar-receber" aria-hidden="true" aria-labelledby="modal-gerar-receber-title" role="dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <i class="fas fa-wand-magic-sparkles"></i>
-        <h3 id="modal-gerar-receber-title" class="modal-title">Gerar recebíveis do mês</h3>
-        <button class="close" data-modal-close aria-label="Fechar">&times;</button>
-      </div>
-      <form class="form-grid" method="POST" action="/contas-a-receber/gerar-parcelas-mes" id="form-gerar-receber">
-        <div class="grid-2">
-          <label>Competência (mês/ano)
-            <input type="month" name="competencia" required />
-          </label>
-          <label>Dia padrão de recebimento
-            <input type="number" name="dia_recebimento" min="1" max="31" placeholder="Ex.: 10"/>
-          </label>
-          <label>Forma de recebimento
-            <input type="text" name="forma_pagamento" placeholder="PIX, Cartão..."/>
-          </label>
-          <label>Centro de receita
-            <input type="text" name="centro_custo" placeholder="Vendas"/>
-          </label>
-          <label class="checkbox span-2">
-            <input type="checkbox" name="sobrescrever" value="1"/> Regerar se já existir
-          </label>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-          <button type="submit" class="btn-add"><i class="fas fa-rotate"></i> Gerar</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <script nonce="<%= cspNonce %>" src="/financeiro/financeiro.js"></script>
 </body>
 </html>

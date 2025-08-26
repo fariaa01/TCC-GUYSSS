@@ -10,6 +10,8 @@ const tourFlag = require('./middlewares/tourFlag');
 
 const app = express();
 
+app.use(express.urlencoded({ extended: true })); 
+
 app.use((req, res, next) => {
   res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
   next();
@@ -54,11 +56,10 @@ app.use('/restaurantes', require('./routes/restaurantes'));
 app.use('/financeiro', require('./routes/financeiro'));
 app.use('/produtos', require('./routes/produto'));
 app.use('/fornecedores', require('./routes/fornecedores'));
+app.use('/gastos-fixos', require('./routes/gastos-fixo'));
 
 
 app.get('/healthz', (_req, res) => res.status(200).send('ok'));
-
-require('./cron');
 
 app.use((req, res) => {
   res.status(404);

@@ -1,125 +1,205 @@
-(function () {
-  const $ = (sel, ctx = document) => ctx.querySelector(sel);
-  const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+   (function () {
+      const $  = (s, el=document) => el.querySelector(s);
+      const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
 
-  // ------------- Util -------------
-  function normaliza(txt) {
-    return (txt || '')
-      .toString()
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  }
+      // ===== Modais: Lançamento
+      const modal     = $('#modalLancamento');
+      const formLanc  = $('#formLancamento');
+      const btnOpen1  = $('#btnNovoLancamento');
+      const btnOpen2  = $('#btnNovoLancamento2');
+      const btnOpen3  = $('#btnEmptyAdd');
+      const btnClose  = $('#fecharModal');
+      const btnCancel = $('#cancelarLancamento');
 
-  function openModal(modal) {
-    if (!modal) return;
-    modal.classList.add('show');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    const firstInput = modal.querySelector('input,select,textarea,button');
-    if (firstInput) setTimeout(() => firstInput.focus(), 10);
-  }
+      const openLanc  = () => { modal.classList.add('is-open'); setTimeout(()=>formLanc?.querySelector('select, input')?.focus(),0); };
+      const closeLanc = () => modal.classList.remove('is-open');
 
-  function closeModal(modal) {
-    if (!modal) return;
-    modal.classList.remove('show');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-    const form = modal.querySelector('form');
-    if (form && modal.id !== 'modal-pagar') form.reset();
-  }
+      btnOpen1?.addEventListener('click', openLanc);
+      btnOpen2?.addEventListener('click', openLanc);
+      btnOpen3?.addEventListener('click', openLanc);
+      btnClose?.addEventListener('click', closeLanc);
+      btnCancel?.addEventListener('click', closeLanc);
+      window.addEventListener('click', (e)=>{ if(e.target===modal) closeLanc(); });
 
-  document.addEventListener('click', (e) => {
-    const trigger = e.target.closest('[data-modal-target]');
-    if (trigger) {
-      const sel = trigger.getAttribute('data-modal-target');
-      const modal = document.querySelector(sel);
-      const monthInput = modal?.querySelector('input[type="month"][name="competencia"]');
-      const start = $('#start')?.value || new Date().toISOString().slice(0,10);
-      if (monthInput) monthInput.value = (start || '').slice(0,7);
-      openModal(modal);
+      // ===== Modais: Gasto Fixo
+      const modalF     = $('#modalGastoFixo');
+      const formF      = $('#formGastoFixo');
+      const btnOpenF1  = $('#btnNovoGastoFixo');
+      const btnOpenF2  = $('#btnEmptyAddFixo');
+      const btnCloseF  = $('#fecharModalFixo');
+      const btnCancelF = $('#cancelarGastoFixo');
+
+      const openFixo  = () => { modalF.classList.add('is-open'); setTimeout(()=>formF?.querySelector('input, select')?.focus(),0); };
+      const closeFixo = () => modalF.classList.remove('is-open');
+
+      btnOpenF1?.addEventListener('click', openFixo);
+      btnOpenF2?.addEventListener('click', openFixo);
+      btnCloseF?.addEventListener('click', closeFixo);
+      btnCancelF?.addEventListener('click', closeFixo);
+      window.addEventListener('click', (e)=>{ if(e.target===modalF) closeFixo(); });
+
+      // ===== Filtros: Lançamentos
+      const busca = $('#busca');
+      const filtroCategoria = $('#filtroCategoria');
+      const dIni = $('#filtroDataInicio');
+      const dFim = $('#filtroDataFim');
+      const chips = $$('.chip');
+      const table = $('#tabela');
+      const tbody = table?.querySelector('tbody');
+
+      let tipoAtivo = 'todos';
+
+      const toISO = (v) => v ? new Date(v+'T00:00:00').toISOString().slice(0,10) : '';
+      const inRange = (dateISO, iniISO, fimISO) => {
+        if (!dateISO) return true;
+        if (iniISO && dateISO < iniISO) return false;
+        if (fimISO && dateISO > fimISO) return false;
+        return true;
+      };
+
+      const applyFilters = () => {
+        const q = (busca?.value || '').toLowerCase().trim();
+        const cat = filtroCategoria?.value || '';
+        const ini = toISO(dIni?.value);
+        const fim = toISO(dFim?.value);
+
+        let visibles = 0;
+        $$('#tabela tbody tr').forEach(tr => {
+          if (tr.classList.contains('empty-row')) return;
+          const rowCat = tr.getAttribute('data-categoria') || '';
+          const rowTipo = tr.getAttribute('data-tipo') || '';
+          const rowDate = tr.getAttribute('data-data') || '';
+
+          const text = (rowCat + ' ' + rowTipo).toLowerCase();
+          const matchBusca = !q || text.includes(q);
+          const matchCat = !cat || rowCat === cat;
+          const matchTipo = (tipoAtivo === 'todos') || rowTipo === tipoAtivo;
+          const matchRange = inRange(rowDate, ini, fim);
+
+          const show = matchBusca && matchCat && matchTipo && matchRange;
+          tr.style.display = show ? '' : 'none';
+          if (show) visibles++;
+        });
+
+        const emptyId = 'empty-after-filter';
+        let emptyRow = document.getElementById(emptyId);
+        if (!visibles) {
+          if (!emptyRow) {
+            emptyRow = document.createElement('tr');
+            emptyRow.id = emptyId;
+            emptyRow.innerHTML = `
+              <td colspan="5">
+                <div class="empty small">
+                  <i class="fa-regular fa-folder-open"></i>
+                  <p>Nenhum resultado com os filtros aplicados.</p>
+                  <button class="btn btn--ghost" id="btnLimpar2">Limpar filtros</button>
+                </div>
+              </td>`;
+            tbody?.appendChild(emptyRow);
+            document.getElementById('btnLimpar2')?.addEventListener('click', clearFilters);
+          }
+        } else {
+          emptyRow?.remove();
+        }
+      };
+
+      const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+
+      const clearFilters = () => {
+        if (busca) busca.value = '';
+        if (filtroCategoria) filtroCategoria.value = '';
+        if (dIni) dIni.value = '';
+        if (dFim) dFim.value = '';
+        tipoAtivo = 'todos';
+        chips.forEach(c => c.classList.toggle('is-active', c.dataset.tipo === 'todos'));
+        applyFilters();
+      };
+
+      busca?.addEventListener('input', debounce(applyFilters, 200));
+      filtroCategoria?.addEventListener('change', applyFilters);
+      dIni?.addEventListener('change', applyFilters);
+      dFim?.addEventListener('change', applyFilters);
+
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chips.forEach(c => c.classList.remove('is-active'));
+          chip.classList.add('is-active');
+          tipoAtivo = chip.dataset.tipo;
+          applyFilters();
+        });
+      });
+
+      const setRange = (start, end) => { if (dIni) dIni.value = start; if (dFim) dFim.value = end; applyFilters(); };
+      const todayISO = new Date().toISOString().slice(0,10);
+      const addDays = (d, diff) => { const dt=new Date(d); dt.setDate(dt.getDate()+diff); return dt.toISOString().slice(0,10); };
+      const firstDayMonth = (() => { const dt=new Date(); dt.setDate(1); return dt.toISOString().slice(0,10); })();
+      const lastDayMonth  = (() => { const dt=new Date(); dt.setMonth(dt.getMonth()+1,0); return dt.toISOString().slice(0,10); })();
+
+      document.getElementById('btnHoje')?.addEventListener('click', () => setRange(todayISO, todayISO));
+      document.getElementById('btn7d')?.addEventListener('click', () => setRange(addDays(todayISO,-6), todayISO));
+      document.getElementById('btn30d')?.addEventListener('click', () => setRange(addDays(todayISO,-29), todayISO));
+      document.getElementById('btnMes')?.addEventListener('click', () => setRange(firstDayMonth, lastDayMonth));
+      document.getElementById('btnLimparFiltros')?.addEventListener('click', clearFilters);
+
+      // ===== Busca fixos
+      const buscaFixos = $('#buscaFixos');
+      buscaFixos?.addEventListener('input', debounce(() => {
+        const q = buscaFixos.value.toLowerCase().trim();
+        $$('#tabelaFixos tbody tr').forEach(row => {
+          if (row.classList.contains('empty-row')) return;
+          const texto = Array.from(row.querySelectorAll('[data-col="nome"], [data-col="recorrencia"]'))
+            .map(td => td.textContent.toLowerCase())
+            .join(' ');
+          row.style.display = texto.includes(q) ? '' : 'none';
+        });
+      }, 200));
+    })();
+
+    // ===== SweetAlert (botões seguindo seu modelo de CSS)
+    function confirmarExclusaoLancamento(id) {
+      Swal.fire({
+        title: 'Tem certeza?',
+        text: 'Deseja excluir este lançamento?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: 'btn btn--danger',
+          cancelButton: 'btn btn--ghost'
+        }
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/financeiro/delete/${id}`;
+        document.body.appendChild(form);
+        form.submit();
+      });
     }
-    if (e.target.matches('.modal')) closeModal(e.target);
-    if (e.target.hasAttribute('data-modal-close')) {
-      const modal = e.target.closest('.modal');
-      closeModal(modal);
+
+    function confirmarExclusaoGastoFixo(id) {
+      Swal.fire({
+        title: 'Excluir gasto fixo?',
+        text: 'Essa ação não pode ser desfeita.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, excluir!',
+        cancelButtonText: 'Cancelar',
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: 'btn btn--danger',
+          cancelButton: 'btn btn--ghost'
+        }
+      }).then(async (result) => {
+        if (!result.isConfirmed) return;
+        try {
+          const resp = await fetch(`/gastos-fixos/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
+          if (!resp.ok) throw new Error('Falha ao excluir');
+          location.reload();
+        } catch (e) {
+          Swal.fire('Erro', 'Não foi possível excluir o gasto fixo.', 'error');
+        }
+      });
     }
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') $$('.modal.show').forEach(closeModal);
-  });
-
-  const busca = $('#busca');
-  const tabAtual =
-    (new URLSearchParams(location.search).get('tab')) ||
-    (document.querySelector('.tabs a.active')?.textContent?.trim().toLowerCase() || 'pagar');
-
-  const tabelaAtual = {
-    pagar:       $('#tabela-pagar'),
-    receber:     $('#tabela-receber'),
-    lançamentos: $('#tabela-lancamentos'),
-    lancamentos: $('#tabela-lancamentos'),
-  }[tabAtual] || $('#tabela-pagar');
-
-  function filtrarTabela(q) {
-    if (!tabelaAtual) return;
-    const n = normaliza(q);
-    $$('#' + tabelaAtual.id + ' tbody tr').forEach(tr => {
-      const texto = normaliza(tr.innerText);
-      tr.style.display = texto.includes(n) ? '' : 'none';
-    });
-  }
-  if (busca) busca.addEventListener('input', (e) => filtrarTabela(e.target.value));
-
-  const modalPagar = $('#modal-pagar');
-  const formPagar = $('#form-pagar');
-  const inputForma = $('#forma_pagamento');
-  const inputData  = $('#data_pagamento');
-
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action="abrir-modal-pagar"]');
-    if (!btn) return;
-    const id = btn.getAttribute('data-id');
-    const forma = btn.getAttribute('data-forma') || '';
-    if (formPagar) {
-      formPagar.action = `/contas-a-pagar/${id}/pagar`;
-      inputForma.value = forma;
-      if (!inputData.value) inputData.value = new Date().toISOString().slice(0,10);
-    }
-    openModal(modalPagar);
-  });
-
-  function tabelaParaCSV(table) {
-    const linhas = [];
-    const linha = (row) => Array.from(row.querySelectorAll('th,td')).map(c => {
-      const txt = (c.innerText || '').replace(/\s+/g, ' ').trim();
-      return '"' + txt.replace(/"/g, '""') + '"';
-    }).join(',');
-    if (table.tHead?.rows?.[0]) linhas.push(linha(table.tHead.rows[0]));
-    Array.from(table.tBodies[0].rows).forEach(r => {
-      if (r.style.display === 'none') return;
-      linhas.push(linha(r));
-    });
-    return linhas.join('\n');
-  }
-  function baixar(nome, conteudo, mime = 'text/csv;charset=utf-8;') {
-    const blob = new Blob([conteudo], { type: mime });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = nome; document.body.appendChild(a); a.click();
-    URL.revokeObjectURL(url); a.remove();
-  }
-  $('#btn-exportar')?.addEventListener('click', () => {
-    const t = tabelaAtual; if (!t) return;
-    const nome = `financeiro_${tabAtual}_${new Date().toISOString().slice(0,10)}.csv`;
-    const csv = tabelaParaCSV(t);
-    baixar(nome, csv);
-  });
-
-  $('#btn-imprimir')?.addEventListener('click', () => window.print());
-  const hiddenTab = document.querySelector('input[name="tab"]');
-  const anchorAtivo = document.querySelector('.tabs a.active');
-  if (hiddenTab && anchorAtivo) {
-    const url = new URL(anchorAtivo.href);
-    hiddenTab.value = url.searchParams.get('tab') || 'pagar';
-  }
-})();

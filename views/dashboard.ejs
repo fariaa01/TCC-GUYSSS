@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
+
   <link rel="stylesheet" href="/dashboard/dashboard.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+
   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -40,7 +43,6 @@
         <div class="card"><i class="fas fa-wallet"></i> <p>Gastos do Mês<br><strong>R$ <%= total_saida %></strong></p></div>
         <div class="card"><i class="fas fa-box-open"></i> <p>Produtos em Baixa<br><strong><%= produtos_em_baixa %> itens</strong></p></div>
         <div class="card"><i class="fas fa-user-check"></i> <p>Funcionários Ativos<br><strong><%= total_func %> funcionários</strong></p></div>
-        
       </div>
 
       <hr class="separador">
@@ -52,7 +54,7 @@
   </div>
 
   <script nonce="<%= cspNonce %>">
-     document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       const nomeAtual = "<%= nome_empresa || '' %>";
 
       if (!nomeAtual.trim()) {
@@ -62,9 +64,15 @@
           input: 'text',
           inputPlaceholder: 'Ex: Food Truck do João',
           confirmButtonText: 'Salvar',
-          confirmButtonColor: '#148f77',
           allowOutsideClick: false,
           allowEscapeKey: false,
+
+          buttonsStyling: false,
+          customClass: {
+            actions: 'swal2-actions',
+            confirmButton: 'btn btn-voltar',
+          },
+
           inputValidator: (value) => {
             if (!value || value.trim() === '') {
               return 'Por favor, digite um nome válido!';
@@ -84,16 +92,27 @@
             if (result.sucesso) {
               setTimeout(() => location.reload(), 300);
             } else {
-              Swal.fire('Erro', 'Não foi possível salvar o nome.', 'error');
+              Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Não foi possível salvar o nome.',
+                buttonsStyling: false,
+                customClass: { confirmButton: 'btn btn-voltar', actions: 'swal2-actions' }
+              });
             }
           } catch (e) {
-            Swal.fire('Erro', 'Erro de conexão ao salvar.', 'error');
+            Swal.fire({
+              icon: 'error',
+              title: 'Erro',
+              text: 'Erro de conexão ao salvar.',
+              buttonsStyling: false,
+              customClass: { confirmButton: 'btn btn-voltar', actions: 'swal2-actions' }
+            });
           }
         }
       }
     });
 
-    
     const dadosEntradas = JSON.parse('<%= JSON.stringify(entradas) %>');
     const dadosSaidas = JSON.parse('<%= JSON.stringify(saidas) %>');
 

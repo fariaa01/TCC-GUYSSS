@@ -1,25 +1,21 @@
-const Financeiro = require('../models/financeiroModel');
-const ContasPagar = require('../models/ContasPagar');
-let ContasReceber = null;
-try { ContasReceber = require('../models/ContasReceber'); } catch {}
+const Financeiro = require('../models/financeiro/financeiroModel');
+const GastosFixos = require('../models/financeiro/gastos-fixosModel');
 
-function firstDayOfMonth(d = new Date()) {
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+function getPeriodoMes(req) {
+  const agora = new Date();
+  const ano = parseInt(req.query.ano || agora.getFullYear(), 10);
+  const mes = parseInt(req.query.mes || (agora.getMonth() + 1), 10);
+  const inicio = new Date(ano, mes - 1, 1);
+  const fim = new Date(ano, mes, 0);
+  const toISO = (d) => d.toISOString().slice(0, 10);
+  return { ano, mes, inicio, fim, inicioStr: toISO(inicio), fimStr: toISO(fim) };
 }
-function parseDateOrNull(v) {
-  if (!v) return null;
-  const d = new Date(v);
-  return isNaN(d) ? null : d;
-}
-function wantsJSON(req) {
-  return req.xhr || req.is('application/json') || req.get('accept')?.includes('application/json');
-}
-function toISODate(d) {
-  const x = d instanceof Date ? d : new Date(d);
-  const yyyy = x.getFullYear();
-  const mm = String(x.getMonth() + 1).padStart(2, '0');
-  const dd = String(x.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
+
+function weeksInMonth(ano, mes) {
+  const start = new Date(ano, mes - 1, 1);
+  const end = new Date(ano, mes, 0);
+  const days = Math.floor((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.round(days / 7) || 4;
 }
 
 module.exports = {
@@ -28,138 +24,97 @@ module.exports = {
       const userId = req.session.userId;
       if (!userId) return res.redirect('/login');
 
-      const empresaId = req.session.empresaId || req.session.userId || null;
+      const { ano, mes, inicio, fim } = getPeriodoMes(req);
+      const dados = await Financeiro.getAll(userId);
 
-      const page = Math.max(1, Number(req.query.page || 1));
-      const perPage = Math.min(Number(req.query.perPage || 100), 500);
-      const tipo = req.query.tipo || null;
-      const categoria = req.query.categoria || null;
-      const subcategoria = req.query.subcategoria || null;
-      const centro_custo = req.query.centro_custo || null;
-      const busca = req.query.q || null;
-      const tab = req.query.tab || 'pagar'; 
-
-      let start = parseDateOrNull(req.query.start);
-      let end = parseDateOrNull(req.query.end);
-      if (!start || !end) {
-        start = firstDayOfMonth();
-        end = new Date();
-      }
-      
-      const filters = {
-        start,
-        end,
-        tipo,
-        categoria,
-        subcategoria,
-        centro_custo,
-        busca,
-        page,
-        perPage,
-        order: 'data DESC, id DESC'
-      };
-      const { data: dados, total } = await Financeiro.list(empresaId, filters, userId);
-      const resumo = await Financeiro.getResumo(empresaId, { start, end }, userId);
-
-      // ===== Contas a Pagar (lista + totais)
-      let pagarContas = [];
-      let pagarTotais = { previsto: 0, vencido: 0, pago: 0 };
-      if (ContasPagar) {
-        await ContasPagar.atualizarVencidos(empresaId);
-        pagarContas = (await ContasPagar.list(empresaId, { start, end })) || [];
-        const t = (await ContasPagar.totaisPorStatus(empresaId, { start, end })) || {};
-        pagarTotais = {
-          previsto: Number(t.previsto || 0),
-          vencido: Number(t.vencido || 0),
-          pago: Number(t.pago || 0),
-        };
-      }
-
-      // ===== Contas a Receber (opcional)
-      let receberContas = [];
-      let receberTotais = { previsto: 0, vencido: 0, recebido: 0 };
-      if (ContasReceber && typeof ContasReceber.list === 'function') {
-        if (typeof ContasReceber.atualizarVencidos === 'function') {
-          await ContasReceber.atualizarVencidos(empresaId);
+      const dadosMes = (dados || []).filter((d) => {
+        const dd = new Date(d.data);
+        if (Number.isNaN(dd.getTime())) {
+          const s = String(d.data).slice(0, 10);
+          return s >= `${ano}-${String(mes).padStart(2, '0')}-01` && s <= `${ano}-${String(mes).padStart(2, '0')}-${String(fim.getDate()).padStart(2, '0')}`;
         }
-        receberContas = (await ContasReceber.list(empresaId, { start, end })) || [];
-        const tr = (await ContasReceber.totaisPorStatus(empresaId, { start, end })) || {};
-        receberTotais = {
-          previsto: Number(tr.previsto || 0),
-          vencido: Number(tr.vencido || 0),
-          recebido: Number(tr.recebido || 0),
-        };
-      }
+        return dd >= inicio && dd <= fim;
+      });
 
-      if (wantsJSON(req)) {
-        // Mantém compat com seu JSON atual e agrega as novas seções
-        return res.status(200).json({
-          dados, total, page, perPage,
-          periodo: { start, end },
-          ...resumo,
-          pagar: { contas: pagarContas, totais: pagarTotais },
-          receber: { contas: receberContas, totais: receberTotais }
-        });
-      }
+      const totalEntradasMes = dadosMes
+        .filter(d => d.tipo === 'entrada')
+        .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
 
-      // Render da PÁGINA ÚNICA (Hub). Use a view que te mandei: views/financeiro.ejs
-      return res.render('financeiro', {
-        tab,
-        start: toISODate(start),
-        end: toISODate(end),
-        // KPIs do módulo de lançamentos (se quiser mostrar algo rápido nessa aba)
-        totalEntradas: Number(resumo.totalEntradas || 0).toFixed(2),
-        totalSaidas: Number(resumo.totalSaidas || 0).toFixed(2),
-        saldoFinal: Number(resumo.saldo || 0).toFixed(2),
+      const totalSaidasMes = dadosMes
+        .filter(d => d.tipo === 'saida')
+        .reduce((acc, cur) => acc + Number(cur.valor || 0), 0);
 
-        // Dados para cada aba:
-        pagarContas,
-        pagarTotais,
-        receberContas,
-        receberTotais,
-        lancamentos: dados, // <— a aba "Lançamentos" usa esse nome
-        // Se sua view ainda espera 'filtros', mantém também:
-        filtros: {
-          start: toISODate(start),
-          end: toISODate(end),
-          tipo, categoria, subcategoria, centro_custo, busca, page, perPage
-        },
-        total
+      const saldoFinalMes = totalEntradasMes - totalSaidasMes;
+
+      const gastosFixos = await GastosFixos.getAll(userId);
+      const semanas = weeksInMonth(ano, mes);
+
+      const totalFixosMes = (gastosFixos || []).reduce((acc, g) => {
+        const ini = new Date(g.data_inicio);
+        const fimG = g.data_fim ? new Date(g.data_fim) : null;
+        const ativo =
+          (Number.isNaN(ini.getTime()) ? true : ini <= fim) &&
+          (fimG ? fimG >= inicio : true);
+
+        if (!ativo) return acc;
+
+        const v = Number(g.valor || 0);
+        if (g.recorrencia === 'mensal') return acc + v;
+        if (g.recorrencia === 'anual') {
+          const mesInicio = Number.isNaN(ini.getTime()) ? null : (ini.getMonth() + 1);
+          return acc + (mesInicio === mes ? v : 0);
+        }
+        if (g.recorrencia === 'semanal') return acc + v * semanas;
+        return acc;
+      }, 0);
+
+      const saldoComFixosMes = saldoFinalMes - totalFixosMes;
+
+      res.render('financeiro', {
+        dados,
+        totalEntradas: totalEntradasMes.toFixed(2),
+        totalSaidas: totalSaidasMes.toFixed(2),
+        saldoFinal: saldoFinalMes.toFixed(2),
+        gastosFixos,
+        totalFixos: totalFixosMes.toFixed(2),
+        saldoComFixos: saldoComFixosMes.toFixed(2),
+        ano,
+        mes
       });
     } catch (error) {
       console.error("Erro ao listar financeiro:", error);
-      if (wantsJSON(req)) return res.status(500).json({ success: false, message: 'Erro ao carregar dados financeiros.' });
       res.status(500).send("Erro ao carregar os dados financeiros.");
     }
   },
 
-  // ===== Mantidos como estavam =====
+  formCreate: async (req, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) return res.redirect('/login');
+      res.render('financeiro-create');
+    } catch (error) {
+      console.error("Erro ao abrir formulário:", error);
+      res.status(500).send("Erro ao abrir o formulário.");
+    }
+  },
+
   criar: async (req, res) => {
     try {
       const userId = req.session.userId;
       if (!userId) return res.redirect('/login');
-      const empresaId = req.session.empresaId || null;
 
-      const {
-        tipo,
-        categoria,
-        subcategoria = null,
-        valor,
-        data,
-        forma_pagamento = null,
-        descricao = null,
-        centro_custo = null
-      } = req.body;
+      const { tipo, categoria, valor, data } = req.body;
+      await Financeiro.create({ tipo, categoria, valor, data }, userId);
 
-      await Financeiro.createManual({
-        tipo, categoria, subcategoria, valor, data, forma_pagamento, descricao, centro_custo
-      }, empresaId, userId);
-
-      if (wantsJSON(req)) return res.status(200).json({ success: true });
+      if (req.is('application/json')) {
+        return res.status(200).json({ success: true });
+      }
       res.redirect('/financeiro');
     } catch (error) {
       console.error("Erro ao criar lançamento:", error);
-      if (wantsJSON(req)) return res.status(500).json({ success: false, message: 'Erro ao criar lançamento financeiro.' });
+      if (req.is('application/json')) {
+        return res.status(500).json({ success: false, message: 'Erro ao criar lançamento financeiro.' });
+      }
       res.status(500).send("Erro ao criar lançamento financeiro.");
     }
   },
@@ -168,32 +123,11 @@ module.exports = {
     try {
       const userId = req.session.userId;
       if (!userId) return res.redirect('/login');
-      const empresaId = req.session.empresaId || null;
 
-      const id = req.params.id;
-      const {
-        tipo,
-        categoria,
-        subcategoria = null,
-        valor,
-        data,
-        forma_pagamento = null,
-        descricao = null,
-        centro_custo = null
-      } = req.body;
-
-      await Financeiro.updateManual(
-        id,
-        { tipo, categoria, subcategoria, valor, data, forma_pagamento, descricao, centro_custo },
-        empresaId,
-        userId
-      );
-
-      if (wantsJSON(req)) return res.status(200).json({ success: true });
+      await Financeiro.update(req.params.id, req.body, userId);
       res.redirect('/financeiro');
     } catch (error) {
       console.error("Erro ao atualizar lançamento:", error);
-      if (wantsJSON(req)) return res.status(500).json({ success: false, message: 'Erro ao atualizar lançamento.' });
       res.status(500).send("Erro ao atualizar lançamento.");
     }
   },
@@ -202,19 +136,12 @@ module.exports = {
     try {
       const userId = req.session.userId;
       if (!userId) return res.redirect('/login');
-      const empresaId = req.session.empresaId || null;
 
-      await Financeiro.delete(req.params.id, empresaId, userId);
-
-      if (wantsJSON(req)) return res.status(200).json({ success: true });
+      await Financeiro.delete(req.params.id, userId);
       res.redirect('/financeiro');
     } catch (error) {
       console.error("Erro ao deletar lançamento:", error);
-      const msg = error?.message?.includes('conciliado') 
-        ? 'Não é possível excluir: lançamento conciliado (origem).'
-        : 'Erro ao deletar lançamento.';
-      if (wantsJSON(req)) return res.status(400).json({ success: false, message: msg });
-      res.status(400).send(msg);
+      res.status(500).send("Erro ao deletar lançamento.");
     }
   }
 };

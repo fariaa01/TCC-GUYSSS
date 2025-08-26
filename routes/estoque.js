@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const estoqueController = require('../controllers/estoqueController');
+const estoqueCtrl = require('../controllers/estoqueController');
 
-router.get('/', estoqueController.listar);
-router.post('/create', estoqueController.criar);
-router.post('/edit/:id', estoqueController.atualizar);
-router.get('/delete/:id', estoqueController.deletar);
+router.get('/', estoqueCtrl.listar);
+router.post('/create', estoqueCtrl.criar);
+router.post('/:id/update', estoqueCtrl.atualizar);
+router.get('/delete/:id', estoqueCtrl.deletar);
 
 module.exports = router;

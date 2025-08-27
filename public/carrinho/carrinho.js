@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Menu = require('../models/menuModel');
 
+
 router.get('/', (req, res) => {
     const carrinho = req.session.carrinho || [];
     res.render('carrinho', { carrinho });
 });
+
 
 router.post('/', async(req, res) => {
     try {
@@ -19,6 +21,7 @@ router.post('/', async(req, res) => {
             return res.status(404).json({ ok: false, msg: 'Prato não encontrado' });
         }
 
+
         if (!req.session.carrinho) req.session.carrinho = [];
 
 
@@ -26,15 +29,16 @@ router.post('/', async(req, res) => {
         if (existente) {
             existente.quantidade = (existente.quantidade || 1) + 1;
         } else {
-
             req.session.carrinho.push({
                 ...prato,
                 quantidade: 1
             });
         }
 
-        // Soma total de itens no carrinho
-        const qtdCarrinho = req.session.carrinho.reduce((soma, item) => soma + (item.quantidade || 1), 0);
+
+        const qtdCarrinho = req.session.carrinho.reduce(
+            (soma, item) => soma + (item.quantidade || 1), 0
+        );
 
         res.json({ ok: true, msg: 'Adicionado ao carrinho', qtdCarrinho });
     } catch (err) {

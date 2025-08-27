@@ -71,6 +71,7 @@ body {
 }
 
 .sidebar nav {
+<<<<<<< Updated upstream
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -87,6 +88,24 @@ body {
     border-radius: 12px;
     opacity: .95;
     transition: all .2s ease;
+=======
+  display: block;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sidebar nav a {
+  display: block;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: #eafff3;
+  text-decoration: none;
+  border-radius: 12px;
+  opacity: .95;
+  transition: all .2s ease;
+>>>>>>> Stashed changes
 }
 
 .sidebar nav a i {
@@ -108,10 +127,15 @@ body {
     margin-top: auto;
 }
 
+<<<<<<< Updated upstream
 .sidebar:not(.open) {
     width: 80px;
     padding: 18px;
 }
+=======
+.sidebar:not(.open) { width: 0px; padding: 0px; height: 0px; }
+
+>>>>>>> Stashed changes
 
 .sidebar:not(.open) h2 {
     opacity: 0;
@@ -120,11 +144,15 @@ body {
     overflow: hidden;
 }
 
+<<<<<<< Updated upstream
 .sidebar:not(.open) nav a {
     justify-content: center;
     gap: 0;
     font-size: 0;
 }
+=======
+.sidebar:not(.open) nav a { justify-content: center; gap: 0; font-size: 0; pointer-events: none; user-select: none; opacity: 0.0; }
+>>>>>>> Stashed changes
 
 .sidebar:not(.open) nav a i {
     font-size: 18px;
@@ -145,6 +173,7 @@ body {
 }
 
 .toggle-btn {
+<<<<<<< Updated upstream
     border: 0;
     background: var(--panel);
     width: 44px;
@@ -165,6 +194,22 @@ body {
 .toggle-btn:active {
     transform: scale(.98);
 }
+=======
+  border: 0;
+  background: var(--panel);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-block;
+  place-items: center;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+
+.toggle-btn i { font-size: 18px; color: var(--brand-700); }
+.toggle-btn:active { transform: scale(.95); }
+>>>>>>> Stashed changes
 
 .btn-sair {
     border: 0;
@@ -392,6 +437,12 @@ body {
 }
 
 .grafico-container {
+<<<<<<< Updated upstream
     overflow: auto;
     -webkit-overflow-scrolling: touch;
 }
+=======
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+>>>>>>> Stashed changes

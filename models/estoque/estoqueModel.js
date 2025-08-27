@@ -1,188 +1,118 @@
-const db = require('../../db');
+const pool = require('../../db');
 
-const toNull = (v) => (v === '' || v === undefined ? null : v);
-const toNumberOrNull = (v) => (v === '' || v === undefined || v === null ? null : Number(v));
+function buildFilters({ categoria, fornecedor, validade, usuarioId }) {
+  let sql = `SELECT 
+      id, produto, categoria, quantidade, quantidade_minima,
+      unidade_medida, valor, validade, fornecedor, usuario_id
+    FROM estoque
+    WHERE usuario_id = ?`;
+  const params = [usuarioId];
+
+  if (categoria) { sql += ` AND categoria = ?`; params.push(categoria); }
+  if (fornecedor) { sql += ` AND fornecedor = ?`; params.push(fornecedor); }
+  if (validade === 'vencido') {
+    sql += ` AND validade IS NOT NULL AND validade < CURRENT_DATE()`;
+  } else if (validade === 'proximo') {
+    sql += ` AND validade IS NOT NULL 
+             AND validade BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)`;
+  }
+
+  sql += ` ORDER BY produto ASC`;
+  return { sql, params };
+}
+
+function normStr(v) {
+  if (v === undefined) return undefined;
+  if (v === null) return null;
+  const s = String(v).trim();
+  return s === '' ? null : s;
+}
+function parseNum(v, fallback = 0) {
+  if (v === undefined) return undefined;
+  if (v === null || v === '') return null;
+  const n = Number(String(v).replace(',', '.'));
+  return Number.isFinite(n) ? n : fallback;
+}
+function parseMoney(v, fallback = 0) {
+  return parseNum(v, fallback);
+}
+function parseDateOrNull(v) {
+  if (v === undefined) return undefined;
+  if (v === null || v === '') return null;
+  return v; // assume YYYY-MM-DD já válido
+}
 
 module.exports = {
-  getAll: async (usuarioId) => {
-    const [rows] = await db.query(
-      'SELECT * FROM estoque WHERE usuario_id = ? ORDER BY produto ASC',
-      [usuarioId]
-    );
+  async getFiltrado({ categoria, fornecedor, validade, usuarioId }) {
+    const { sql, params } = buildFilters({ categoria, fornecedor, validade, usuarioId });
+    const [rows] = await pool.query(sql, params);
     return rows;
   },
 
-  getFiltrado: async ({ categoria, fornecedor, validade, usuarioId }) => {
-    let query = 'SELECT * FROM estoque WHERE usuario_id = ?';
-    const params = [usuarioId];
+  async create(body, usuarioId) {
+    const sql = `
+      INSERT INTO estoque
+        (produto, categoria, quantidade, quantidade_minima, unidade_medida, valor, validade, fornecedor, usuario_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-    if (categoria && categoria !== '') {
-      query += ' AND categoria = ?';
-      params.push(categoria);
-    }
+    const params = [
+      normStr(body.produto),
+      normStr(body.categoria),
+      parseNum(body.quantidade, 0),
+      parseNum(body.quantidade_minima, 0),
+      normStr(body.unidade_medida),
+      parseMoney(body.valor, 0),
+      parseDateOrNull(body.validade),
+      normStr(body.fornecedor),
+      usuarioId
+    ];
 
-    if (fornecedor && fornecedor !== '') {
-      query += ' AND fornecedor = ?';
-      params.push(fornecedor);
-    }
-
-    if (validade === 'vencido') {
-      query += ' AND validade IS NOT NULL AND validade < CURDATE()';
-    } else if (validade === 'proximo') {
-      query += ' AND validade IS NOT NULL AND validade BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)';
-    }
-
-    query += ' ORDER BY produto ASC';
-
-    const [rows] = await db.query(query, params);
-    return rows;
+    const [result] = await pool.query(sql, params);
+    return result.insertId;
   },
 
-  listarCategoriasUnicas: async (usuarioId) => {
-    const [rows] = await db.query(
-      `SELECT DISTINCT categoria 
-         FROM estoque 
-        WHERE usuario_id = ? 
-          AND categoria IS NOT NULL 
-          AND categoria <> ''
-        ORDER BY categoria ASC`,
-      [usuarioId]
-    );
-    return rows.map(r => r.categoria);
-  },
+  async update(id, body, usuarioId) {
+    const whitelist = {
+      produto:              normStr(body.produto),
+      categoria:            normStr(body.categoria),
+      quantidade:           parseNum(body.quantidade),
+      quantidade_minima:    parseNum(body.quantidade_minima),
+      unidade_medida:       normStr(body.unidade_medida),
+      valor:                parseMoney(body.valor),
+      validade:             parseDateOrNull(body.validade),
+      fornecedor:           normStr(body.fornecedor)
+    };
 
-  listarFornecedoresUnicos: async (usuarioId) => {
-    const [rows] = await db.query(
-      `SELECT DISTINCT fornecedor 
-         FROM estoque 
-        WHERE usuario_id = ? 
-          AND fornecedor IS NOT NULL 
-          AND fornecedor <> ''
-        ORDER BY fornecedor ASC`,
-      [usuarioId]
-    );
-    return rows.map(r => r.fornecedor);
-  },
+    const sets = [];
+    const values = [];
 
-  // Criação com normalizações
-  create: async (dados, usuarioId) => {
-    const conn = await db.getConnection();
-    try {
-      await conn.beginTransaction();
-
-      const {
-        produto,
-        categoria,
-        quantidade,
-        quantidade_minima,
-        valor,
-        unidade_medida,
-        validade,
-        fornecedor
-      } = dados;
-
-      const qte = toNumberOrNull(quantidade) ?? 0;
-      const qteMin = toNumberOrNull(quantidade_minima) ?? 0;
-      const vlr = toNumberOrNull(valor) ?? 0;
-      const val = toNull(validade); // se vier '' vira NULL
-
-      await conn.query(
-        `INSERT INTO estoque 
-          (produto, categoria, quantidade, quantidade_minima, valor, unidade_medida, validade, fornecedor, usuario_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          produto,
-          toNull(categoria),
-          qte,
-          qteMin,
-          vlr,
-          toNull(unidade_medida),
-          val,
-          toNull(fornecedor),
-          usuarioId
-        ]
-      );
-
-      await conn.commit();
-    } catch (error) {
-      await conn.rollback();
-      throw error;
-    } finally {
-      conn.release();
+    for (const [col, val] of Object.entries(whitelist)) {
+      if (val !== undefined) {
+        sets.push(`${col} = ?`);
+        values.push(val);
+      }
     }
+
+    if (sets.length === 0) {
+      return { affectedRows: 0, warning: 'no_fields' };
+    }
+
+    values.push(Number(id), usuarioId);
+
+    const sql = `
+      UPDATE estoque
+         SET ${sets.join(', ')}
+       WHERE id = ? AND usuario_id = ?
+    `;
+
+    const [result] = await pool.query(sql, values);
+    return result;
   },
 
-  update: async (id, dados, usuarioId) => {
-    const conn = await db.getConnection();
-    try {
-      await conn.beginTransaction();
-
-      const {
-        produto,
-        categoria,
-        quantidade,
-        quantidade_minima,
-        valor,
-        unidade_medida,
-        validade,
-        fornecedor
-      } = dados;
-
-      const qte = toNumberOrNull(quantidade);
-      const qteMin = toNumberOrNull(quantidade_minima);
-      const vlr = toNumberOrNull(valor);
-      const val = toNull(validade);
-
-      await conn.query(
-        `UPDATE estoque 
-            SET produto = ?,
-                categoria = ?,
-                quantidade = ?,
-                quantidade_minima = ?,
-                valor = ?,
-                unidade_medida = ?,
-                validade = ?,
-                fornecedor = ?
-          WHERE id = ? AND usuario_id = ?`,
-        [
-          produto,
-          toNull(categoria),
-          qte,
-          qteMin,
-          vlr,
-          toNull(unidade_medida),
-          val,
-          toNull(fornecedor),
-          id,
-          usuarioId
-        ]
-      );
-
-      await conn.commit();
-    } catch (error) {
-      await conn.rollback();
-      throw error;
-    } finally {
-      conn.release();
-    }
-  },
-
-  delete: async (id, usuarioId) => {
-    const conn = await db.getConnection();
-    try {
-      await conn.beginTransaction();
-
-      await conn.query(
-        'DELETE FROM estoque WHERE id = ? AND usuario_id = ?',
-        [id, usuarioId]
-      );
-
-      await conn.commit();
-    } catch (error) {
-      await conn.rollback();
-      throw error;
-    } finally {
-      conn.release();
-    }
+  async delete(id, usuarioId) {
+    const sql = `DELETE FROM estoque WHERE id = ? AND usuario_id = ?`;
+    const [result] = await pool.query(sql, [Number(id), usuarioId]);
+    return result.affectedRows > 0;
   }
 };

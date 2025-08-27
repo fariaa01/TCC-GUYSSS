@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Carrinho de Compras</title>
+  <link rel="stylesheet" href="/cardapio/cardapio.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="topbar">
+      <h1>Carrinho de Compras</h1>
+      <a href="/cardapio" class="btn-ghost">Voltar ao cardápio</a>
+    </header>
+
+    <% if (!carrinho || carrinho.length === 0) { %>
+      <p class="vazio">Seu carrinho está vazio.</p>
+    <% } else { %>
+      <table class="tabela-carrinho">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Preço</th>
+            <th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% let total = 0; %>
+          <% carrinho.forEach(function(item) { 
+               const subtotal = Number(item.preco) * (item.quantidade || 1);
+               total += subtotal;
+          %>
+            <tr>
+              <td><%= item.nome_prato %></td>
+              <td><%= item.quantidade || 1 %></td>
+              <td>R$ <%= Number(item.preco).toFixed(2).replace('.', ',') %></td>
+              <td>R$ <%= subtotal.toFixed(2).replace('.', ',') %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" style="text-align:right"><strong>Total:</strong></td>
+            <td><strong>R$ <%= total.toFixed(2).replace('.', ',') %></strong></td>
+          </tr>
+        </tfoot>
+      </table>
+      <a href="/finalizar" class="btn btn-primary">Finalizar Pedido</a>
+    <% } %>
+  </div>
+</body>
+</html>

@@ -8,10 +8,13 @@
 </head>
 <body>
   <div class="container">
-    <header class="topbar">
-      <h1><%= empresaNome %></h1>
-      <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
-    </header>
+  <header class="topbar">
+  <h1><%= empresaNome %></h1>
+  <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
+  <a href="/carrinho" class="btn-carrinho" aria-label="Ver carrinho">
+    🛒 Carrinho
+  </a>
+</header>
     <% 
       const temCategorias = (typeof categorias !== 'undefined' && Array.isArray(categorias) && categorias.length > 0);
       const listaChips = temCategorias ? categorias : ['Todos','Bebidas','Hamburguer','Salada','Apimentados','Doces'];
@@ -50,20 +53,22 @@
                 <p class="desc muted">Sem descrição.</p>
               <% } %>
 
-              <div class="card-footer">
-                <strong class="preco">R$ <%= Number(i.preco).toFixed(2).replace('.', ',') %></strong>
-                <form method="POST" action="/carrinho/adicionar" class="acao">
-                  <input type="hidden" name="item_id" value="<%= i.id %>">
-                  <button type="submit" class="btn" aria-label="Adicionar <%= i.nome_prato %> ao carrinho">
-                    Adicionar
-                  </button>
-                </form>
-              </div>
+    <div class="card-footer">
+  <strong class="preco">R$ <%= Number(i.preco).toFixed(2).replace('.', ',') %></strong>
+<button 
+  class="btn adicionar-carrinho" 
+  data-id="<%= i.id %>" 
+  aria-label="Adicionar <%= i.nome_prato %> ao carrinho">
+  Adicionar
+</button>
+</div>
             </div>
           </div>
         <% }) %>
       </div>
     <% } %>
   </div>
+  <script src="/public/cardapio/cardapio.js"></script>
+   <script src="/cardapio/cardapio.js"></script>
 </body>
 </html>

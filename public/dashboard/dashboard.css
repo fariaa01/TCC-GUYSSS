@@ -223,6 +223,23 @@ h1 { margin: 8px 0 14px; font-size: 22px; font-weight: 700; color: #1f2a23; }
   height: 340px !important;
 }
 
+.btn-voltar {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 28px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 4px 12px rgba(47,163,107,0.18);
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-voltar:hover {
+  background: var(--brand-700);
+  transform: translateY(1px) scale(0.98);
+}
+
 .rotate { animation: spin .4s ease; }
 @keyframes spin { from { transform: rotate(0); } to { transform: rotate(180deg); } }
 

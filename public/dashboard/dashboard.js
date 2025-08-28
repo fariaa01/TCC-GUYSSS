@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const nomeAtual = "<%= nome_empresa || '' %>";
-  
+
   async function promptNomeEmpresa() {
     const { value: nomeEmpresa } = await Swal.fire({
       title: 'Bem-vindo!',
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       buttonsStyling: false,
       customClass: {
         actions: 'swal2-actions',
-        confirmButton: 'btn btn-voltar' 
+        confirmButton: 'btn btn-voltar'
       },
       inputValidator: (value) => {
         if (!value || value.trim() === '') {
@@ -60,13 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Chart.js
   const dadosEntradas = JSON.parse('<%= JSON.stringify(entradas) %>');
-  const dadosSaidas   = JSON.parse('<%= JSON.stringify(saidas) %>');
+  const dadosSaidas = JSON.parse('<%= JSON.stringify(saidas) %>');
 
   const ctx = document.getElementById('grafico');
   new Chart(ctx, {
     type: 'line',
     data: {
-      labels: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+      labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
       datasets: [
         {
           label: 'Entradas',
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         legend: { labels: { font: { size: 14 } } },
         tooltip: {
           callbacks: {
-            label: function(context) {
+            label: function (context) {
               let label = context.dataset.label || '';
               if (label) label += ': ';
               if (context.parsed.y !== null) {
@@ -108,15 +108,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  const toggleBtn   = document.getElementById('toggleSidebar');
-  const sidebar     = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('toggleSidebar');
+  const sidebar = document.getElementById('sidebar');
   const mainContent = document.getElementById('mainContent');
-  const icon        = toggleBtn.querySelector('i');
+  const icon = toggleBtn.querySelector('i');
 
   toggleBtn.addEventListener('click', () => {
     sidebar.classList.toggle('open');
     mainContent.classList.toggle('sidebar-hidden');
     icon.classList.add('rotate');
+    // Troca o ícone corretamente
+    if (sidebar.classList.contains('open')) {
+      icon.classList.remove('fa-solid', 'fa-x');
+      icon.classList.add('fas', 'fa-bars');
+    } else {
+      icon.classList.remove('fas', 'fa-bars');
+      icon.classList.add('fa-solid', 'fa-x');
+    }
     setTimeout(() => icon.classList.remove('rotate'), 400);
   });
 });

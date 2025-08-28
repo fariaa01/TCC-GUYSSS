@@ -4,7 +4,6 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-
 const security = require('./middlewares/security');
 const tourFlag = require('./middlewares/tourFlag');
 

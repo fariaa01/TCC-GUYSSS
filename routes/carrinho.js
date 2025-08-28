@@ -33,7 +33,7 @@ router.post('/', async(req, res) => {
             });
         }
 
-        // Soma total de itens no carrinho
+
         const qtdCarrinho = req.session.carrinho.reduce((soma, item) => soma + (item.quantidade || 1), 0);
 
         res.json({ ok: true, msg: 'Adicionado ao carrinho', qtdCarrinho });

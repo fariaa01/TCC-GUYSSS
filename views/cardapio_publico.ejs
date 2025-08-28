@@ -1,74 +1,84 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title><%= empresaNome %> — Cardápio</title>
-  <link rel="stylesheet" href="/cardapio/cardapio.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+        <%= empresaNome %> — Cardápio</title>
+    <link rel="stylesheet" href="/cardapio/cardapio.css" />
 </head>
+
 <body>
-  <div class="container">
-  <header class="topbar">
-  <h1><%= empresaNome %></h1>
-  <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
-  <a href="/carrinho" class="btn-carrinho" aria-label="Ver carrinho">
+    <div class="container">
+        <header class="topbar">
+            <h1>
+                <%= empresaNome %>
+            </h1>
+            <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
+            <a href="/carrinho" class="btn-carrinho" aria-label="Ver carrinho">
     🛒 Carrinho
   </a>
-</header>
-    <% 
+        </header>
+        <% 
       const temCategorias = (typeof categorias !== 'undefined' && Array.isArray(categorias) && categorias.length > 0);
       const listaChips = temCategorias ? categorias : ['Todos','Bebidas','Hamburguer','Salada','Apimentados','Doces'];
     %>
-    <nav class="filtros" aria-label="Categorias do cardápio">
-      <% listaChips.forEach(function(c, idx){ %>
-        <button class="chip <%= idx === 0 ? 'is-active' : '' %>" type="button"><%= c %></button>
-      <% }) %>
-      <button class="btn-primary" type="button">Ver tudo</button>
-    </nav>
+            <nav class="filtros" aria-label="Categorias do cardápio">
+                <% listaChips.forEach(function(c, idx){ %>
+                    <button class="chip <%= idx === 0 ? 'is-active' : '' %>" type="button"><%= c %></button>
+                    <% }) %>
+                        <button class="btn-primary" type="button">Ver tudo</button>
+            </nav>
 
-    <% if (!itens || !itens.length) { %>
-      <p class="vazio">Este restaurante ainda não tem itens no cardápio.</p>
-    <% } else { %>
-      <div class="grid-cards">
-        <% itens.forEach(function(i){ %>
-          <div class="card" data-cat="<%= i.categoria || 'Outros' %>">
-            <% if (i.desconto) { %>
-              <span class="badge"><%= i.desconto %>%</span>
-            <% } %>
-            <% if (typeof i.avaliacao !== 'undefined' && i.avaliacao !== null) { %>
-              <span class="price-badge"><%= Number(i.avaliacao).toFixed(1) %> ★</span>
-            <% } %>
+            <% if (!itens || !itens.length) { %>
+                <p class="vazio">Este restaurante ainda não tem itens no cardápio.</p>
+                <% } else { %>
+                    <div class="grid-cards">
+                        <% itens.forEach(function(i){ %>
+                            <div class="card" data-cat="<%= i.categoria || 'Outros' %>">
+                                <% if (i.desconto) { %>
+                                    <span class="badge"><%= i.desconto %>%</span>
+                                    <% } %>
+                                        <% if (typeof i.avaliacao !== 'undefined' && i.avaliacao !== null) { %>
+                                            <span class="price-badge"><%= Number(i.avaliacao).toFixed(1) %> ★</span>
+                                            <% } %>
 
-            <% if (i.imagem) { %>
-              <img src="/uploads/<%= i.imagem %>" alt="<%= i.nome_prato %>">
-            <% } else { %>
-              <div class="img-placeholder" aria-label="Sem imagem"></div>
-            <% } %>
+                                                <% if (i.imagem) { %>
+                                                    <img src="/uploads/<%= i.imagem %>" alt="<%= i.nome_prato %>">
+                                                    <% } else { %>
+                                                        <div class="img-placeholder" aria-label="Sem imagem"></div>
+                                                        <% } %>
 
-            <div class="card-body">
-              <h3 class="titulo"><%= i.nome_prato %></h3>
-              <% if (i.descricao) { %>
-                <p class="desc"><%= i.descricao %></p>
-              <% } else { %>
-                <p class="desc muted">Sem descrição.</p>
-              <% } %>
+                                                            <div class="card-body">
+                                                                <h3 class="titulo">
+                                                                    <%= i.nome_prato %>
+                                                                </h3>
+                                                                <% if (i.descricao) { %>
+                                                                    <p class="desc">
+                                                                        <%= i.descricao %>
+                                                                    </p>
+                                                                    <% } else { %>
+                                                                        <p class="desc muted">Sem descrição.</p>
+                                                                        <% } %>
 
-    <div class="card-footer">
-  <strong class="preco">R$ <%= Number(i.preco).toFixed(2).replace('.', ',') %></strong>
-<button 
-  class="btn adicionar-carrinho" 
-  data-id="<%= i.id %>" 
-  aria-label="Adicionar <%= i.nome_prato %> ao carrinho">
+                                                                            <div class="card-footer">
+                                                                                <strong class="preco">R$ <%= Number(i.preco).toFixed(2).replace('.', ',') %></strong>
+                                                                                <button class="btn adicionar-carrinho" data-id="<%= i.id %>" aria-label="Adicionar <%= i.nome_prato %> ao carrinho">
   Adicionar
 </button>
-</div>
-            </div>
-          </div>
-        <% }) %>
-      </div>
-    <% } %>
-  </div>
-  <script src="/public/cardapio/cardapio.js"></script>
-   <script src="/cardapio/cardapio.js"></script>
+
+                                                                            </div>
+                                                            </div>
+                            </div>
+                            <% }) %>
+                    </div>
+                    <% } %>
+    </div>
+    <script src="/public/cardapio/cardapio.js"></script>
+
+    <script src="/cardapio/cardapio.js"></script>
+
 </body>
+
 </html>

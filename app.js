@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 const security = require('./middlewares/security');
 const tourFlag = require('./middlewares/tourFlag');
-const requireCliente = require('./middlewares/requireCliente');
+// const requireCliente = require('./middlewares/requireCliente'); // não vamos usar direto aqui
 
 const clienteAuthRoutes = require('./routes/clienteAuthRoutes');
 
@@ -24,7 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// segurança (sua middleware custom)
+// segurança (middleware custom)
 app.use(security);
 
 // sessão
@@ -34,6 +34,17 @@ app.use(session({
   saveUninitialized: false,
   cookie: { sameSite: 'lax' }
 }));
+
+// Habilita proxy e força HTTP em dev se o browser insistir em HTTPS
+app.enable('trust proxy');
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    if (req.secure) {
+      return res.redirect('http://' + req.headers.host + req.url);
+    }
+    next();
+  });
+}
 
 // views e estáticos
 app.set('view engine', 'ejs');
@@ -45,7 +56,7 @@ app.use(tourFlag);
 
 // locals globais para as views
 app.use((req, res, next) => {
-  res.locals.usuarioId   = req.session.userId || null;       // se você usar para dono/admin
+  res.locals.usuarioId   = req.session.userId || null;       // dono/admin
   res.locals.empresaId   = req.session.empresaId || null;    // opcional
   res.locals.clienteId   = req.session.clienteId || null;    // login do cliente (checkout)
   res.locals.empresaNome = (req.session?.empresa?.nome)
@@ -54,7 +65,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// rotas
+// rotas principais
 app.use('/tour', require('./routes/tour'));
 app.use('/', require('./routes/auth'));
 app.use('/cardapio', require('./routes/cardapio'));
@@ -72,15 +83,13 @@ app.use('/gastos-fixos', require('./routes/gastos-fixo'));
 app.use('/pedidos', require('./routes/pedido'));
 app.use('/carrinho', require('./routes/carrinho'));
 
-
-
 // rotas de autenticação do cliente (status/login/cadastro/logout)
 app.use('/', clienteAuthRoutes);
 
-// página protegida de checkout (exige cliente logado)
-app.get('/checkout', requireCliente, (req, res) => {
+// checkout (liberado para convidado ou logado)
+app.get('/checkout', (req, res) => {
   res.render('checkout', {
-    clienteId: req.session.clienteId
+    clienteId: req.session.clienteId || null
   });
 });
 
@@ -101,7 +110,7 @@ app.use((req, res) => {
 // start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 
 module.exports = app;

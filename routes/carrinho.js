@@ -1,46 +1,24 @@
+// routes/carrinho.js
 const express = require('express');
 const router = express.Router();
-const Menu = require('../models/menuModel');
+const ctrl = require('../controllers/carrinhoController');
 
-router.get('/', (req, res) => {
-  const carrinho = req.session.carrinho || [];
-  res.render('carrinho', { carrinho });
-});
+// GET /carrinho -> retorna carrinho atual (pedido em rascunho + itens)
+router.get('/', ctrl.getCarrinho);
 
-router.post('/', async (req, res) => {
-  try {
-    const itemId = Number(req.body.item_id);
-    if (!itemId) {
-      return res.status(400).json({ ok: false, msg: 'ID inválido' });
-    }
+// GET /carrinho/itens -> só itens do carrinho (atalho)
+router.get('/itens', ctrl.getCarrinho);
 
-    const prato = await Menu.getById(itemId);
-    if (!prato) {
-      return res.status(404).json({ ok: false, msg: 'Prato não encontrado' });
-    }
+// POST /carrinho/itens -> adiciona item { produto_id, nome, preco, qtd }
+router.post('/itens', ctrl.addItem);
 
-    if (!req.session.carrinho) req.session.carrinho = [];
+// PATCH /carrinho/itens/:id -> atualiza quantidade de um item
+router.patch('/itens/:id', ctrl.updateQty);
 
-    // Verifica se o item já está no carrinho
-    const existente = req.session.carrinho.find(item => item.id === prato.id);
-    if (existente) {
-      existente.quantidade = (existente.quantidade || 1) + 1;
-    } else {
-      // Cria um novo objeto para evitar mutação do original
-      req.session.carrinho.push({
-        ...prato,
-        quantidade: 1
-      });
-    }
+// DELETE /carrinho/itens/:id -> remove item
+router.delete('/itens/:id', ctrl.removeItem);
 
-    // Soma total de itens no carrinho
-    const qtdCarrinho = req.session.carrinho.reduce((soma, item) => soma + (item.quantidade || 1), 0);
-
-    res.json({ ok: true, msg: 'Adicionado ao carrinho', qtdCarrinho });
-  } catch (err) {
-    console.error('Erro ao adicionar ao carrinho:', err);
-    res.status(500).json({ ok: false, msg: 'Erro interno do servidor' });
-  }
-});
+// POST /carrinho/checkout -> finaliza pedido (convidado ou logado)
+router.post('/checkout', ctrl.checkout);
 
 module.exports = router;

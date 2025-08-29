@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= empresaNome %> — Checkout</title>
+  <link rel="stylesheet" href="/cardapio/cardapio.css"/>
+  <style>
+    /* pode usar o CSS do checkout que você já me passou */
+    .wrap{max-width:900px;margin:24px auto;padding:0 16px}
+    .panel{background:#fff;border:1px solid #e9eef3;border-radius:16px;padding:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .form-grid .full{grid-column:1/-1}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field input,.field select{border:1px solid #e9eef3;border-radius:12px;padding:10px 12px}
+    .btn-primary{width:100%;padding:12px 14px;border-radius:12px;border:0;background:linear-gradient(90deg,#3b5bff,#5a59ff);color:#fff;font-weight:800;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Checkout</h1>
+
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Seu pedido</h3>
+      <div id="lista-itens"></div>
+      <hr class="line"/>
+      <div class="row"><span>Itens</span><strong id="sumSubtotal">R$ 0,00</strong></div>
+      <div class="row"><span>Taxas</span><strong id="sumTax">R$ 0,00</strong></div>
+      <div class="row total"><span>Total</span><strong id="sumTotal">R$ 0,00</strong></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Identificação</h3>
+      <p class="sub">Você pode finalizar como convidado. Se preferir, <a href="#" id="btnAbrirLogin">entrar/criar conta</a>.</p>
+      <div class="form-grid">
+        <label class="field full">
+          <span>Nome</span>
+          <input id="guest_nome" placeholder="Seu nome" required>
+        </label>
+        <label class="field full">
+          <span>Telefone / WhatsApp</span>
+          <input id="guest_tel" placeholder="(DDD) 9 9999-9999" required>
+        </label>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:14px">
+      <h3>Entrega</h3>
+      <div class="form-grid">
+        <label class="field full"><span>Rua</span><input id="ent_rua" placeholder="Rua / Avenida"></label>
+        <label class="field"><span>Número</span><input id="ent_num"></label>
+        <label class="field"><span>Bairro</span><input id="ent_bairro"></label>
+        <label class="field"><span>Cidade</span><input id="ent_cidade"></label>
+        <label class="field"><span>UF</span><input id="ent_uf" maxlength="2"></label>
+        <label class="field"><span>CEP</span><input id="ent_cep"></label>
+        <label class="field full"><span>Complemento</span><input id="ent_comp"></label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Pagamento</h3>
+      <div class="form-grid">
+        <label class="field full">
+          <span>Método</span>
+          <select id="pay_method">
+            <option value="cash">Dinheiro</option>
+            <option value="debit">Débito</option>
+            <option value="credit">Crédito</option>
+            <option value="pix">Pix</option>
+          </select>
+        </label>
+        <label class="field full">
+          <span>Observações</span>
+          <input id="obs" placeholder="Ex.: sem cebola, ponto da carne, troco para R$ 50...">
+        </label>
+      </div>
+      <button class="btn-primary" id="btnFinalizar">Finalizar pedido</button>
+      <p id="fb" class="muted" style="margin-top:8px;"></p>
+    </div>
+  </div>
+
+  <!-- (Opcional) reuso do seu modal de login/cadastro -->
+  <%- include('partials/auth-modal'); %>
+
+  <script nonce="<%= cspNonce %>">
+  (function(){
+    const fmt = v => 'R$ ' + Number(v||0).toFixed(2).replace('.',',');
+
+    async function getJSON(u){ const r=await fetch(u,{credentials:'include'}); const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j?.erro||('Erro '+r.status)); return j; }
+    async function sendJSON(m,u,b){ const r=await fetch(u,{method:m,headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(b||{})}); const j=await r.json().catch(()=>({})); if(!r.ok||j?.erro) throw new Error(j?.erro||('Erro '+r.status)); return j; }
+
+    const elList = document.getElementById('lista-itens');
+    const elSub  = document.getElementById('sumSubtotal');
+    const elTax  = document.getElementById('sumTax');
+    const elTot  = document.getElementById('sumTotal');
+    const fb     = document.getElementById('fb');
+    const btn    = document.getElementById('btnFinalizar');
+
+    function line(it){
+      const p = Number(it.preco_unitario ?? it.preco ?? 0);
+      const q = Number(it.quantidade ?? 1);
+      const s = Number(it.subtotal ?? (p*q));
+      const nome = it.nome_produto || it.nome || 'Item';
+      return `<div class="row"><span>${nome} × ${q}</span><strong>${fmt(s)}</strong></div>`;
+    }
+
+    async function loadCart(){
+      const data = await getJSON('/carrinho');
+      const itens = Array.isArray(data?.itens)?data.itens:[];
+      elList.innerHTML = itens.length ? itens.map(line).join('') : '<p class="muted">Seu carrinho está vazio.</p>';
+      const subtotal = itens.reduce((s,i)=> s + Number(i.subtotal ?? (Number(i.preco_unitario||0)*(Number(i.quantidade||1)))), 0);
+      const taxas = 0;
+      elSub.textContent = fmt(subtotal);
+      elTax.textContent = fmt(taxas);
+      elTot.textContent = fmt(subtotal + taxas);
+    }
+
+    document.getElementById('btnFinalizar')?.addEventListener('click', async ()=>{
+      fb.textContent = '';
+      btn.disabled = true;
+      try{
+        const guest = {
+          nome: document.getElementById('guest_nome')?.value?.trim(),
+          telefone: document.getElementById('guest_tel')?.value?.trim(),
+          entrega: {
+            rua: document.getElementById('ent_rua')?.value?.trim(),
+            numero: document.getElementById('ent_num')?.value?.trim(),
+            bairro: document.getElementById('ent_bairro')?.value?.trim(),
+            cidade: document.getElementById('ent_cidade')?.value?.trim(),
+            uf: document.getElementById('ent_uf')?.value?.trim(),
+            cep: document.getElementById('ent_cep')?.value?.trim(),
+            complemento: document.getElementById('ent_comp')?.value?.trim(),
+          },
+          pagamento: document.getElementById('pay_method')?.value || 'cash'
+        };
+
+        // se já estiver logado, o backend ignora 'guest'; se não, usa 'guest'
+        const payload = {
+          statusFinal: 'aberto',
+          observacoes: document.getElementById('obs')?.value || '',
+          guest
+        };
+
+        const resp = await sendJSON('POST','/carrinho/checkout', payload);
+        alert('Pedido criado! ID: ' + (resp?.pedidoId || '—'));
+        window.location.href = '/pedidos';
+      }catch(e){
+        // Se backend ainda exigir login, vai indicar needLogin
+        fb.textContent = e.message || 'Não foi possível finalizar.';
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    // abrir modal de login/cadastro se quiser logar no checkout
+    document.getElementById('btnAbrirLogin')?.addEventListener('click', (e)=>{
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: { tab: 'login' } }));
+    });
+
+    loadCart().catch(err=>{
+      fb.textContent = err.message || 'Falha ao carregar carrinho';
+    });
+  })();
+  </script>
+</body>
+</html>

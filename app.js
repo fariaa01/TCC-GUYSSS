@@ -7,42 +7,54 @@ const crypto = require('crypto');
 
 const security = require('./middlewares/security');
 const tourFlag = require('./middlewares/tourFlag');
+const requireCliente = require('./middlewares/requireCliente');
+
+const clienteAuthRoutes = require('./routes/clienteAuthRoutes');
 
 const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-    res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
-    next();
-});
-
-app.use(security);
-
-app.use(cookieParser());
+// parsers
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({ limit: '2mb' }));
+app.use(cookieParser());
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'segredo_super_secreto',
-    resave: false,
-    saveUninitialized: false,
-    cookie: { sameSite: 'lax' }
-}));
-
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use(tourFlag);
-
+// CSP nonce para inline scripts nas views
 app.use((req, res, next) => {
-    res.locals.usuarioId = req.session.userId || null;
-    res.locals.empresaId = req.session.empresaId || null;
-    next();
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
 });
 
+// segurança (sua middleware custom)
+app.use(security);
+
+// sessão
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'segredo_super_secreto',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { sameSite: 'lax' }
+}));
+
+// views e estáticos
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// feature flags/tour
+app.use(tourFlag);
+
+// locals globais para as views
+app.use((req, res, next) => {
+  res.locals.usuarioId   = req.session.userId || null;       // se você usar para dono/admin
+  res.locals.empresaId   = req.session.empresaId || null;    // opcional
+  res.locals.clienteId   = req.session.clienteId || null;    // login do cliente (checkout)
+  res.locals.empresaNome = (req.session?.empresa?.nome)
+                        || (req.session?.empresaNome)
+                        || 'Minha Empresa';
+  next();
+});
+
+// rotas
 app.use('/tour', require('./routes/tour'));
 app.use('/', require('./routes/auth'));
 app.use('/cardapio', require('./routes/cardapio'));
@@ -59,21 +71,37 @@ app.use('/fornecedores', require('./routes/fornecedores'));
 app.use('/gastos-fixos', require('./routes/gastos-fixo'));
 app.use('/pedidos', require('./routes/pedido'));
 app.use('/carrinho', require('./routes/carrinho'));
-app.get('/healthz', (_req, res) => res.status(200).send('ok'));
 
-app.use((req, res) => {
-    res.status(404);
-    try {
-        return res.render('404');
-    } catch (e) {
-        if (req.accepts('json')) return res.json({ error: 'Not found' });
-        return res.type('txt').send('Not found');
-    }
+
+
+// rotas de autenticação do cliente (status/login/cadastro/logout)
+app.use('/', clienteAuthRoutes);
+
+// página protegida de checkout (exige cliente logado)
+app.get('/checkout', requireCliente, (req, res) => {
+  res.render('checkout', {
+    clienteId: req.session.clienteId
+  });
 });
 
+// healthcheck
+app.get('/healthz', (_req, res) => res.status(200).send('ok'));
+
+// 404
+app.use((req, res) => {
+  res.status(404);
+  try {
+    return res.render('404');
+  } catch (e) {
+    if (req.accepts('json')) return res.json({ error: 'Not found' });
+    return res.type('txt').send('Not found');
+  }
+});
+
+// start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
 
 module.exports = app;

@@ -1,0 +1,131 @@
+body {
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background:#f4f6f8;
+  color:#1f2937;
+}
+
+.layout {
+  display:flex;
+  min-height:100vh;
+}
+
+.conteudo {
+  flex:1;
+  padding:20px;
+}
+
+.sidebar {
+  width:350px;
+  background:#fff;
+  border-left:1px solid #e5e7eb;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  box-shadow:-2px 0 8px rgba(0,0,0,.05);
+}
+
+.sidebar header {
+  margin-bottom:20px;
+}
+.sidebar header h2 {
+  margin:0 0 12px;
+}
+.tabs {
+  display:flex;
+  gap:6px;
+}
+.tab {
+  flex:1;
+  padding:8px;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  background:#f9fafb;
+  font-size:14px;
+  cursor:pointer;
+}
+.tab.active {
+  background:#1abc9c;
+  color:#fff;
+  border-color:#1abc9c;
+}
+
+.cart-list {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  overflow-y:auto;
+}
+
+.item {
+  display:grid;
+  grid-template-columns: 60px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:10px;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.item img {
+  width:60px; height:60px;
+  border-radius:8px;
+  object-fit:cover;
+}
+.item .info { font-size:14px; }
+.item .nome { font-weight:600; display:block; }
+.item .preco-unit { color:#6b7280; font-size:12px; }
+.item .acoes { display:flex; align-items:center; gap:6px; }
+.item input { width:40px; text-align:center; }
+
+.resumo {
+  border-top:1px solid #e5e7eb;
+  padding-top:12px;
+  margin-top:12px;
+}
+.resumo .linha {
+  display:flex; justify-content:space-between;
+  margin-bottom:8px;
+}
+.resumo .linha.total { font-size:16px; font-weight:600; }
+
+.pagamentos {
+  margin:16px 0;
+}
+.pagamentos h4 { margin-bottom:8px; }
+.opcoes { display:flex; gap:8px; }
+.pay {
+  flex:1;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:8px;
+  background:#f9fafb;
+  cursor:pointer;
+}
+.pay.active {
+  background:#1abc9c;
+  color:#fff;
+  border-color:#1abc9c;
+}
+
+footer {
+  display:flex; flex-direction:column; gap:10px;
+}
+.btn-primary, .btn-outline {
+  padding:12px;
+  text-align:center;
+  border-radius:10px;
+  text-decoration:none;
+  font-weight:600;
+}
+.btn-primary {
+  background:#1abc9c;
+  color:#fff;
+  border:none;
+}
+.btn-outline {
+  border:1px solid #e5e7eb;
+  background:#fff;
+}

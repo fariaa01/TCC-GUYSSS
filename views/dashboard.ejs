@@ -15,7 +15,7 @@
 </head>
 <body>
   <div class="layout" data-aos="zoom-in-left">
-    <aside id="sidebar" class="sidebar open">
+    <aside id="sidebar" class="sidebar">
       <h2 id="nomeEmpresa"><%= nome_empresa || 'Meu Sistema' %></h2>
       <nav>
         <a href="/estoque"><i class="fas fa-boxes"></i> Estoque</a>
@@ -96,8 +96,8 @@
                 icon: 'error',
                 title: 'Erro',
                 text: 'Não foi possível salvar o nome.',
-                buttonsStyling: false,
-                customClass: { confirmButton: 'btn btn-voltar', actions: 'swal2-actions' }
+                buttonsStyling: false,  
+                customClass: { confirmButton: 'btn btn-voltar', actions: 'swal2-actions' ,  }
               });
             }
           } catch (e) {
@@ -162,19 +162,29 @@
       }
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const toggleBtn = document.getElementById('toggleSidebar');
-      const sidebar = document.getElementById('sidebar');
-      const mainContent = document.getElementById('mainContent');
-      const icon = toggleBtn.querySelector('i');
+     document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const icon = toggleBtn.querySelector('i');
 
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        mainContent.classList.toggle('sidebar-hidden');
-        icon.classList.add('rotate');
-        setTimeout(() => icon.classList.remove('rotate'), 400);
-      });
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      mainContent.classList.toggle('sidebar-hidden');
+
+      // troca o ícone entre "bars" e "times"
+      if (sidebar.classList.contains('open')) {
+        icon.classList.remove('fa-bars');
+        icon.classList.add('fa-times');
+      } else {
+        icon.classList.remove('fa-times');
+        icon.classList.add('fa-bars');
+      }
+      
+      icon.classList.add('rotate');
+      setTimeout(() => icon.classList.remove('rotate'), 400);
     });
+  });
   </script>
 
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

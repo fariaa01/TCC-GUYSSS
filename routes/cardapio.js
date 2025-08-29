@@ -6,3 +6,4 @@ router.get('/', (req, res) => res.redirect('/restaurantes'));
 router.get('/u/:usuarioId', menuController.publicoPorUsuario);
 
 module.exports = router;
+    

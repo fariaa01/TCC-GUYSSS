@@ -14,9 +14,9 @@
           <h1><%= empresaNome %></h1>
           <div style="display:flex; gap:10px; align-items:center;">
             <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
-            <button type="button" id="btnToggleCart" class="btn-carrinho" aria-label="Ver carrinho">
+            <button type="button" id="btnToggleCart" class="btn-carrinho" aria-label="Ver carrinho" data-endpoint-listar="/carrinho">
               <span class="icon" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M6 6h15l-2 8H8L6 6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
                   <path d="M6 6 5 3H2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                   <circle cx="9.5" cy="18.5" r="1.6" fill="currentColor"/>
@@ -36,9 +36,9 @@
 
         <nav class="filtros" aria-label="Categorias do cardápio">
           <% listaChips.forEach(function(c, idx){ %>
-            <button class="chip <%= idx === 0 ? 'is-active' : '' %>" type="button"><%= c %></button>
+            <button class="chip <%= idx === 0 ? 'is-active' : '' %>" type="button" data-filter="<%= c %>"><%= c %></button>
           <% }) %>
-          <button class="btn-primary" type="button">Ver tudo</button>
+          <button class="btn-primary" type="button" id="btnVerTudo">Ver tudo</button>
         </nav>
 
         <% if (!itens || !itens.length) { %>
@@ -55,7 +55,7 @@
                 <% } %>
 
                 <% if (i.imagem) { %>
-                  <img src="/uploads/<%= i.imagem %>" alt="<%= i.nome_prato %>">
+                  <img src="/uploads/<%= i.imagem %>" alt="<%= i.nome_prato || 'Item do cardápio' %>">
                 <% } else { %>
                   <div class="img-placeholder" aria-label="Sem imagem"></div>
                 <% } %>
@@ -72,11 +72,14 @@
                   <div class="card-footer">
                     <strong class="preco">R$ <%= Number(i.preco).toFixed(2).replace('.', ',') %></strong>
                     <button
+                      type="button"
                       class="btn adicionar-carrinho"
+                      data-produto-id="<%= i.id %>"                      <!-- menu.id -->
                       data-id="<%= i.id %>"
                       data-preco="<%= Number(i.preco) %>"
                       data-nome ="<%= i.nome_prato %>"
                       data-img  ="<%= i.imagem ? ('/uploads/' + i.imagem) : '' %>"
+                      data-endpoint-adicionar="/carrinho/adicionar"
                       aria-label="Adicionar <%= i.nome_prato %> ao carrinho">
                       Adicionar
                     </button>
@@ -89,16 +92,20 @@
       </div>
     </main>
 
-    <aside class="col-carrinho" id="cart">
+    <aside class="col-carrinho" id="cart"
+           data-endpoint-listar="/carrinho"
+           data-endpoint-remover="/carrinho/remover"
+           data-endpoint-atualizar="/carrinho/atualizar"
+           data-endpoint-finalizar="/carrinho/finalizar">
       <header class="cart-header" style="display:flex; align-items:center; gap:10px;">
         <h2 style="margin:0;">Meu Pedido</h2>
         <button type="button" class="cart-close" id="closeCart" aria-label="Fechar">✕</button>
       </header>
 
       <div class="tabs" style="margin-top:8px;">
-        <button class="tab active"  data-mode="dine">Comer no local</button>
-        <button class="tab"         data-mode="pickup">Retirar</button>
-        <button class="tab"         data-mode="delivery">Entrega</button>
+        <button class="tab active"  type="button" data-mode="dine">Comer no local</button>
+        <button class="tab"         type="button" data-mode="pickup">Retirar</button>
+        <button class="tab"         type="button" data-mode="delivery">Entrega</button>
       </div>
 
       <section id="carrinho-container" class="cart-list"></section>
@@ -112,15 +119,15 @@
       <section class="pagamentos">
         <h4>Pagamentos</h4>
         <div class="opcoes">
-          <button class="pay active" data-pay="cash">Dinheiro</button>
-          <button class="pay"        data-pay="debit">Débito</button>
-          <button class="pay"        data-pay="credit">Crédito</button>
-          <button class="pay"        data-pay="ewallet">Pix</button>
+          <button class="pay active" type="button" data-pay="cash">Dinheiro</button>
+          <button class="pay"        type="button" data-pay="debit">Débito</button>
+          <button class="pay"        type="button" data-pay="credit">Crédito</button>
+          <button class="pay"        type="button" data-pay="ewallet">Pix</button>
         </div>
       </section>
 
       <footer class="cart-footer">
-        <button id="limpar" class="btn-outline">Limpar carrinho</button>
+        <button id="limpar" class="btn-outline" type="button">Limpar carrinho</button>
         <a href="/checkout" class="btn-primary" id="ir-checkout">Checkout</a>
       </footer>
     </aside>
@@ -143,7 +150,7 @@
       </nav>
 
       <section id="pane-login" class="auth-pane is-active" role="tabpanel" aria-labelledby="tab-login">
-        <form id="formLogin" class="auth-form" autocomplete="on">
+        <form id="formLogin" class="auth-form" autocomplete="on" data-endpoint-login="/cliente/login">
           <input type="hidden" name="next" value="/checkout" />
           <label class="auth-field">
             <span>Email</span>
@@ -159,7 +166,7 @@
       </section>
 
       <section id="pane-cadastro" class="auth-pane" role="tabpanel" aria-labelledby="tab-cadastro" hidden>
-        <form id="formCadastro" class="auth-form" autocomplete="on">
+        <form id="formCadastro" class="auth-form" autocomplete="on" data-endpoint-cadastro="/cliente/cadastrar">
           <input type="hidden" name="next" value="/checkout" />
           <label class="auth-field">
             <span>Nome</span>

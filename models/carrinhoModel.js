@@ -1,321 +1,180 @@
 // models/carrinhoModel.js
 const pool = require('../db');
-const crypto = require('crypto');
 
-/** Garante uma chave de sessão para carrinho anônimo */
-function ensureCartKey(req) {
-  if (!req.session.cartKey) {
-    req.session.cartKey = crypto.randomBytes(16).toString('hex');
-  }
-  return req.session.cartKey;
-}
-
-/** Busca (ou cria) rascunho por cliente logado */
-async function getOrCreateDraftByCliente(clienteId, conn = pool) {
+async function getRascunhoId(clienteId, conn = pool) {
   const [rows] = await conn.query(
-    'SELECT * FROM pedidos WHERE cliente_id = ? AND status = "rascunho" LIMIT 1',
+    `SELECT id FROM pedidos 
+     WHERE cliente_id = ? AND status = 'rascunho'
+     ORDER BY id DESC LIMIT 1`,
     [clienteId]
   );
-  if (rows[0]) return rows[0];
+  return rows[0]?.id || null;
+}
 
+async function criarRascunho(clienteId, conn = pool) {
   const [ins] = await conn.query(
-    'INSERT INTO pedidos (cliente_id, status, total) VALUES (?, "rascunho", 0)',
+    `INSERT INTO pedidos (cliente_id, status, criado_em, atualizado_em)
+     VALUES (?, 'rascunho', NOW(), NOW())`,
     [clienteId]
   );
-  const [[novo]] = await conn.query('SELECT * FROM pedidos WHERE id = ?', [ins.insertId]);
-  return novo;
+  return ins.insertId;
 }
 
-/** Busca (ou cria) rascunho por sessão anônima */
-async function getOrCreateDraftBySession(sessionKey, conn = pool) {
-  const [rows] = await conn.query(
-    'SELECT * FROM pedidos WHERE session_key = ? AND status = "rascunho" LIMIT 1',
-    [sessionKey]
-  );
-  if (rows[0]) return rows[0];
-
-  const [ins] = await conn.query(
-    'INSERT INTO pedidos (session_key, status, total) VALUES (?, "rascunho", 0)',
-    [sessionKey]
-  );
-  const [[novo]] = await conn.query('SELECT * FROM pedidos WHERE id = ?', [ins.insertId]);
-  return novo;
+async function obterOuCriarRascunhoId(clienteId, conn = pool) {
+  const id = await getRascunhoId(clienteId, conn);
+  if (id) return id;
+  return criarRascunho(clienteId, conn);
 }
 
-/** Retorna (ou cria) o rascunho atual baseando-se em cliente logado ou sessão */
-async function getDraft(req, conn = pool) {
-  if (req.session?.clienteId) {
-    return getOrCreateDraftByCliente(req.session.clienteId, conn);
-  }
-  const key = ensureCartKey(req);
-  return getOrCreateDraftBySession(key, conn);
-}
-
-/** Retorna rascunho + itens */
-async function getDraftWithItems(req) {
-  const pedido = await getDraft(req);
-  const [itens] = await pool.query(
-    'SELECT * FROM pedido_itens WHERE pedido_id = ? ORDER BY id DESC',
-    [pedido.id]
-  );
-  return { pedido, itens };
-}
-
-/** Adiciona item (snapshot de nome/preço) e recalcula total */
-async function addItem(req, { produto_id, nome, preco, qtd = 1 }) {
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const pedido = await getDraft(req, conn);
-
-    // Se existir mesmo produto, só soma a quantidade
-    const [exist] = await conn.query(
-      'SELECT * FROM pedido_itens WHERE pedido_id = ? AND produto_id = ? LIMIT 1',
-      [pedido.id, produto_id]
-    );
-
-    if (exist[0]) {
-      const novoQ = exist[0].quantidade + Number(qtd);
-      const novoS = (Number(preco) * novoQ).toFixed(2);
-      await conn.query(
-        'UPDATE pedido_itens SET quantidade = ?, subtotal = ?, atualizado_em = NOW() WHERE id = ?',
-        [novoQ, novoS, exist[0].id]
-      );
-    } else {
-      const subtotal = (Number(preco) * Number(qtd)).toFixed(2);
-      await conn.query(
-        `INSERT INTO pedido_itens (pedido_id, produto_id, nome_produto, preco_unitario, quantidade, subtotal)
-         VALUES (?,?,?,?,?,?)`,
-        [pedido.id, produto_id, nome, preco, qtd, subtotal]
-      );
-    }
-
-    // Recalcula total do pedido
-    const [[sum]] = await conn.query(
-      'SELECT COALESCE(SUM(subtotal),0) AS soma FROM pedido_itens WHERE pedido_id = ?',
-      [pedido.id]
-    );
-    await conn.query('UPDATE pedidos SET total = ?, atualizado_em = NOW() WHERE id = ?', [sum.soma, pedido.id]);
-    await conn.commit();
-    return pedido.id;
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
-}
-
-/** Atualiza quantidade de um item do rascunho atual */
-async function updateQty(req, itemId, quantidade) {
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const pedido = await getDraft(req, conn);
-
-    const [[item]] = await conn.query(
-      'SELECT * FROM pedido_itens WHERE id = ? AND pedido_id = ? LIMIT 1',
-      [itemId, pedido.id]
-    );
-    if (!item) throw new Error('Item não encontrado no carrinho');
-
-    const qtd = Math.max(1, Number(quantidade));
-    const subtotal = (Number(item.preco_unitario) * qtd).toFixed(2);
-
-    await conn.query(
-      'UPDATE pedido_itens SET quantidade = ?, subtotal = ? WHERE id = ?',
-      [qtd, subtotal, itemId]
-    );
-
-    const [[sum]] = await conn.query(
-      'SELECT COALESCE(SUM(subtotal),0) AS soma FROM pedido_itens WHERE pedido_id = ?',
-      [pedido.id]
-    );
-    await conn.query('UPDATE pedidos SET total = ? WHERE id = ?', [sum.soma, pedido.id]);
-
-    await conn.commit();
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
-}
-
-/** Remove item do rascunho e recalcula total */
-async function removeItem(req, itemId) {
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const pedido = await getDraft(req, conn);
-    await conn.query('DELETE FROM pedido_itens WHERE id = ? AND pedido_id = ?', [itemId, pedido.id]);
-
-    const [[sum]] = await conn.query(
-      'SELECT COALESCE(SUM(subtotal),0) AS soma FROM pedido_itens WHERE pedido_id = ?',
-      [pedido.id]
-    );
-    await conn.query('UPDATE pedidos SET total = ? WHERE id = ?', [sum.soma, pedido.id]);
-
-    await conn.commit();
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
-}
-
-/** Mescla carrinho anônimo na conta do cliente após login/cadastro */
-async function mergeSessionCartIntoCliente(req, clienteId) {
-  if (!req.session?.cartKey) return;
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-
-    const [sessRows] = await conn.query(
-      'SELECT * FROM pedidos WHERE session_key = ? AND status = "rascunho" LIMIT 1',
-      [req.session.cartKey]
-    );
-    if (!sessRows[0]) { await conn.commit(); return; }
-
-    const draftCli = await getOrCreateDraftByCliente(clienteId, conn);
-
-    const [itens] = await conn.query(
-      'SELECT * FROM pedido_itens WHERE pedido_id = ?',
-      [sessRows[0].id]
-    );
-    for (const it of itens) {
-      const [ex] = await conn.query(
-        'SELECT * FROM pedido_itens WHERE pedido_id = ? AND produto_id = ? LIMIT 1',
-        [draftCli.id, it.produto_id]
-      );
-      if (ex[0]) {
-        const novaQ = ex[0].quantidade + it.quantidade;
-        const novoS = (Number(ex[0].preco_unitario) * novaQ).toFixed(2);
-        await conn.query(
-          'UPDATE pedido_itens SET quantidade = ?, subtotal = ? WHERE id = ?',
-          [novaQ, novoS, ex[0].id]
-        );
-      } else {
-        await conn.query(
-          `INSERT INTO pedido_itens (pedido_id, produto_id, nome_produto, preco_unitario, quantidade, subtotal)
-           VALUES (?,?,?,?,?,?)`,
-          [draftCli.id, it.produto_id, it.nome_produto, it.preco_unitario, it.quantidade, it.subtotal]
-        );
-      }
-    }
-
-    const [[sum]] = await conn.query(
-      'SELECT COALESCE(SUM(subtotal),0) AS soma FROM pedido_itens WHERE pedido_id = ?',
-      [draftCli.id]
-    );
-    await conn.query('UPDATE pedidos SET total = ? WHERE id = ?', [sum.soma, draftCli.id]);
-
-    await conn.query('DELETE FROM pedidos WHERE id = ?', [sessRows[0].id]);
-    delete req.session.cartKey;
-
-    await conn.commit();
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
-  }
-}
-
-/** Checkout flexível:
- *  - Se logado: finaliza vinculando ao cliente.
- *  - Se convidado: exige contato (nome + telefone) e finaliza sem cliente_id.
- *  - Salva dados de entrega se informados.
+/**
+ * Lista itens do pedido juntando com a TABELA MENU.
+ * Expõe "produto_nome" e "imagem" para o front.
  */
-async function checkout(
-  req,
-  {
-    observacoes = '',
-    statusFinal = 'aberto',
-    contato = {},          // { nome, telefone }
-    entrega = {}           // { endereco, bairro, cidade, uf, cep }
-  } = {}
-) {
-  const isLogged = !!req.session?.clienteId;
-  const conn = await pool.getConnection();
+async function listarItensComProduto(pedidoId, conn = pool) {
+  const [itens] = await conn.query(
+    `SELECT 
+        pi.id,
+        pi.produto_id,
+        pi.quantidade,
+        pi.preco_unitario,
+        (pi.quantidade * pi.preco_unitario) AS subtotal,
+        COALESCE(m.nome_prato, m.nome, m.titulo, m.descricao) AS produto_nome,
+        m.imagem
+     FROM pedido_itens pi
+     JOIN menu m ON m.id = pi.produto_id
+     WHERE pi.pedido_id = ?`,
+    [pedidoId]
+  );
+  return itens;
+}
 
-  try {
-    await conn.beginTransaction();
+/**
+ * Busca preço atual no MENU (não em produtos).
+ * Mantém fallback para nomes de coluna comuns.
+ */
+async function precoProduto(produtoId, conn = pool) {
+  const [rows] = await conn.query(
+    `SELECT * FROM menu WHERE id = ? LIMIT 1`,
+    [produtoId]
+  );
+  const prod = rows[0];
+  if (!prod) return null;
 
-    // Obtém rascunho por cliente OU por sessão
-    let pedido;
-    if (isLogged) {
-      pedido = await getOrCreateDraftByCliente(req.session.clienteId, conn);
-    } else {
-      pedido = await getOrCreateDraftBySession(ensureCartKey(req), conn);
+  const candidates = [
+    'preco',
+    'preco_venda',
+    'preco_unitario',
+    'valor',
+    'valor_unitario',
+    'price',
+    'unit_price'
+  ];
+
+  let valor = null;
+  for (const k of candidates) {
+    if (Object.prototype.hasOwnProperty.call(prod, k) && prod[k] != null) {
+      valor = Number(prod[k]);
+      break;
     }
-
-    // Deve ter itens
-    const [[qtd]] = await conn.query(
-      'SELECT COUNT(*) AS n FROM pedido_itens WHERE pedido_id = ?',
-      [pedido.id]
-    );
-    if (!qtd.n) throw new Error('Carrinho vazio');
-
-    // Convidado precisa de contato mínimo
-    const nome     = (contato?.nome || '').trim();
-    const telefone = (contato?.telefone || '').trim();
-    if (!isLogged && (!nome || !telefone)) {
-      const err = new Error('Informe seu nome e telefone para finalizar.');
-      err.needContact = true;
-      throw err;
-    }
-
-    // Se logado e ainda não vinculado, vincula ao cliente
-    if (isLogged && !pedido.cliente_id) {
-      await conn.query('UPDATE pedidos SET cliente_id = ? WHERE id = ?', [req.session.clienteId, pedido.id]);
-    }
-
-    // Atualiza status + campos de checkout
-    await conn.query(
-      `UPDATE pedidos SET
-         status = ?,
-         observacoes = ?,
-         contato_nome = COALESCE(?, contato_nome),
-         contato_telefone = COALESCE(?, contato_telefone),
-         entrega_endereco = COALESCE(?, entrega_endereco),
-         entrega_bairro = COALESCE(?, entrega_bairro),
-         entrega_cidade = COALESCE(?, entrega_cidade),
-         entrega_uf = COALESCE(?, entrega_uf),
-         entrega_cep = COALESCE(?, entrega_cep),
-         atualizado_em = NOW()
-       WHERE id = ?`,
-      [
-        statusFinal,
-        observacoes,
-        isLogged ? null : (nome || null),
-        isLogged ? null : (telefone || null),
-        entrega?.endereco || null,
-        entrega?.bairro   || null,
-        entrega?.cidade   || null,
-        entrega?.uf       || null,
-        entrega?.cep      || null,
-        pedido.id
-      ]
-    );
-
-    await conn.commit();
-    return { pedidoId: pedido.id };
-  } catch (e) {
-    await conn.rollback();
-    throw e;
-  } finally {
-    conn.release();
   }
+  return Number.isFinite(valor) ? valor : null;
+}
+
+async function buscarItemDoPedido(pedidoId, produtoId, conn = pool) {
+  const [rows] = await conn.query(
+    `SELECT id, quantidade FROM pedido_itens
+     WHERE pedido_id = ? AND produto_id = ?
+     LIMIT 1`,
+    [pedidoId, produtoId]
+  );
+  return rows[0] || null;
+}
+
+async function aumentarQuantidadeItem(itemId, delta, novoPrecoUnitario, conn = pool) {
+  await conn.query(
+    `UPDATE pedido_itens
+     SET quantidade = quantidade + ?, preco_unitario = ?
+     WHERE id = ?`,
+    [delta, novoPrecoUnitario, itemId]
+  );
+}
+
+async function inserirItem(pedidoId, produtoId, quantidade, precoUnitario, conn = pool) {
+  await conn.query(
+    `INSERT INTO pedido_itens (pedido_id, produto_id, quantidade, preco_unitario)
+     VALUES (?, ?, ?, ?)`,
+    [pedidoId, produtoId, quantidade, precoUnitario]
+  );
+}
+
+async function atualizarQuantidadeItemCliente(clienteId, itemId, quantidade, conn = pool) {
+  const [result] = await conn.query(
+    `UPDATE pedido_itens pi
+     JOIN pedidos p ON p.id = pi.pedido_id
+     SET pi.quantidade = ?
+     WHERE pi.id = ? AND p.cliente_id = ? AND p.status = 'rascunho'`,
+    [quantidade, itemId, clienteId]
+  );
+  return result.affectedRows || 0;
+}
+
+async function obterPedidoIdDoItemCliente(clienteId, itemId, conn = pool) {
+  const [[row]] = await conn.query(
+    `SELECT pi.pedido_id
+     FROM pedido_itens pi
+     JOIN pedidos p ON p.id = pi.pedido_id
+     WHERE pi.id = ? AND p.cliente_id = ? AND p.status = 'rascunho'
+     LIMIT 1`,
+    [itemId, clienteId]
+  );
+  return row?.pedido_id || null;
+}
+
+async function removerItemPorId(itemId, conn = pool) {
+  await conn.query(
+    `DELETE FROM pedido_itens WHERE id = ?`,
+    [itemId]
+  );
+}
+
+async function tocarPedido(pedidoId, conn = pool) {
+  await conn.query(
+    `UPDATE pedidos SET atualizado_em = NOW() WHERE id = ?`,
+    [pedidoId]
+  );
+}
+
+async function finalizarRascunho(clienteId, conn = pool) {
+  const [pedidos] = await conn.query(
+    `SELECT id FROM pedidos 
+     WHERE cliente_id = ? AND status = 'rascunho'
+     ORDER BY id DESC LIMIT 1`,
+    [clienteId]
+  );
+  if (!pedidos[0]) return null;
+
+  const pedidoId = pedidos[0].id;
+  await conn.query(
+    `UPDATE pedidos 
+     SET status = 'confirmado', atualizado_em = NOW()
+     WHERE id = ?`,
+    [pedidoId]
+  );
+  return pedidoId;
 }
 
 module.exports = {
-  ensureCartKey,
-  getDraftWithItems,
-  addItem,
-  updateQty,
-  removeItem,
-  mergeSessionCartIntoCliente,
-  checkout,
+  getRascunhoId,
+  criarRascunho,
+  obterOuCriarRascunhoId,
+  listarItensComProduto,
+  precoProduto,
+  buscarItemDoPedido,
+  aumentarQuantidadeItem,
+  inserirItem,
+  atualizarQuantidadeItemCliente,
+  obterPedidoIdDoItemCliente,
+  removerItemPorId,
+  tocarPedido,
+  finalizarRascunho,
 };

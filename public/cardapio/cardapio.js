@@ -1,35 +1,118 @@
+// /public/cardapio/cardapio.js
 (function () {
   const money = (v) => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
 
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  // ==== Helpers de API (carrinho no servidor) ====
-  async function getJSON(url) {
-    const r = await fetch(url, { credentials: 'include' });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data?.erro || `Erro ${r.status}`);
+  // ========= Estado global (para reexecutar ação após login) =========
+  let pendingAction = null;
+
+  // ========= Modal de autenticação =========
+  const authModal       = $('#authModal');
+  const paneLogin       = $('#pane-login');
+  const paneCadastro    = $('#pane-cadastro');
+  const tabLogin        = $('#tab-login');
+  const tabCadastro     = $('#tab-cadastro');
+  const formLogin       = $('#formLogin');
+  const formCadastro    = $('#formCadastro');
+  const loginFeedback   = $('#loginFeedback');
+  const cadastroFeedback= $('#cadastroFeedback');
+
+  function switchTab(which){
+    if (!tabLogin || !tabCadastro || !paneLogin || !paneCadastro) return;
+    const isLogin = which === 'login';
+    tabLogin.classList.toggle('is-active', isLogin);
+    tabCadastro.classList.toggle('is-active', !isLogin);
+    paneLogin.classList.toggle('is-active', isLogin);
+    paneCadastro.classList.toggle('is-active', !isLogin);
+    paneCadastro.hidden = isLogin;
+    paneLogin.hidden = !isLogin;
+    tabLogin.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+    tabCadastro.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+  }
+  function openAuth(which='login'){
+    if (!authModal) return;
+    switchTab(which);
+    authModal.classList.add('open');
+    setTimeout(() => {
+      const first = which === 'login' ? $('input[name="email"]', formLogin) : $('input[name="nome"]', formCadastro);
+      first?.focus();
+    }, 0);
+  }
+  function closeAuth(){
+    authModal?.classList.remove('open');
+    loginFeedback && (loginFeedback.textContent = '');
+    cadastroFeedback && (cadastroFeedback.textContent = '');
+    formLogin?.reset();
+    formCadastro?.reset();
+  }
+  tabLogin?.addEventListener('click', () => switchTab('login'));
+  tabCadastro?.addEventListener('click', () => switchTab('cadastro'));
+  $$('.auth-close, [data-close-auth]').forEach(el => el.addEventListener('click', () => { pendingAction=null; closeAuth(); }));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && authModal?.classList.contains('open')) { pendingAction=null; closeAuth(); }
+  });
+
+  // ========= Helpers de API =========
+  async function rawFetch(url, opts = {}) {
+    const headers = { Accept: 'application/json', ...(opts.headers || {}) };
+    const r = await fetch(url, { credentials: 'include', ...opts, headers });
+
+    let data = {};
+    try { data = await r.json(); } catch {}
+
+    if (r.status === 401 || data?.authRequired) {
+      const err = new Error('Login necessário');
+      err.authRequired = true;
+      err.response = data;
+      throw err;
+    }
+
+    if (!r.ok) {
+      const err = new Error(data?.erro || data?.error || `Erro ${r.status}`);
+      err.response = data;
+      throw err;
+    }
+
     return data;
   }
-  async function sendJSON(method, url, body) {
-    const r = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: method === 'DELETE' ? undefined : JSON.stringify(body || {})
-    });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok || data?.erro) throw new Error(data?.erro || `Erro ${r.status}`);
-    return data;
+  const getJSON  = (url)                => rawFetch(url);
+  const postJSON = (url, body={})       => rawFetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+  // Confirma sessão após login/cadastro (evita reabrir modal por 401 logo em seguida)
+  async function waitForLogin(tries = 6, delayMs = 200) {
+    for (let i = 0; i < tries; i++) {
+      try {
+        const s = await getJSON('/api/cliente/status');
+        if (s?.loggedIn) return true;
+      } catch {}
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+    return false;
   }
 
-  // ==== Estado e elementos ====
-  let carrinho = { pedido: null, itens: [] };
+  // ========= Estado e elementos =========
+  let carrinho = { pedidoId: null, itens: [], total: 0 };
   const container   = $('#carrinho-container');
   const elSubtotal  = $('#subtotal');
   const elTaxas     = $('#taxas');
   const elTotal     = $('#total');
   const badge       = $('#badge-carrinho');
+
+  const cartPanel    = $('#cart');
+  const cartBackdrop = $('#cartBackdrop');
+  const btnToggle    = $('#btnToggleCart');
+  const btnClose     = $('#closeCart');
+
+  // Endpoints dinâmicos via data-*
+  const endpoints = {
+    listar:    cartPanel?.dataset.endpointListar || btnToggle?.dataset.endpointListar || '/carrinho',
+    adicionar: '/carrinho/adicionar', // pode ser sobrescrito por data-endpoint-adicionar no botão
+    atualizar: cartPanel?.dataset.endpointAtualizar || '/carrinho/atualizar',
+    remover:   cartPanel?.dataset.endpointRemover   || '/carrinho/remover',
+    finalizar: cartPanel?.dataset.endpointFinalizar || '/carrinho/finalizar',
+  };
 
   const TAXA_FIXA = 0;
   const TAXA_PERCENTUAL = 0;
@@ -37,7 +120,7 @@
   let modoPedido = 'dine';
   let formaPagamento = 'cash';
 
-  // ==== Renderização ====
+  // ========= Render =========
   function updateBadgeFromCart() {
     if (!badge) return;
     const totalQtd = (carrinho.itens || []).reduce((s, i) => s + Number(i.quantidade || 0), 0);
@@ -46,7 +129,7 @@
   }
 
   function calcTotais(itens) {
-    const subtotal = itens.reduce((s, i) => s + Number(i.subtotal || (Number(i.preco_unitario || 0) * Number(i.quantidade || 0))), 0);
+    const subtotal = itens.reduce((s, i) => s + Number(i.subtotal ?? (Number(i.preco_unitario || 0) * Number(i.quantidade || 0))), 0);
     const taxas = TAXA_FIXA + subtotal * TAXA_PERCENTUAL;
     return { subtotal, taxas, total: subtotal + taxas };
   }
@@ -75,18 +158,18 @@
     const id = row.getAttribute('data-id');
     row.querySelector('.menos')?.addEventListener('click', async () => {
       const cur = carrinho.itens.find(x => String(x.id) === String(id))?.quantidade || 1;
-      await apiUpdateQty(id, Math.max(1, Number(cur) - 1));
+      await guarded(() => apiUpdateQty(id, Math.max(1, Number(cur) - 1)));
     });
     row.querySelector('.mais')?.addEventListener('click', async () => {
       const cur = carrinho.itens.find(x => String(x.id) === String(id))?.quantidade || 1;
-      await apiUpdateQty(id, Number(cur) + 1);
+      await guarded(() => apiUpdateQty(id, Number(cur) + 1));
     });
     row.querySelector('.qty')?.addEventListener('change', async (e) => {
       const v = Math.max(1, Number(e.target.value) || 1);
-      await apiUpdateQty(id, v);
+      await guarded(() => apiUpdateQty(id, v));
     });
     row.querySelector('.remover')?.addEventListener('click', async () => {
-      await apiRemoveItem(id);
+      await guarded(() => apiRemoveItem(id));
     });
   }
 
@@ -111,71 +194,95 @@
     updateBadgeFromCart();
   }
 
-  // ==== API específicas ====
+  // ========= Carregamento do carrinho =========
   async function loadCart() {
-    const data = await getJSON('/carrinho');
-    // Normaliza itens vindos do backend
+    const data = await getJSON(endpoints.listar);
     const itens = Array.isArray(data?.itens) ? data.itens : [];
     carrinho = {
-      pedido: data?.pedido || null,
+      pedidoId: data?.pedidoId ?? null,
       itens: itens.map(i => ({
         id: i.id,
         produto_id: i.produto_id ?? i.id_produto ?? null,
-        nome_produto: i.nome_produto || i.nome || 'Item',
+        nome_produto: i.produto_nome || i.nome_produto || i.nome || 'Item',
         preco_unitario: Number(i.preco_unitario ?? i.preco ?? 0),
         quantidade: Number(i.quantidade ?? 1),
-        subtotal: Number(i.subtotal ?? ((Number(i.preco_unitario ?? i.preco ?? 0))*(Number(i.quantidade ?? 1)))),
+        subtotal: Number(i.subtotal ?? ((Number(i.preco_unitario ?? i.preco ?? 0))*(Number(i.quantidade ?? 1)))) ,
         img: i.img,
         imagem: i.imagem
-      }))
+      })),
+      total: Number(data?.total ?? 0)
     };
     renderCart();
   }
 
-  async function apiAddItem({ produto_id, nome, preco, qtd = 1, imagem = '' }) {
-    await sendJSON('POST', '/carrinho/itens', { produto_id, nome, preco, qtd, imagem });
-    await loadCart();
+  // ========= Chamada protegida =========
+  async function guarded(fn) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (e?.authRequired) {
+        pendingAction = fn;       // reexecuta depois do login
+        openAuth('login');
+        return;
+      }
+      console.error(e);
+      throw e; // erros reais não disparam o modal
+    }
   }
 
-  async function apiUpdateQty(itemId, quantidade) {
-    await sendJSON('PATCH', `/carrinho/itens/${itemId}`, { quantidade });
+  // ========= API do carrinho =========
+  async function apiAddItem({ endpoint, produto_id, quantidade = 1 }) {
+    await postJSON(endpoint || endpoints.adicionar, { produto_id, quantidade });
     await loadCart();
   }
-
-  async function apiRemoveItem(itemId) {
-    await sendJSON('DELETE', `/carrinho/itens/${itemId}`);
+  async function apiUpdateQty(item_id, quantidade) {
+    await postJSON(endpoints.atualizar, { item_id, quantidade });
     await loadCart();
   }
-
+  async function apiRemoveItem(item_id) {
+    await postJSON(endpoints.remover, { item_id });
+    await loadCart();
+  }
   async function apiClearCart() {
-    // não há endpoint específico; removemos item a item
     for (const it of (carrinho.itens || [])) {
       await apiRemoveItem(it.id);
     }
   }
 
-  // ==== Botões "Adicionar" nos cards (agora chamam o backend) ====
+  // ========= Botões "Adicionar" nos cards =========
   $$('.adicionar-carrinho').forEach((btn) => {
     btn.addEventListener('click', async () => {
+      const produto_id = Number(
+        btn.dataset.produtoId ||
+        btn.getAttribute('data-produto-id') ||
+        btn.dataset.id ||
+        btn.getAttribute('data-id')
+      );
+      const endpointAdd = btn.dataset.endpointAdicionar || endpoints.adicionar;
+
+      if (!Number.isFinite(produto_id) || produto_id <= 0) {
+        console.warn('ID de produto inválido no botão', btn);
+        return;
+      }
+
+      btn.disabled = true;
+      const original = btn.textContent;
       try {
-        const produto_id = Number(btn.dataset.id);
-        const nome  = btn.dataset.nome || 'Item';
-        const preco = Number(btn.dataset.preco || 0);
-        const imagem = btn.dataset.img || '';
-        await apiAddItem({ produto_id, nome, preco, qtd: 1, imagem });
+        await guarded(() => apiAddItem({ endpoint: endpointAdd, produto_id, quantidade: 1 }));
         btn.textContent = 'Adicionado!';
-        setTimeout(() => { btn.textContent = 'Adicionar'; }, 900);
-      } catch (e) {
-        console.error(e);
+        setTimeout(() => { btn.textContent = original; }, 900);
+      } catch {
         btn.textContent = 'Erro';
-        setTimeout(() => { btn.textContent = 'Adicionar'; }, 900);
+        setTimeout(() => { btn.textContent = original; }, 900);
+      } finally {
+        btn.disabled = false;
       }
     });
   });
 
-  // ==== Filtros de categorias (UI existente) ====
+  // ========= Filtros =========
   const chips = $$('.chip');
-  const verTudo = $('.btn-primary');
+  const verTudo = $('#btnVerTudo') || $('.btn-primary');
   const cards = $$('.grid-cards .card');
 
   function aplicarFiltro(cat) {
@@ -198,7 +305,7 @@
     aplicarFiltro('todos');
   });
 
-  // ==== Tabs modo/forma de pagamento ====
+  // ========= Tabs modo & pagamentos =========
   $$('.tab').forEach((t) => {
     t.addEventListener('click', () => {
       $$('.tab').forEach((x) => x.classList.remove('active'));
@@ -215,12 +322,7 @@
     });
   });
 
-  // ==== Painel do carrinho (open/close) ====
-  const cartPanel = $('#cart');
-  const cartBackdrop = $('#cartBackdrop');
-  const btnToggle = $('#btnToggleCart');
-  const btnClose = $('#closeCart');
-
+  // ========= Painel do carrinho =========
   function openCart() {
     cartPanel?.classList.add('is-open');
     cartBackdrop?.classList.add('show');
@@ -230,156 +332,109 @@
     cartBackdrop?.classList.remove('show');
   }
 
-  btnToggle?.addEventListener('click', openCart);
+  btnToggle?.addEventListener('click', async () => {
+    await guarded(loadCart); // se 401 → abre login
+    if (!authModal?.classList.contains('open')) openCart();
+  });
   btnClose?.addEventListener('click', closeCart);
   cartBackdrop?.addEventListener('click', closeCart);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCart(); });
 
-  // Limpar carrinho (server-side via loop)
+  // Limpar carrinho
   $('#limpar')?.addEventListener('click', async () => {
+    try { await guarded(apiClearCart); } catch (e) { console.error(e); }
+  });
+
+  // ========= Proteção do checkout =========
+  const btnCheckout = document.getElementById('ir-checkout');
+  btnCheckout?.addEventListener('click', async (e) => {
+    e.preventDefault();
     try {
-      await apiClearCart();
-    } catch (e) {
-      console.error(e);
+      await guarded(loadCart);
+      if (authModal?.classList.contains('open')) {
+        pendingAction = () => { window.location.href = '/checkout'; };
+      } else {
+        window.location.href = '/checkout';
+      }
+    } catch {
+      openAuth('login');
+      pendingAction = () => { window.location.href = '/checkout'; };
     }
   });
 
-  // Start
+  // ========= Início =========
   loadCart().catch((e) => {
-    console.error('Falha ao carregar carrinho:', e);
-    // Mostra vazio se der erro
-    if (container) container.innerHTML = '<div class="cart-empty"><p>Não foi possível carregar seu carrinho.</p></div>';
+    if (!e?.authRequired) {
+      console.error('Falha ao carregar carrinho:', e);
+    }
+    if (container) container.innerHTML = '<div class="cart-empty"><p>Seu carrinho está vazio.</p></div>';
     if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
     if (elSubtotal) elSubtotal.textContent = money(0);
     if (elTaxas)    elTaxas.textContent    = money(0);
     if (elTotal)    elTotal.textContent    = money(0);
   });
-})();
 
-// ============ MODAL LOGIN/CADASTRO & CHECKOUT PROTECT ============
-(function(){
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
-  const authModal = $('#authModal');
-  const paneLogin = $('#pane-login');
-  const paneCadastro = $('#pane-cadastro');
-  const tabLogin = $('#tab-login');
-  const tabCadastro = $('#tab-cadastro');
-  const formLogin = $('#formLogin');
-  const formCadastro = $('#formCadastro');
-  const loginFeedback = $('#loginFeedback');
-  const cadastroFeedback = $('#cadastroFeedback');
-
-  function openAuth(which='login'){
-    if (!authModal) return;
-    authModal.classList.add('open');
-    switchTab(which);
-    setTimeout(() => {
-      const first = which === 'login' ? $('input[name="email"]', formLogin) : $('input[name="nome"]', formCadastro);
-      first?.focus();
-    }, 0);
-  }
-  function closeAuth(){
-    authModal?.classList.remove('open');
-    if (loginFeedback) loginFeedback.textContent = '';
-    if (cadastroFeedback) cadastroFeedback.textContent = '';
-    formLogin?.reset();
-    formCadastro?.reset();
-  }
-  function switchTab(which){
-    if (!tabLogin || !tabCadastro || !paneLogin || !paneCadastro) return;
-    const isLogin = which === 'login';
-    tabLogin.classList.toggle('is-active', isLogin);
-    tabCadastro.classList.toggle('is-active', !isLogin);
-    paneLogin.classList.toggle('is-active', isLogin);
-    paneCadastro.classList.toggle('is-active', !isLogin);
-    paneCadastro.hidden = isLogin;
-    paneLogin.hidden = !isLogin;
-    tabLogin.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-    tabCadastro.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
-  }
-
-  tabLogin?.addEventListener('click', () => switchTab('login'));
-  tabCadastro?.addEventListener('click', () => switchTab('cadastro'));
-  $$('.auth-close, [data-close-auth]').forEach(el => el.addEventListener('click', closeAuth));
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && authModal?.classList.contains('open')) closeAuth();
-  });
-
-  // Protege o Checkout: se não logado, abre modal
-  const btnCheckout = document.getElementById('ir-checkout');
-  btnCheckout?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    try {
-      const r = await fetch('/api/cliente/status', { credentials: 'include' });
-      const data = await r.json();
-      if (data?.loggedIn) {
-        window.location.href = '/checkout';
-      } else {
-        openAuth('login');
-      }
-    } catch (err) {
-      console.error(err);
-      openAuth('login');
-    }
-  });
-
-  async function postJSON(url, payload){
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload)
-    });
-    const data = await r.json().catch(()=> ({}));
-    if (!r.ok || data?.erro) throw new Error(data?.erro || `Erro ${r.status}`);
-    return data;
+  // ========= Login / Cadastro =========
+  async function postAuth(url, payload){
+    return postJSON(url, payload);
   }
 
   formLogin?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    loginFeedback.textContent = '';
+    loginFeedback && (loginFeedback.textContent = '');
     const btn = formLogin.querySelector('.auth-submit');
-    btn.disabled = true;
+    btn && (btn.disabled = true);
     try {
+      const endpoint = formLogin.getAttribute('data-endpoint-login') || '/cliente/login';
       const form = new FormData(formLogin);
       const payload = {
         email: form.get('email'),
         senha: form.get('senha'),
-        next: form.get('next') || '/checkout'
+        next:  form.get('next') || ''
       };
-      const data = await postJSON('/cliente/login', payload);
+      await postAuth(endpoint, payload);
+      await waitForLogin(); // <- confirma sessão antes de seguir
       closeAuth();
-      // após login, o backend deve mesclar o carrinho anônimo no do cliente
-      window.location.href = data?.redirect || '/checkout';
+      if (typeof pendingAction === 'function') {
+        const fn = pendingAction; pendingAction = null;
+        await fn();
+      } else {
+        await loadCart();
+      }
     } catch (err) {
-      loginFeedback.textContent = err.message || 'Falha no login';
+      loginFeedback && (loginFeedback.textContent = err.message || 'Falha no login');
     } finally {
-      btn.disabled = false;
+      btn && (btn.disabled = false);
     }
   });
 
   formCadastro?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    cadastroFeedback.textContent = '';
+    cadastroFeedback && (cadastroFeedback.textContent = '');
     const btn = formCadastro.querySelector('.auth-submit');
-    btn.disabled = true;
+    btn && (btn.disabled = true);
     try {
+      const endpoint = formCadastro.getAttribute('data-endpoint-cadastro') || '/cliente/cadastrar';
       const form = new FormData(formCadastro);
       const payload = {
-        nome: form.get('nome'),
+        nome:  form.get('nome'),
         email: form.get('email'),
         senha: form.get('senha'),
-        next: form.get('next') || '/checkout'
+        next:  form.get('next') || ''
       };
-      const data = await postJSON('/cliente/cadastrar', payload);
+      await postAuth(endpoint, payload);
+      await waitForLogin(); // <- confirma sessão antes de seguir
       closeAuth();
-      window.location.href = data?.redirect || '/checkout';
+      if (typeof pendingAction === 'function') {
+        const fn = pendingAction; pendingAction = null;
+        await fn();
+      } else {
+        await loadCart();
+      }
     } catch (err) {
-      cadastroFeedback.textContent = err.message || 'Falha no cadastro';
+      cadastroFeedback && (cadastroFeedback.textContent = err.message || 'Falha no cadastro');
     } finally {
-      btn.disabled = false;
+      btn && (btn.disabled = false);
     }
   });
 

@@ -1,24 +1,15 @@
 // routes/carrinho.js
 const express = require('express');
 const router = express.Router();
-const ctrl = require('../controllers/carrinhoController');
+const requireCliente = require('../middlewares/requireCliente');
+const carrinhoCtrl = require('../controllers/carrinhoController');
 
-// GET /carrinho -> retorna carrinho atual (pedido em rascunho + itens)
-router.get('/', ctrl.getCarrinho);
-
-// GET /carrinho/itens -> só itens do carrinho (atalho)
-router.get('/itens', ctrl.getCarrinho);
-
-// POST /carrinho/itens -> adiciona item { produto_id, nome, preco, qtd }
-router.post('/itens', ctrl.addItem);
-
-// PATCH /carrinho/itens/:id -> atualiza quantidade de um item
-router.patch('/itens/:id', ctrl.updateQty);
-
-// DELETE /carrinho/itens/:id -> remove item
-router.delete('/itens/:id', ctrl.removeItem);
-
-// POST /carrinho/checkout -> finaliza pedido (convidado ou logado)
-router.post('/checkout', ctrl.checkout);
+// Todas as rotas do carrinho exigem cliente logado.
+// IMPORTANTe: para chamadas AJAX, o requireCliente deve responder 401 JSON (sem redirect).
+router.get('/',         requireCliente, carrinhoCtrl.getCarrinho);
+router.post('/adicionar',  requireCliente, carrinhoCtrl.adicionarItem);
+router.post('/atualizar',  requireCliente, carrinhoCtrl.atualizarItem);
+router.post('/remover',    requireCliente, carrinhoCtrl.removerItem);
+router.post('/finalizar',  requireCliente, carrinhoCtrl.finalizar);
 
 module.exports = router;

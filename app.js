@@ -1,3 +1,4 @@
+// app.js
 const express = require('express');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
@@ -9,9 +10,10 @@ const security = require('./middlewares/security');
 const tourFlag = require('./middlewares/tourFlag');
 const requireCliente = require('./middlewares/requireCliente');
 
-const clienteAuthRoutes = require('./routes/clienteAuthRoutes');
-
 const app = express();
+
+// Se estiver atrás de proxy reverso (nginx, render, heroku), mantenha isso:
+app.set('trust proxy', 1);
 
 // parsers
 app.use(express.urlencoded({ extended: true }));
@@ -27,12 +29,16 @@ app.use((req, res, next) => {
 // segurança (sua middleware custom)
 app.use(security);
 
-// sessão
+// sessão (garante persistência do cookie corretamente)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'segredo_super_secreto',
   resave: false,
   saveUninitialized: false,
-  cookie: { sameSite: 'lax' }
+  cookie: {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production' // true em produção (HTTPS)
+  }
 }));
 
 // views e estáticos
@@ -46,7 +52,6 @@ app.use(tourFlag);
 // locals globais para as views
 app.use((req, res, next) => {
   res.locals.usuarioId   = req.session.userId || null;       // se você usar para dono/admin
-  res.locals.empresaId   = req.session.empresaId || null;    // opcional
   res.locals.clienteId   = req.session.clienteId || null;    // login do cliente (checkout)
   res.locals.empresaNome = (req.session?.empresa?.nome)
                         || (req.session?.empresaNome)
@@ -54,7 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// rotas
+// rotas existentes
 app.use('/tour', require('./routes/tour'));
 app.use('/', require('./routes/auth'));
 app.use('/cardapio', require('./routes/cardapio'));
@@ -70,12 +75,13 @@ app.use('/produtos', require('./routes/produto'));
 app.use('/fornecedores', require('./routes/fornecedores'));
 app.use('/gastos-fixos', require('./routes/gastos-fixo'));
 app.use('/pedidos', require('./routes/pedido'));
+
+// ⚠️ Carrinho: dentro de routes/carrinho.js deve haver router.use(requireCliente)
 app.use('/carrinho', require('./routes/carrinho'));
 
-
-
-// rotas de autenticação do cliente (status/login/cadastro/logout)
-app.use('/', clienteAuthRoutes);
+// rotas de cliente (status/login/cadastro/logout) — JSON
+// trocamos para o arquivo novo separado
+app.use('/', require('./routes/clienteAuthRoutes'));
 
 // página protegida de checkout (exige cliente logado)
 app.get('/checkout', requireCliente, (req, res) => {

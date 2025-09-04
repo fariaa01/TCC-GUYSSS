@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const gastosFixosController = require('../controllers/gastos-fixosController');
+const gastosFixosController = require('../controllers/financeiro/gastos-fixosController');
 
 router.get('/', gastosFixosController.list);
 router.get('/:id', gastosFixosController.getById);

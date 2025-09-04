@@ -23,15 +23,19 @@ module.exports = {
     if (!usuarioId) throw new Error('usuarioId ausente em listarTodos');
     const [rows] = await pool.query(
       `SELECT id, nome, email, cnpj, telefone
-         FROM fornecedores
-        WHERE usuario_id = ?
-        ORDER BY nome ASC`,
+       FROM fornecedores
+       WHERE usuario_id = ?
+       ORDER BY nome ASC`,
       [usuarioId]
     );
     return rows;
   },
 
   async findAll(usuarioId) {
+    return this.listarTodos(usuarioId);
+  },
+
+  async getAll(usuarioId) {
     return this.listarTodos(usuarioId);
   }
 };

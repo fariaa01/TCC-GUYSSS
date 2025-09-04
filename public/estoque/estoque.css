@@ -206,6 +206,33 @@ h2 {
   border-color: var(--primary);
 }
 
+.btn--primary,
+.btn-add,
+.modal-content-editar .btn-primary-editar {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn--primary:hover,
+.btn-add:hover,
+.modal-content-editar .btn-primary-editar:hover {
+  background: var(--primary-hover);
+}
+
+.btn--secondary,
+.modal-content-editar .btn-secondary-editar {
+  background: transparent;
+  color: #555;
+  border-color: #ccc;
+  box-shadow: none;
+}
+
+.btn--secondary:hover,
+.modal-content-editar .btn-secondary-editar:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

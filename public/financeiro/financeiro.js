@@ -1,205 +1,259 @@
-   (function () {
-      const $  = (s, el=document) => el.querySelector(s);
-      const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+ document.addEventListener('DOMContentLoaded', function () {
+    function hojeISO() {
+      var d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+    function addDias(iso, qtd) {
+      var d = new Date(iso + 'T00:00:00');
+      d.setDate(d.getDate() + qtd);
+      return d.toISOString().slice(0, 10);
+    }
+    function primeiroDiaDoMes() {
+      var d = new Date();
+      d.setDate(1);
+      return d.toISOString().slice(0, 10);
+    }
+    function ultimoDiaDoMes() {
+      var d = new Date();
+      d.setMonth(d.getMonth() + 1, 0);
+      return d.toISOString().slice(0, 10);
+    }
+    function valorInput(el) { return el ? (el.value || '') : ''; }
 
-      // ===== Modais: Lançamento
-      const modal     = $('#modalLancamento');
-      const formLanc  = $('#formLancamento');
-      const btnOpen1  = $('#btnNovoLancamento');
-      const btnOpen2  = $('#btnNovoLancamento2');
-      const btnOpen3  = $('#btnEmptyAdd');
-      const btnClose  = $('#fecharModal');
-      const btnCancel = $('#cancelarLancamento');
+    var modalLanc = document.getElementById('modalLancamento');
+    var formLanc  = document.getElementById('formLancamento');
+    var btnNL1    = document.getElementById('btnNovoLancamento');
+    var btnNL2    = document.getElementById('btnNovoLancamento2');
+    var btnNL3    = document.getElementById('btnEmptyAdd');
+    var btnFechar = document.getElementById('fecharModal');
+    var btnCanc   = document.getElementById('cancelarLancamento');
 
-      const openLanc  = () => { modal.classList.add('is-open'); setTimeout(()=>formLanc?.querySelector('select, input')?.focus(),0); };
-      const closeLanc = () => modal.classList.remove('is-open');
+    function abrirLanc() {
+      if (!modalLanc) return;
+      modalLanc.classList.add('is-open');
+      setTimeout(function () {
+        if (!formLanc) return;
+        var primeiro = formLanc.querySelector('select, input');
+        if (primeiro) primeiro.focus();
+      }, 0);
+    }
+    function fecharLanc() {
+      if (modalLanc) modalLanc.classList.remove('is-open');
+    }
+    if (btnNL1) btnNL1.addEventListener('click', abrirLanc);
+    if (btnNL2) btnNL2.addEventListener('click', abrirLanc);
+    if (btnNL3) btnNL3.addEventListener('click', abrirLanc);
+    if (btnFechar) btnFechar.addEventListener('click', fecharLanc);
+    if (btnCanc) btnCanc.addEventListener('click', fecharLanc);
+    window.addEventListener('click', function (e) {
+      if (e.target === modalLanc) fecharLanc();
+    });
 
-      btnOpen1?.addEventListener('click', openLanc);
-      btnOpen2?.addEventListener('click', openLanc);
-      btnOpen3?.addEventListener('click', openLanc);
-      btnClose?.addEventListener('click', closeLanc);
-      btnCancel?.addEventListener('click', closeLanc);
-      window.addEventListener('click', (e)=>{ if(e.target===modal) closeLanc(); });
+    var inpBusca   = document.getElementById('busca');
+    var selCat     = document.getElementById('filtroCategoria');
+    var inpDataIni = document.getElementById('filtroDataInicio');
+    var inpDataFim = document.getElementById('filtroDataFim');
+    var tabela     = document.getElementById('tabela');
+    var chips      = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+    var tipoAtivo  = 'todos';
 
-      // ===== Modais: Gasto Fixo
-      const modalF     = $('#modalGastoFixo');
-      const formF      = $('#formGastoFixo');
-      const btnOpenF1  = $('#btnNovoGastoFixo');
-      const btnOpenF2  = $('#btnEmptyAddFixo');
-      const btnCloseF  = $('#fecharModalFixo');
-      const btnCancelF = $('#cancelarGastoFixo');
+    function dentroDoPeriodo(dataISO, iniISO, fimISO) {
+      if (!dataISO) return true;
+      if (iniISO && dataISO < iniISO) return false;
+      if (fimISO && dataISO > fimISO) return false;
+      return true;
+    }
 
-      const openFixo  = () => { modalF.classList.add('is-open'); setTimeout(()=>formF?.querySelector('input, select')?.focus(),0); };
-      const closeFixo = () => modalF.classList.remove('is-open');
+    function aplicarFiltros() {
+      var q   = valorInput(inpBusca).toLowerCase().trim();
+      var cat = valorInput(selCat);
+      var ini = valorInput(inpDataIni);
+      var fim = valorInput(inpDataFim);
 
-      btnOpenF1?.addEventListener('click', openFixo);
-      btnOpenF2?.addEventListener('click', openFixo);
-      btnCloseF?.addEventListener('click', closeFixo);
-      btnCancelF?.addEventListener('click', closeFixo);
-      window.addEventListener('click', (e)=>{ if(e.target===modalF) closeFixo(); });
+      var visiveis = 0;
+      var corpo = tabela ? tabela.querySelector('tbody') : null;
+      var linhas = corpo ? corpo.querySelectorAll('tr') : [];
 
-      // ===== Filtros: Lançamentos
-      const busca = $('#busca');
-      const filtroCategoria = $('#filtroCategoria');
-      const dIni = $('#filtroDataInicio');
-      const dFim = $('#filtroDataFim');
-      const chips = $$('.chip');
-      const table = $('#tabela');
-      const tbody = table?.querySelector('tbody');
+      for (var i = 0; i < linhas.length; i++) {
+        var tr = linhas[i];
+        if (tr.classList.contains('empty-row')) continue;
 
-      let tipoAtivo = 'todos';
+        var rowCat  = tr.getAttribute('data-categoria') || '';
+        var rowTipo = tr.getAttribute('data-tipo') || '';
+        var rowData = tr.getAttribute('data-data') || '';
 
-      const toISO = (v) => v ? new Date(v+'T00:00:00').toISOString().slice(0,10) : '';
-      const inRange = (dateISO, iniISO, fimISO) => {
-        if (!dateISO) return true;
-        if (iniISO && dateISO < iniISO) return false;
-        if (fimISO && dateISO > fimISO) return false;
-        return true;
-      };
+        var texto = (rowCat + ' ' + rowTipo).toLowerCase();
+        var okBusca = !q || texto.indexOf(q) > -1;
+        var okCat   = !cat || rowCat === cat;
+        var okTipo  = (tipoAtivo === 'todos') || rowTipo === tipoAtivo;
+        var okData  = dentroDoPeriodo(rowData, ini, fim);
 
-      const applyFilters = () => {
-        const q = (busca?.value || '').toLowerCase().trim();
-        const cat = filtroCategoria?.value || '';
-        const ini = toISO(dIni?.value);
-        const fim = toISO(dFim?.value);
+        var mostrar = okBusca && okCat && okTipo && okData;
+        tr.style.display = mostrar ? '' : 'none';
+        if (mostrar) visiveis++;
+      }
 
-        let visibles = 0;
-        $$('#tabela tbody tr').forEach(tr => {
-          if (tr.classList.contains('empty-row')) return;
-          const rowCat = tr.getAttribute('data-categoria') || '';
-          const rowTipo = tr.getAttribute('data-tipo') || '';
-          const rowDate = tr.getAttribute('data-data') || '';
-
-          const text = (rowCat + ' ' + rowTipo).toLowerCase();
-          const matchBusca = !q || text.includes(q);
-          const matchCat = !cat || rowCat === cat;
-          const matchTipo = (tipoAtivo === 'todos') || rowTipo === tipoAtivo;
-          const matchRange = inRange(rowDate, ini, fim);
-
-          const show = matchBusca && matchCat && matchTipo && matchRange;
-          tr.style.display = show ? '' : 'none';
-          if (show) visibles++;
-        });
-
-        const emptyId = 'empty-after-filter';
-        let emptyRow = document.getElementById(emptyId);
-        if (!visibles) {
-          if (!emptyRow) {
-            emptyRow = document.createElement('tr');
-            emptyRow.id = emptyId;
-            emptyRow.innerHTML = `
-              <td colspan="5">
-                <div class="empty small">
-                  <i class="fa-regular fa-folder-open"></i>
-                  <p>Nenhum resultado com os filtros aplicados.</p>
-                  <button class="btn btn--ghost" id="btnLimpar2">Limpar filtros</button>
-                </div>
-              </td>`;
-            tbody?.appendChild(emptyRow);
-            document.getElementById('btnLimpar2')?.addEventListener('click', clearFilters);
+      var emptyId = 'empty-after-filter';
+      var existente = document.getElementById(emptyId);
+      if (visiveis === 0) {
+        if (!existente && corpo) {
+          var nova = document.createElement('tr');
+          nova.id = emptyId;
+          nova.innerHTML = '<td colspan="5"><div class="empty small">' +
+            '<i class="fa-regular fa-folder-open"></i>' +
+            '<p>Nenhum resultado com os filtros aplicados.</p>' +
+            '<button class="btn btn--ghost" id="btnLimpar2">Limpar filtros</button>' +
+          '</div></td>';
+          corpo.appendChild(nova);
+          var btnLimpar2 = document.getElementById('btnLimpar2');
+          if (btnLimpar2) {
+            btnLimpar2.addEventListener('click', limparFiltros);
           }
-        } else {
-          emptyRow?.remove();
         }
-      };
+      } else {
+        if (existente) existente.remove();
+      }
+    }
 
-      const debounce = (fn, ms=250) => { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; };
+    function limparFiltros() {
+      if (inpBusca) inpBusca.value = '';
+      if (selCat) selCat.value = '';
+      if (inpDataIni) inpDataIni.value = '';
+      if (inpDataFim) inpDataFim.value = '';
+      tipoAtivo = 'todos';
+      for (var i = 0; i < chips.length; i++) {
+        var c = chips[i];
+        var tipo = c.getAttribute('data-tipo');
+        if (tipo === 'todos') c.classList.add('is-active');
+        else c.classList.remove('is-active');
+      }
+      aplicarFiltros();
+    }
 
-      const clearFilters = () => {
-        if (busca) busca.value = '';
-        if (filtroCategoria) filtroCategoria.value = '';
-        if (dIni) dIni.value = '';
-        if (dFim) dFim.value = '';
-        tipoAtivo = 'todos';
-        chips.forEach(c => c.classList.toggle('is-active', c.dataset.tipo === 'todos'));
-        applyFilters();
-      };
+    if (inpBusca)   inpBusca.addEventListener('input', aplicarFiltros);
+    if (selCat)     selCat.addEventListener('change', aplicarFiltros);
+    if (inpDataIni) inpDataIni.addEventListener('change', aplicarFiltros);
+    if (inpDataFim) inpDataFim.addEventListener('change', aplicarFiltros);
 
-      busca?.addEventListener('input', debounce(applyFilters, 200));
-      filtroCategoria?.addEventListener('change', applyFilters);
-      dIni?.addEventListener('change', applyFilters);
-      dFim?.addEventListener('change', applyFilters);
-
-      chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-          chips.forEach(c => c.classList.remove('is-active'));
+    for (var i = 0; i < chips.length; i++) {
+      (function (chip) {
+        chip.addEventListener('click', function () {
+          for (var j = 0; j < chips.length; j++) chips[j].classList.remove('is-active');
           chip.classList.add('is-active');
-          tipoAtivo = chip.dataset.tipo;
-          applyFilters();
+          tipoAtivo = chip.getAttribute('data-tipo') || 'todos';
+          aplicarFiltros();
         });
-      });
-
-      const setRange = (start, end) => { if (dIni) dIni.value = start; if (dFim) dFim.value = end; applyFilters(); };
-      const todayISO = new Date().toISOString().slice(0,10);
-      const addDays = (d, diff) => { const dt=new Date(d); dt.setDate(dt.getDate()+diff); return dt.toISOString().slice(0,10); };
-      const firstDayMonth = (() => { const dt=new Date(); dt.setDate(1); return dt.toISOString().slice(0,10); })();
-      const lastDayMonth  = (() => { const dt=new Date(); dt.setMonth(dt.getMonth()+1,0); return dt.toISOString().slice(0,10); })();
-
-      document.getElementById('btnHoje')?.addEventListener('click', () => setRange(todayISO, todayISO));
-      document.getElementById('btn7d')?.addEventListener('click', () => setRange(addDays(todayISO,-6), todayISO));
-      document.getElementById('btn30d')?.addEventListener('click', () => setRange(addDays(todayISO,-29), todayISO));
-      document.getElementById('btnMes')?.addEventListener('click', () => setRange(firstDayMonth, lastDayMonth));
-      document.getElementById('btnLimparFiltros')?.addEventListener('click', clearFilters);
-
-      // ===== Busca fixos
-      const buscaFixos = $('#buscaFixos');
-      buscaFixos?.addEventListener('input', debounce(() => {
-        const q = buscaFixos.value.toLowerCase().trim();
-        $$('#tabelaFixos tbody tr').forEach(row => {
-          if (row.classList.contains('empty-row')) return;
-          const texto = Array.from(row.querySelectorAll('[data-col="nome"], [data-col="recorrencia"]'))
-            .map(td => td.textContent.toLowerCase())
-            .join(' ');
-          row.style.display = texto.includes(q) ? '' : 'none';
-        });
-      }, 200));
-    })();
-
-    // ===== SweetAlert (botões seguindo seu modelo de CSS)
-    function confirmarExclusaoLancamento(id) {
-      Swal.fire({
-        title: 'Tem certeza?',
-        text: 'Deseja excluir este lançamento?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Cancelar',
-        buttonsStyling: false,
-        customClass: {
-          confirmButton: 'btn btn--danger',
-          cancelButton: 'btn btn--ghost'
-        }
-      }).then((result) => {
-        if (!result.isConfirmed) return;
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/financeiro/delete/${id}`;
-        document.body.appendChild(form);
-        form.submit();
-      });
+      })(chips[i]);
     }
 
-    function confirmarExclusaoGastoFixo(id) {
-      Swal.fire({
-        title: 'Excluir gasto fixo?',
-        text: 'Essa ação não pode ser desfeita.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sim, excluir!',
-        cancelButtonText: 'Cancelar',
-        buttonsStyling: false,
-        customClass: {
-          confirmButton: 'btn btn--danger',
-          cancelButton: 'btn btn--ghost'
+    var btnHoje   = document.getElementById('btnHoje');
+    var btn7d     = document.getElementById('btn7d');
+    var btn30d    = document.getElementById('btn30d');
+    var btnMes    = document.getElementById('btnMes');
+    var btnLimpar = document.getElementById('btnLimparFiltros');
+
+    function setRange(startISO, endISO) {
+      if (inpDataIni) inpDataIni.value = startISO;
+      if (inpDataFim) inpDataFim.value = endISO;
+      aplicarFiltros();
+    }
+
+    if (btnHoje)   btnHoje.addEventListener('click', function(){ setRange(hojeISO(), hojeISO()); });
+    if (btn7d)     btn7d.addEventListener('click', function(){ setRange(addDias(hojeISO(), -6), hojeISO()); });
+    if (btn30d)    btn30d.addEventListener('click', function(){ setRange(addDias(hojeISO(), -29), hojeISO()); });
+    if (btnMes)    btnMes.addEventListener('click', function(){ setRange(primeiroDiaDoMes(), ultimoDiaDoMes()); });
+    if (btnLimpar) btnLimpar.addEventListener('click', limparFiltros);
+
+    var modalFixo = document.getElementById('modalGastoFixo');
+    var formFixo  = document.getElementById('formGastoFixo');
+    var btnNF1    = document.getElementById('btnNovoGastoFixo');
+    var btnNF2    = document.getElementById('btnEmptyAddFixo');
+    var btnFFecha = document.getElementById('fecharModalFixo');
+    var btnFCan   = document.getElementById('cancelarGastoFixo');
+
+    function abrirFixo() {
+      if (!modalFixo) return;
+      modalFixo.classList.add('is-open');
+      setTimeout(function(){
+        if (!formFixo) return;
+        var primeiro = formFixo.querySelector('input, select');
+        if (primeiro) primeiro.focus();
+      }, 0);
+    }
+    function fecharFixo() {
+      if (modalFixo) modalFixo.classList.remove('is-open');
+    }
+    if (btnNF1) btnNF1.addEventListener('click', abrirFixo);
+    if (btnNF2) btnNF2.addEventListener('click', abrirFixo);
+    if (btnFFecha) btnFFecha.addEventListener('click', fecharFixo);
+    if (btnFCan) btnFCan.addEventListener('click', fecharFixo);
+    window.addEventListener('click', function (e) {
+      if (e.target === modalFixo) fecharFixo();
+    });
+
+    var inpBuscaFixos = document.getElementById('buscaFixos');
+    if (inpBuscaFixos) {
+      inpBuscaFixos.addEventListener('input', function () {
+        var q = (inpBuscaFixos.value || '').toLowerCase().trim();
+        var corpo = document.querySelector('#tabelaFixos tbody');
+        if (!corpo) return;
+        var linhas = corpo.querySelectorAll('tr');
+        for (var i = 0; i < linhas.length; i++) {
+          var row = linhas[i];
+          if (row.classList.contains('empty-row')) continue;
+          var cols = row.querySelectorAll('[data-col="nome"], [data-col="recorrencia"]');
+          var txt = '';
+          for (var c = 0; c < cols.length; c++) {
+            txt += ' ' + (cols[c].textContent || '').toLowerCase();
+          }
+          row.style.display = txt.indexOf(q) > -1 ? '' : 'none';
         }
-      }).then(async (result) => {
-        if (!result.isConfirmed) return;
-        try {
-          const resp = await fetch(`/gastos-fixos/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } });
-          if (!resp.ok) throw new Error('Falha ao excluir');
+      });
+    }
+  });
+
+  window.confirmarExclusaoLancamento = function (id) {
+    if (typeof Swal === 'undefined') return;
+    Swal.fire({
+      title: 'Tem certeza?',
+      text: 'Deseja excluir este lançamento?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false,
+      customClass: { confirmButton: 'btn btn--danger', cancelButton: 'btn btn--ghost' }
+    }).then(function (res) {
+      if (!res.isConfirmed) return;
+      var f = document.createElement('form');
+      f.method = 'POST';
+      f.action = '/financeiro/delete/' + id;
+      document.body.appendChild(f);
+      f.submit();
+    });
+  };
+
+  window.confirmarExclusaoGastoFixo = function (id) {
+    if (typeof Swal === 'undefined') return;
+    Swal.fire({
+      title: 'Excluir gasto fixo?',
+      text: 'Essa ação não pode ser desfeita.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sim, excluir!',
+      cancelButtonText: 'Cancelar',
+      buttonsStyling: false,
+      customClass: { confirmButton: 'btn btn--danger', cancelButton: 'btn btn--ghost' }
+    }).then(function (res) {
+      if (!res.isConfirmed) return;
+      fetch('/gastos-fixos/' + id, { method: 'DELETE', headers: { 'Content-Type': 'application/json' } })
+        .then(function (r) {
+          if (!r.ok) throw new Error();
           location.reload();
-        } catch (e) {
+        })
+        .catch(function () {
           Swal.fire('Erro', 'Não foi possível excluir o gasto fixo.', 'error');
-        }
-      });
-    }
+        });
+    });
+  };
+

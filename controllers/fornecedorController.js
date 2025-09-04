@@ -9,6 +9,22 @@ function onlyDigits(str = '') {
 }
 
 module.exports = {
+  listar: async (req, res, next) => {
+    try {
+      const usuarioId = req.session?.userId;
+      if (!usuarioId) {
+        if (wantsJSON(req)) return res.status(401).json({ error: 'Não autenticado.' });
+        return res.redirect('/login');
+      }
+
+      const fornecedores = await Fornecedor.getAll(usuarioId);
+      return res.render('dados-fornecedor', { fornecedores: fornecedores || [] });
+    } catch (err) {
+      console.error('[fornecedorController.listar]', err);
+      return next?.(err);
+    }
+  },
+
   create: async (req, res) => {
     try {
       const usuarioId = req.session.userId;
@@ -20,7 +36,7 @@ module.exports = {
       let { nome, email, cnpj, telefone } = req.body;
       const nomeTrim = (nome || '').trim();
       const emailTrim = email?.trim() || null;
-      const telTrim = telefone?.trim() || null;
+      const telTrim   = telefone?.trim() || null;
 
       if (!nomeTrim) {
         const msg = 'Nome é obrigatório.';

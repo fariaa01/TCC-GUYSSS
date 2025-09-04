@@ -1,4 +1,4 @@
-const gastosFixosModel = require('../models/financeiro/gastos-fixosModel');
+const gastosFixosModel = require('../../models/financeiro/gastos-fixosModel');
 
 module.exports = {
   list: async (req, res) => {

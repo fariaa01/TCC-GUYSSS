@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const estoqueCtrl = require('../controllers/estoqueController');
+const estoqueCtrl = require('../controllers/estoque/estoqueController');
 
 router.get('/', estoqueCtrl.listar);
 router.post('/create', estoqueCtrl.criar);

@@ -1,6 +1,6 @@
 const show = (el) => el && el.classList.remove('is-hidden');
 const hide = (el) => el && el.classList.add('is-hidden');
-const openModal  = (el) => el && el.classList.add('is-open');
+const openModal = (el) => el && el.classList.add('is-open');
 const closeModal = (el) => el && el.classList.remove('is-open');
 
 const modal = document.getElementById("modalProduto");
@@ -37,18 +37,18 @@ btnFecharEditar?.addEventListener("click", () => closeModal(modalEditar));
 document.getElementById("cancelarModalEditar")?.addEventListener("click", () => closeModal(modalEditar));
 window.addEventListener("click", (e) => { if (e.target === modalEditar) closeModal(modalEditar); });
 
-const selectEditProduto   = document.getElementById('edit_produto');
+const selectEditProduto = document.getElementById('edit_produto');
 const selectEditCategoria = document.getElementById('edit_categoria');
-const selectEditUnidade   = document.getElementById('edit_unidade_medida');
+const selectEditUnidade = document.getElementById('edit_unidade_medida');
 
 function syncProdutoToFields({ force = false } = {}) {
   if (!selectEditProduto) return;
   const opt = selectEditProduto.options[selectEditProduto.selectedIndex];
   if (!opt) return;
   const cat = opt.dataset.categoria || '';
-  const uni = opt.dataset.unidade   || '';
+  const uni = opt.dataset.unidade || '';
   if (force || !selectEditCategoria.value) selectEditCategoria.value = cat || selectEditCategoria.value;
-  if (force || !selectEditUnidade.value)   selectEditUnidade.value   = uni || selectEditUnidade.value;
+  if (force || !selectEditUnidade.value) selectEditUnidade.value = uni || selectEditUnidade.value;
 }
 
 function selectOptionOrCreate(selectEl, value) {
@@ -100,13 +100,13 @@ function abrirEditarEstoque(btn) {
   selectOptionOrCreate(selectEditProduto, produtoAtual);
 
   selectEditCategoria.value = get('data-categoria');
-  selectEditUnidade.value   = get('data-unidade_medida');
+  selectEditUnidade.value = get('data-unidade_medida');
 
-  setVal('edit_quantidade',         get('data-quantidade'));
-  setVal('edit_quantidade_minima',  get('data-quantidade_minima'));
-  setVal('edit_valor',              get('data-valor'));
-  setVal('edit_validade',           get('data-validade'));
-  setVal('edit_fornecedor',         get('data-fornecedor'));
+  setVal('edit_quantidade', get('data-quantidade'));
+  setVal('edit_quantidade_minima', get('data-quantidade_minima'));
+  setVal('edit_valor', get('data-valor'));
+  setVal('edit_validade', get('data-validade'));
+  setVal('edit_fornecedor', get('data-fornecedor'));
 
   if (!selectEditCategoria.value || !selectEditUnidade.value) {
     syncProdutoToFields({ force: false });
@@ -140,7 +140,7 @@ function confirmarExclusao(id) {
       window.location.href = `/estoque/delete/${id}`;
     }
   });
-  return false; 
+  return false;
 }
 window.confirmarExclusao = confirmarExclusao;
 
@@ -158,16 +158,16 @@ window.confirmarExclusao = confirmarExclusao;
 })();
 
 (function () {
-  const selectProduto  = document.getElementById('selectProdutoCadastro');
+  const selectProduto = document.getElementById('selectProdutoCadastro');
   const selectCategoria = document.getElementById('selectCategoria');
-  const selectUnidade   = document.getElementById('selectUnidade');
+  const selectUnidade = document.getElementById('selectUnidade');
 
   function applyDefaultsFromOption(opt) {
     if (!opt) return;
     const cat = opt.getAttribute('data-categoria') || '';
     const uni = opt.getAttribute('data-unidade') || '';
     if (cat && !selectCategoria.value) selectCategoria.value = cat;
-    if (uni && !selectUnidade.value)   selectUnidade.value   = uni;
+    if (uni && !selectUnidade.value) selectUnidade.value = uni;
   }
 
   selectProduto?.addEventListener('change', function () {
@@ -182,7 +182,7 @@ window.confirmarExclusao = confirmarExclusao;
 
 (function () {
   const cnpj = document.getElementById('cnpjFornecedor');
-  const tel  = document.getElementById('telefoneFornecedor');
+  const tel = document.getElementById('telefoneFornecedor');
 
   if (cnpj) IMask(cnpj, { mask: '00.000.000/0000-00' });
   if (tel) IMask(tel, { 
@@ -196,11 +196,11 @@ window.confirmarExclusao = confirmarExclusao;
 window.__produtoFiltroAtivo = false;
 
 (function(){
-  const tbody   = document.querySelector('tbody');
-  const $wrap   = document.getElementById('resumoProduto');
-  const $nome   = document.getElementById('resumoNome');
-  const $qtd    = document.getElementById('resumoQtd');
-  const $unid   = document.getElementById('resumoUnid');
+  const tbody = document.querySelector('tbody');
+  const $wrap = document.getElementById('resumoProduto');
+  const $nome = document.getElementById('resumoNome');
+  const $qtd = document.getElementById('resumoQtd');
+  const $unid = document.getElementById('resumoUnid');
   const $valorW = document.getElementById('resumoValorWrap');
   const selProd = document.getElementById('f-prod');
 

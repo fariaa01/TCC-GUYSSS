@@ -2,8 +2,8 @@ const Estoque = require('../../models/estoque/estoqueModel');
 const produtosModel = require('../../models/estoque/produtoModel');
 const fornecedoresModel = require('../../models/estoque/fornecedorModel');
 
-function unicos(lista) {
-  return [...new Set((lista || []).filter(v => v && String(v).trim() !== ''))];
+function uniq(arr) {
+  return [...new Set((arr || []).filter(v => v !== null && v !== undefined && String(v).trim() !== ''))];
 }
 
 function soData(d) {
@@ -12,32 +12,26 @@ function soData(d) {
   return new Date(x.getFullYear(), x.getMonth(), x.getDate());
 }
 
-function contarAlertas(lista) {
+function calcularAlertas(rows) {
   const hoje = soData(new Date());
-  let vencidos = 0;
-  let proximos = 0;
-  let baixos = 0;
+  let cntVencidos = 0;
+  let cntProx7   = 0;
+  let cntBaixo   = 0;
 
-  for (const p of (lista || [])) {
+  for (const p of (rows || [])) {
     const validade = p.validade ? soData(p.validade) : null;
     const qtd = Number(p.quantidade);
     const min = Number(p.quantidade_minima);
 
-    if (!Number.isNaN(qtd) && !Number.isNaN(min) && qtd < min) baixos++;
+    if (!Number.isNaN(qtd) && !Number.isNaN(min) && qtd < min) cntBaixo++;
 
     if (validade) {
-      const diff = Math.ceil((validade - hoje) / (1000 * 60 * 60 * 24));
-      if (validade < hoje) vencidos++;
-      else if (diff >= 0 && diff <= 7) proximos++;
+      const diffDias = Math.ceil((validade - hoje) / (1000*60*60*24));
+      if (validade < hoje) cntVencidos++;
+      else if (diffDias >= 0 && diffDias <= 7) cntProx7++;
     }
   }
-
-  return {
-    vencidos,
-    proximos,
-    baixos,
-    total: vencidos + proximos + baixos
-  };
+  return { cntVencidos, cntProx7, cntBaixo, totalAlerts: cntVencidos + cntProx7 + cntBaixo };
 }
 
 module.exports = {
@@ -46,12 +40,12 @@ module.exports = {
       const usuarioId = req.session.userId;
       if (!usuarioId) return res.redirect('/login');
 
-      const filtros = {
-        produto: req.query.produto || '',
-        categoria: req.query.categoria || '',
+      const filtrosAtuais = {
+        produto:    req.query.produto    || '',
+        categoria:  req.query.categoria  || '',
         fornecedor: req.query.fornecedor || '',
-        validade: req.query.validade || '',
-        status: req.query.status || ''
+        validade:   req.query.validade   || '',
+        status:     req.query.status     || ''
       };
 
       const todos = await Estoque.getFiltrado({
@@ -61,50 +55,50 @@ module.exports = {
         usuarioId
       });
 
-      let lista = await Estoque.getFiltrado({
-        categoria: filtros.categoria || null,
-        fornecedor: filtros.fornecedor || null,
-        validade: filtros.validade || null,
+      let produtosRaw = await Estoque.getFiltrado({
+        categoria: filtrosAtuais.categoria || null,
+        fornecedor: filtrosAtuais.fornecedor || null,
+        validade: filtrosAtuais.validade || null,
         usuarioId
       });
 
-      if (filtros.produto) {
-        lista = lista.filter(p => String(p.produto) === filtros.produto);
+      if (filtrosAtuais.produto) {
+        produtosRaw = produtosRaw.filter(p => String(p.produto) === filtrosAtuais.produto);
       }
-      if (filtros.status === 'abaixoMinimo') {
-        lista = lista.filter(p => Number(p.quantidade) < Number(p.quantidade_minima));
+      if (filtrosAtuais.status === 'abaixoMinimo') {
+        produtosRaw = produtosRaw.filter(p => Number(p.quantidade) < Number(p.quantidade_minima));
       }
 
-      const produtos = (lista || []).map(p => ({
+      const produtos = (produtosRaw || []).map(p => ({
         ...p,
         valor: p?.valor != null ? Number(p.valor) : 0
       }));
 
-      const nomesProdutos = unicos((todos || []).map(p => p.produto)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-      const categoriasUnicas = unicos((todos || []).map(p => p.categoria)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-      const fornecedoresUnicos = unicos((todos || []).map(p => p.fornecedor)).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      const nomesProdutos        = uniq((todos || []).map(p => p.produto)).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      const categoriasUnicas     = uniq((todos || []).map(p => p.categoria)).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      const fornecedoresUnicos   = uniq((todos || []).map(p => p.fornecedor)).sort((a,b)=>a.localeCompare(b,'pt-BR'));
 
-      const produtosCadastrados = await produtosModel.listarTodos(usuarioId);
+      const produtosCadastrados     = await produtosModel.listarTodos(usuarioId);
       const fornecedoresCadastrados = await fornecedoresModel.listarTodos(usuarioId);
 
-      const { vencidos, proximos, baixos, total } = contarAlertas(todos);
+      const { cntVencidos, cntProx7, cntBaixo, totalAlerts } = calcularAlertas(todos);
 
       return res.render('estoque', {
         produtos,
         nomesProdutos,
         categoriasUnicas,
         fornecedoresUnicos,
-        filtros,
+        filtrosAtuais,
         produtosCadastrados,
         fornecedoresCadastrados,
-        cntVencidos: vencidos,
-        cntProx7: proximos,
-        cntBaixo: baixos,
-        totalAlerts: total,
+        cntVencidos,
+        cntProx7,
+        cntBaixo,
+        totalAlerts,
         cspNonce: res.locals.cspNonce
       });
     } catch (err) {
-      console.error('Erro ao listar estoque:', err);
+      console.error('[Estoque.listar] Erro:', err);
       return res.redirect('/estoque?ok=0&msg=Erro ao carregar o estoque');
     }
   },
@@ -115,10 +109,10 @@ module.exports = {
       if (!usuarioId) return res.redirect('/login');
 
       await Estoque.create(req.body, usuarioId);
-      return res.redirect('/estoque?ok=1&msg=Produto adicionado');
+      return res.redirect('/estoque?ok=1&msg=Produto adicionado ao estoque');
     } catch (err) {
-      console.error('Erro ao criar produto:', err);
-      return res.redirect('/estoque?ok=0&msg=Não foi possível adicionar');
+      console.error('[Estoque.criar] Erro:', err);
+      return res.redirect('/estoque?ok=0&msg=Não foi possível adicionar o produto');
     }
   },
 
@@ -135,18 +129,18 @@ module.exports = {
       await Estoque.update(req.params.id, req.body, usuarioId);
 
       if (req.xhr || req.headers.accept?.includes('json')) {
-        return res.json({ ok: true, message: 'Atualizado' });
+        return res.json({ ok: true, message: 'Registro atualizado' });
       }
 
-      return res.redirect('/estoque?ok=1&msg=Atualizado');
+      return res.redirect('/estoque?ok=1&msg=Registro atualizado');
     } catch (err) {
-      console.error('Erro ao atualizar produto:', err);
+      console.error('[Estoque.atualizar] Erro:', err);
 
       if (req.xhr || req.headers.accept?.includes('json')) {
         return res.status(500).json({ ok: false, message: 'Erro ao atualizar' });
       }
 
-      return res.redirect('/estoque?ok=0&msg=Não foi possível atualizar');
+      return res.redirect('/estoque?ok=0&msg=Não foi possível atualizar o registro');
     }
   },
 
@@ -156,10 +150,10 @@ module.exports = {
       if (!usuarioId) return res.redirect('/login');
 
       await Estoque.delete(req.params.id, usuarioId);
-      return res.redirect('/estoque?ok=1&msg=Excluído');
+      return res.redirect('/estoque?ok=1&msg=Registro excluído');
     } catch (err) {
-      console.error('Erro ao deletar produto:', err);
-      return res.redirect('/estoque?ok=0&msg=Não foi possível excluir');
+      console.error('[Estoque.deletar] Erro:', err);
+      return res.redirect('/estoque?ok=0&msg=Não foi possível excluir o registro');
     }
   }
 };

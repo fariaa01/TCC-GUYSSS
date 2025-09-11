@@ -37,5 +37,24 @@ module.exports = {
 
   async getAll(usuarioId) {
     return this.listarTodos(usuarioId);
-  }
+  },
+
+  async update(id, { nome, email, cnpj, telefone }, usuarioId) {
+    if (!usuarioId) throw new Error('usuarioId ausente em fornecedorModel.update');
+
+    const cnpjDigits = cnpj ? onlyDigits(cnpj) : null;
+
+    const sql = `UPDATE fornecedores SET nome = ?, email = ?, cnpj = ?, telefone = ?, updated_at = NOW() WHERE id = ? AND usuario_id = ?`;
+    const params = [nome, email || null, cnpjDigits || null, telefone || null, id, usuarioId];
+    const [result] = await pool.execute(sql, params);
+    return result.affectedRows > 0;
+  },
+
+  async delete(id, usuarioId) {
+    if (!usuarioId) throw new Error('usuarioId ausente em fornecedorModel.delete');
+    const sql = `DELETE FROM fornecedores WHERE id = ? AND usuario_id = ?`;
+    const params = [id, usuarioId];
+    const [result] = await pool.execute(sql, params);
+    return result.affectedRows > 0;
+  } 
 };

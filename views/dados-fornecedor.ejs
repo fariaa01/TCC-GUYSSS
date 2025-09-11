@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fornecedores</title>
   <link rel="stylesheet" href="/dada-fornecedor/dados.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 </head>
 <body>
   <div class="container">
@@ -35,8 +37,27 @@
         </tr>
       <% }) %>
     </tbody>
+    <div id="modalEditarFornecedor" class="modal">
+      <div class="modal-content">
+        <span class="close" id="fecharModalEditar">&times;</span>
+        <h2>Editar Fornecedor</h2>
+
+        <form id="formEditarFornecedor" method="POST" action="/fornecedores/{id}/update">
+          <input type="hidden" id="editarId" name="id">
+          <label for="editarNome">Nome:</label>
+          <input type="text" id="editarNome" name="nome" required>
+          <label for="editarEmail">Email:</label>
+          <input type="email" id="editarEmail" name="email" required>
+          <label for="editarCNPJ">CNPJ:</label>
+          <input type="text" id="editarCNPJ" name="cnpj" required maxlength="18">
+          <label for="editarTelefone">Telefone:</label>
+          <input type="text" id="editarTelefone" name="telefone" required max="length="15">
+          <button type="submit">Salvar</button>
+        </form>
+      </div>
+    </div>
   </table>
-
-
+  <script nonce="<%= cspNonce %>" src="/dada-fornecedor/forncedor.js"></script>
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
 </body>
 </html>

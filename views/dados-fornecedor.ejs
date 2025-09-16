@@ -1,21 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fornecedores</title>
-  <link rel="stylesheet" href="/dada-fornecedor/dados.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+  <link rel="stylesheet" href="/dada-fornecedor/dados.css" />
+  <style nonce="<%= cspNonce %>">
+    .row-hidden{display:none!important}
+  </style>
 </head>
 <body>
   <div class="container">
-  <h1>Gestão de Fornecedores</h1>  
-  <a href="/dashboard"  class="btn-voltar">⬅ Voltar</a>
+    <h2>Gestão de Fornecedores</h2>
+    <a href="/dashboard" class="btn btn--info btn-voltar">⬅ Voltar</a>
   </div>
+
   <table>
     <thead>
       <tr>
@@ -27,21 +26,180 @@
       </tr>
     </thead>
     <tbody>
-      <% fornecedores.forEach(fornecedor => { %>
-        <tr>
-          <td><%= fornecedor.nome %></td>
-          <td><%= fornecedor.email %></td>
-          <td><%= fornecedor.cnpj %></td>
-          <td><%= fornecedor.telefone %></td>
-          <td>
-            <button class="editar-btn" data-id="<%= fornecedor.id %>">Editar</button>
-            <button class="deletar-btn" data-id="<%= fornecedor.id %>">Deletar</button>
+      <% (fornecedores || []).forEach(f => { %>
+        <tr data-id="<%= f.id %>">
+          <td data-label="Nome"     class="td-nome"><%= f.nome %></td>
+          <td data-label="Email"    class="td-email"><%= f.email %></td>
+          <td data-label="CNPJ"     class="td-cnpj"><%= f.cnpj %></td>
+          <td data-label="Telefone" class="td-telefone"><%= f.telefone %></td>
+          <td data-label="Ações">
+            <div class="badges" style="gap:10px">
+              <button
+                class="btn-editar editar-btn"
+                data-id="<%= f.id %>"
+                data-nome="<%= f.nome %>"
+                data-email="<%= f.email %>"
+                data-cnpj="<%= f.cnpj %>"
+                data-telefone="<%= f.telefone %>"
+                title="Editar fornecedor"
+              >
+                Editar
+              </button>
+              <form class="form-delete" action="/fornecedores/deletar/<%= f.id %>" method="POST" data-id="<%= f.id %>">
+                <button type="submit" class="btn btn--danger btn-excluir">Deletar</button>
+              </form>
+            </div>
           </td>
         </tr>
       <% }) %>
     </tbody>
   </table>
 
+  <div id="modalEditarFornecedor" class="modal-editar is-hidden" aria-hidden="true">
+    <div class="modal-content-editar" role="dialog" aria-modal="true" aria-labelledby="tituloEditarFornecedor">
+      <button type="button" id="fecharModalFornecedorEditar" class="close" aria-label="Fechar">&times;</button>
+      <h3 id="tituloEditarFornecedor">Editar fornecedor</h3>
+      <form id="formEditarFornecedor" method="POST" novalidate>
+        <input type="hidden" id="edit_fornecedor_id" name="id" />
+        <label for="edit_fornecedor_nome">Nome</label>
+        <input type="text" id="edit_fornecedor_nome" name="nome" required />
+        <label for="edit_fornecedor_email">Email</label>
+        <input type="email" id="edit_fornecedor_email" name="email" />
+        <label for="edit_fornecedor_cnpj">CNPJ</label>
+        <input type="text" id="edit_fornecedor_cnpj" name="cnpj" inputmode="numeric" />
+        <label for="edit_fornecedor_telefone">Telefone</label>
+        <input type="text" id="edit_fornecedor_telefone" name="telefone" />
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top: 12px;">
+          <button type="button" id="cancelarModalFornecedorEditar" class="btn btn--secondary modal-content-editar btn-secondary-editar">Cancelar</button>
+          <button type="submit" class="btn btn--primary modal-content-editar btn-primary-editar">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <script nonce="<%= cspNonce %>">
+   window.show ??= (el) => el && el.classList.remove('is-hidden');
+   window.hide ??= (el) => el && el.classList.add('is-hidden');
+   window.openModal ??= (el) => { if (el) { el.classList.add('is-open'); show(el); } };
+   window.closeModal ??= (el) => { if (el) { el.classList.remove('is-open'); hide(el); } };
+
+   const $  = (s, el=document) => el.querySelector(s);
+   const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+
+   const modalFornecedorEditar       = $('#modalEditarFornecedor');
+   const btnFecharFornecedorEditar   = $('#fecharModalFornecedorEditar');
+   const btnCancelarFornecedorEditar = $('#cancelarModalFornecedorEditar');
+   const formEditarFornecedor        = $('#formEditarFornecedor');
+
+   const inId    = $('#edit_fornecedor_id');
+   const inNome  = $('#edit_fornecedor_nome');
+   const inEmail = $('#edit_fornecedor_email');
+   const inCNPJ  = $('#edit_fornecedor_cnpj');
+   const inTel   = $('#edit_fornecedor_telefone');
+
+   const soDigitos = (s='') => (s || '').replace(/\D+/g, '');
+   function formatCNPJ(v='') {
+     const d = soDigitos(v);
+     if (d.length !== 14) return v || '';
+     return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2}).*$/, '$1.$2.$3/$4-$5');
+   }
+   function formatTelefone(v='') {
+     const d = soDigitos(v);
+     if (d.length === 11) return d.replace(/^(\d{2})(\d{5})(\d{4}).*$/, '($1) $2-$3');
+     if (d.length === 10) return d.replace(/^(\d{2})(\d{4})(\d{4}).*$/, '($1) $2-$3');
+     return v || '';
+   }
+
+   document.addEventListener('click', (e) => {
+     const btn = e.target.closest('.editar-btn');
+     if (!btn) return;
+     const id       = btn.dataset.id || '';
+     const nome     = btn.dataset.nome || '';
+     const email    = btn.dataset.email || '';
+     const cnpj     = btn.dataset.cnpj || '';
+     const telefone = btn.dataset.telefone || '';
+     inId.value    = id;
+     inNome.value  = nome;
+     inEmail.value = email;
+     inCNPJ.value  = cnpj;
+     inTel.value   = telefone;
+     formEditarFornecedor.setAttribute('action', `/fornecedores/editar/${id}`);
+     openModal(modalFornecedorEditar);
+     setTimeout(() => inNome?.focus(), 30);
+   });
+
+   window.addEventListener('click', (e) => { if (e.target === modalFornecedorEditar) closeModal(modalFornecedorEditar); });
+   btnFecharFornecedorEditar?.addEventListener('click', () => closeModal(modalFornecedorEditar));
+   btnCancelarFornecedorEditar?.addEventListener('click', () => closeModal(modalFornecedorEditar));
+   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalFornecedorEditar?.classList.contains('is-open')) closeModal(modalFornecedorEditar); });
+
+   $$('.form-delete').forEach((form) => {
+     form.addEventListener('submit', (e) => {
+       if (!confirm('Tem certeza que deseja deletar este fornecedor?')) e.preventDefault();
+     });
+   });
+
+   formEditarFornecedor?.addEventListener('submit', async (e) => {
+     e.preventDefault();
+     const id = inId.value;
+     if (!id) return;
+     const fd   = new FormData(formEditarFornecedor);
+     const body = new URLSearchParams(fd);
+     const btnSalvar = formEditarFornecedor.querySelector('.btn-primary-editar, .btn.btn--primary');
+     const prevText  = btnSalvar ? btnSalvar.textContent : null;
+     if (btnSalvar) { btnSalvar.dataset.loading = "true"; btnSalvar.textContent = 'Salvando...'; }
+     try {
+       const res = await fetch(`/fornecedores/editar/${encodeURIComponent(id)}`, {
+         method: 'POST',
+         credentials: 'same-origin',
+         headers: {
+           'Accept': 'application/json',
+           'Content-Type': 'application/x-www-form-urlencoded'
+         },
+         body: body.toString()
+       });
+       if (!res.ok) {
+         let errMsg = 'Falha ao salvar';
+         try {
+           const maybe = await res.json();
+           if (maybe && maybe.error) errMsg = maybe.error;
+         } catch (_) {}
+         throw new Error(errMsg);
+       }
+       const data = await res.json();
+       const tr = document.querySelector(`tbody tr[data-id="${CSS.escape(id)}"]`);
+       if (tr) {
+         const nome     = fd.get('nome') || '';
+         const email    = fd.get('email') || '';
+         const cnpj     = fd.get('cnpj') || '';
+         const telefone = fd.get('telefone') || '';
+         const tdNome  = tr.querySelector('.td-nome');
+         const tdEmail = tr.querySelector('.td-email');
+         const tdCnpj  = tr.querySelector('.td-cnpj');
+         const tdTel   = tr.querySelector('.td-telefone');
+         if (tdNome)  tdNome.textContent  = nome;
+         if (tdEmail) tdEmail.textContent = email;
+         if (tdCnpj)  tdCnpj.textContent  = formatCNPJ(cnpj);
+         if (tdTel)   tdTel.textContent   = formatTelefone(telefone);
+         const btn = tr.querySelector('.editar-btn');
+         if (btn) {
+           btn.dataset.nome = nome;
+           btn.dataset.email = email;
+           btn.dataset.cnpj = cnpj;
+           btn.dataset.telefone = telefone;
+         }
+       }
+       closeModal(modalFornecedorEditar);
+     } catch (err) {
+       console.error('Erro ao salvar fornecedor:', err);
+       alert(err.message || 'Não foi possível salvar. Tente novamente.');
+     } finally {
+       if (btnSalvar) {
+         btnSalvar.dataset.loading = "false";
+         btnSalvar.textContent = prevText || 'Salvar alterações';
+       }
+     }
+   });
+  </script>
 </body>
 </html>

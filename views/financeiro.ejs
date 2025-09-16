@@ -10,7 +10,10 @@
   <link rel="stylesheet" href="/financeiro/financeiro.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="layout">
+    <%- include('partials/navbar') %>
+    <%- include('partials/sidebar') %>
+    <div class="container" id="mainContent">
 
     <header class="page-head">
       <div>
@@ -18,10 +21,7 @@
         <p class="subtitle">Entradas, saídas e fixos com filtros rápidos.</p>
       </div>
       <div class="head-actions">
-        <a href="/dashboard" class="btn btn--info">
-          <i class="fas fa-arrow-left"></i>
-          Voltar
-        </a>
+  <!-- botão voltar removido: navbar já fornece navegação -->
         <button class="btn btn--primary" id="btnNovoLancamento">
           <i class="fas fa-plus-circle"></i>
           Adicionar Lançamento
@@ -147,7 +147,7 @@
                 </td>
                 <td data-col="valor">R$ <%= Number(d.valor || 0).toFixed(2) %></td>
                 <td class="center">
-                  <button type="button" class="btn btn--danger btn--icon" title="Excluir" onclick="confirmarExclusaoLancamento('<%= d.id %>')">
+                  <button type="button" class="btn btn--danger btn--icon" title="Excluir" data-role="excluir" data-id="<%= d.id %>">
                     <i class="fas fa-trash-alt"></i>
                   </button>
                 </td>
@@ -213,7 +213,7 @@
                 <td data-col="inicio"><%= diFmt %></td>
                 <td data-col="fim"><%= dfFmt %></td>
                 <td class="center">
-                  <button type="button" class="btn btn--danger btn--icon" title="Excluir" onclick="confirmarExclusaoGastoFixo('<%= f.id %>')">
+                  <button type="button" class="btn btn--danger btn--Icon" title="Excluir" data-role="excluir" data-id="<%= f.id %>">
                     <i class="fas fa-trash-alt"></i>
                   </button>
                 </td>
@@ -234,6 +234,7 @@
         </table>
       </div>
     </section>
+    </div>
   </div>
 
   <!-- Modal Lançamento -->
@@ -260,7 +261,7 @@
         <input type="number" name="valor" placeholder="Valor" step="0.01" inputmode="decimal" required />
         <input type="date" name="data" required />
 
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+        <div class="form-actions">
           <button type="button" class="btn-secondary" id="cancelarLancamento">Cancelar</button>
           <button type="submit" class="btn-primary">Adicionar</button>
         </div>
@@ -278,20 +279,20 @@
         <input type="text" name="nome" placeholder="Ex: Aluguel, Internet..." required />
         <input type="number" name="valor" placeholder="Valor" step="0.01" inputmode="decimal" required />
 
-        <label style="font-size:.9rem; opacity:.8; margin-top:8px;">Recorrência</label>
+  <label class="label-small">Recorrência</label>
         <select name="recorrencia" required>
           <option value="mensal">Mensal</option>
           <option value="semanal">Semanal</option>
           <option value="anual">Anual</option>
         </select>
 
-        <label style="font-size:.9rem; opacity:.8; margin-top:8px;">Período</label>
+  <label class="label-small">Período</label>
         <input type="date" name="data_inicio" required />
         <input type="date" name="data_fim" placeholder="Opcional" />
 
         <textarea name="observacao" placeholder="Observações (opcional)" rows="3"></textarea>
 
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px;">
+        <div class="form-actions">
           <button type="button" class="btn-secondary" id="cancelarGastoFixo">Cancelar</button>
           <button type="submit" class="btn-primary">Adicionar</button>
         </div>

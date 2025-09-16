@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,88 +9,105 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 </head>
+
 <body>
-  <div class="container">
-    <h2>Gestão de Cardápio</h2>
-    <button class="btn-add" id="btnAbrirCategoria">
-      <i class="fas fa-plus"></i> Adicionar Prato
-    </button>
-  </div>
+  <div class="layout">
+    <%- include('partials/navbar') %>
+      <%- include('partials/sidebar') %>
+        <div class="container" id="mainContent">
+          <h2>Gestão de Cardápio</h2>
+          <button class="btn-add" id="btnAbrirCategoria">
+            <i class="fas fa-plus"></i> Adicionar Prato
+          </button>
 
-  <div class="grid-cards">
-    <% pratos.forEach(p => { %>
-      <div class="card <%= (p.arquivado ? 'is-archived' : '') %>" data-id="<%= p.id %>">
-        <% if (p.imagem) { %>
-          <img src="/uploads/<%= p.imagem %>" alt="Foto do prato">
-        <% } else { %>
-          <div class="img-placeholder">Sem imagem</div>
-        <% } %>
+          <div class="grid-cards">
+            <% pratos.forEach(p=> { %>
+              <div class="card <%= (p.arquivado ? 'is-archived' : '') %>" data-id="<%= p.id %>">
+                <% if (p.imagem) { %>
+                  <img src="/uploads/<%= p.imagem %>" alt="Foto do prato">
+                  <% } else { %>
+                    <div class="img-placeholder">Sem imagem</div>
+                    <% } %>
 
-        <div class="card-body">
-          <div class="linha-topo">
-            <h3 class="editable" data-field="nome_prato"><%= p.nome_prato || p.pedido || p.nome %></h3>
+                      <div class="card-body">
+                        <div class="linha-topo">
+                          <h3 class="editable" data-field="nome_prato">
+                            <%= p.nome_prato || p.pedido || p.nome %>
+                          </h3>
 
-            <span class="badge <%= (p.is_disponivel === 0 ? 'badge-off' : 'badge-on') %>">
-              <%= (p.is_disponivel === 0 ? 'Indisponível' : 'Disponível') %>
-            </span>
+                          <span class="badge <%= (p.is_disponivel === 0 ? 'badge-off' : 'badge-on') %>">
+                            <%= (p.is_disponivel===0 ? 'Indisponível' : 'Disponível' ) %>
+                          </span>
 
-            <% if (p.arquivado) { %>
-              <span class="badge badge-archived" title="Este item está arquivado">
-                <i class="fa-solid fa-box-archive"></i> Arquivado
-              </span>
-            <% } %>
-          </div>
+                          <% if (p.arquivado) { %>
+                            <span class="badge badge-archived" title="Este item está arquivado">
+                              <i class="fa-solid fa-box-archive"></i> Arquivado
+                            </span>
+                            <% } %>
+                        </div>
 
-          <% if (p.ingredientes) { %>
-            <p><strong>Ingredientes:</strong> <%= p.ingredientes %></p>
-          <% } %>
+                        <% if (p.ingredientes) { %>
+                          <p><strong>Ingredientes:</strong>
+                            <%= p.ingredientes %>
+                          </p>
+                          <% } %>
 
-          <% if (typeof p.quantidade !== 'undefined') { %>
-            <p><strong>Quantidade:</strong> <%= p.quantidade %></p>
-          <% } %>
+                            <% if (typeof p.quantidade !=='undefined' ) { %>
+                              <p><strong>Quantidade:</strong>
+                                <%= p.quantidade %>
+                              </p>
+                              <% } %>
 
-          <p>
-            <strong>Preço:</strong>
-            <span class="editable" data-field="preco">R$ <%= Number(p.preco).toFixed(2) %></span>
-          </p>
+                                <p>
+                                  <strong>Preço:</strong>
+                                  <span class="editable" data-field="preco">R$ <%= Number(p.preco).toFixed(2) %></span>
+                                </p>
 
-          <label class="switch">
-            <input type="checkbox" class="toggle-disponivel" <%= (p.is_disponivel === 0 ? '' : 'checked') %> />
-            <span class="slider"></span>
-          </label>
+                                <label class="switch">
+                                  <input type="checkbox" class="toggle-disponivel" <%=(p.is_disponivel===0 ? ''
+                                    : 'checked' ) %>
+                                  />
+                                  <span class="slider"></span>
+                                </label>
 
-          <% if (p.observacoes) { %>
-            <p><strong>Obs:</strong> <%= p.observacoes %></p>
-          <% } %>
+                                <% if (p.observacoes) { %>
+                                  <p><strong>Obs:</strong>
+                                    <%= p.observacoes %>
+                                  </p>
+                                  <% } %>
 
-          <div class="actions">
-            <% if (p.arquivado) { %>
-              <button type="button" class="btn-restaurar" data-id="<%= p.id %>">
-                <i class="fa-solid fa-rotate-left"></i> Restaurar
-              </button>
-            <% } else { %>
-              <button type="button" class="btn-arquivar" data-id="<%= p.id %>">
-                <i class="fa-solid fa-box-archive"></i> Arquivar
-              </button>
-            <% } %>
+                                    <div class="actions">
+                                      <% if (p.arquivado) { %>
+                                        <button type="button" class="btn-restaurar" data-id="<%= p.id %>">
+                                          <i class="fa-solid fa-rotate-left"></i> Restaurar
+                                        </button>
+                                        <% } else { %>
+                                          <button type="button" class="btn-arquivar" data-id="<%= p.id %>">
+                                            <i class="fa-solid fa-box-archive"></i> Arquivar
+                                          </button>
+                                          <% } %>
 
-            <form action="/menu/delete/<%= p.id %>" method="POST" class="form-excluir">
-              <button type="submit" class="btn-excluir">Excluir</button>
-            </form>
+                                            <form action="/menu/delete/<%= p.id %>" method="POST" class="form-excluir">
+                                              <button type="submit" class="btn-excluir">Excluir</button>
+                                            </form>
+                                    </div>
+                      </div>
+              </div>
+              <% }) %>
           </div>
         </div>
-      </div>
-    <% }) %>
   </div>
 
-  <a href="/dashboard" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+
+
+  <!-- botão voltar removido: navbar já fornece navegação -->
 
   <div id="modalCategoria" class="modal">
     <div class="modal-content">
       <span class="close" id="fecharCategoria">&times;</span>
       <h3>Escolher Categoria</h3>
       <select id="selectCategoria" required>
-        <option value="">Selecione...</option>  
+        <option value="">Selecione...</option>
         <option value="lanche">Lanche</option>
         <option value="bebida">Bebida</option>
         <option value="sobremesa">Sobremesa</option>
@@ -115,7 +133,7 @@
           <label for="foto" class="dropzone" id="dropzone">
             <i class="fas fa-image"></i>
             <div class="dz-text">
-              <strong>Arraste e solte</strong> uma imagem aqui<br/>
+              <strong>Arraste e solte</strong> uma imagem aqui<br />
               ou <u>clique para selecionar</u>
               <div class="dz-sub">PNG, JPG ou WEBP • até 2MB</div>
             </div>
@@ -131,7 +149,7 @@
 
   <script nonce="<%= cspNonce %>">
     document.querySelectorAll('.form-excluir').forEach(form => {
-      form.addEventListener('submit', function(e) {
+      form.addEventListener('submit', function (e) {
         e.preventDefault();
         Swal.fire({
           title: "Tem certeza?",
@@ -257,4 +275,5 @@
   <script nonce="<%= cspNonce %>" src="/menu/js/menu-modals.js" defer></script>
   <script nonce="<%= cspNonce %>" src="/menu/js/upload-zone.js" defer></script>
 </body>
+
 </html>

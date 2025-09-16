@@ -5,22 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title><%= empresaNome %> — Checkout</title>
   <link rel="stylesheet" href="/cardapio/cardapio.css"/>
-  <style>
-    /* pode usar o CSS do checkout que você já me passou */
-    .wrap{max-width:900px;margin:24px auto;padding:0 16px}
-    .panel{background:#fff;border:1px solid #e9eef3;border-radius:16px;padding:16px}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .form-grid .full{grid-column:1/-1}
-    .field{display:flex;flex-direction:column;gap:6px}
-    .field input,.field select{border:1px solid #e9eef3;border-radius:12px;padding:10px 12px}
-    .btn-primary{width:100%;padding:12px 14px;border-radius:12px;border:0;background:linear-gradient(90deg,#3b5bff,#5a59ff);color:#fff;font-weight:800;cursor:pointer}
-  </style>
+  <link rel="stylesheet" href="/checkout/checkout.css"/>
 </head>
 <body>
   <div class="wrap">
     <h1>Checkout</h1>
 
-    <div class="panel" style="margin-bottom:14px">
+  <div class="panel mb-sm">
       <h3>Seu pedido</h3>
       <div id="lista-itens"></div>
       <hr class="line"/>
@@ -29,7 +20,7 @@
       <div class="row total"><span>Total</span><strong id="sumTotal">R$ 0,00</strong></div>
     </div>
 
-    <div class="panel" style="margin-bottom:14px">
+  <div class="panel mb-sm">
       <h3>Identificação</h3>
       <p class="sub">Você pode finalizar como convidado. Se preferir, <a href="#" id="btnAbrirLogin">entrar/criar conta</a>.</p>
       <div class="form-grid">
@@ -44,7 +35,7 @@
       </div>
     </div>
 
-    <div class="panel" style="margin-bottom:14px">
+  <div class="panel mb-sm">
       <h3>Entrega</h3>
       <div class="form-grid">
         <label class="field full"><span>Rua</span><input id="ent_rua" placeholder="Rua / Avenida"></label>
@@ -74,8 +65,8 @@
           <input id="obs" placeholder="Ex.: sem cebola, ponto da carne, troco para R$ 50...">
         </label>
       </div>
-      <button class="btn-primary" id="btnFinalizar">Finalizar pedido</button>
-      <p id="fb" class="muted" style="margin-top:8px;"></p>
+  <button class="btn-primary" id="btnFinalizar">Finalizar pedido</button>
+  <p id="fb" class="muted mt8"></p>
     </div>
   </div>
 

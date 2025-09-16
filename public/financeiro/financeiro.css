@@ -8,6 +8,7 @@
 html,
 body {
   height: 100%;
+  width: 100%;
 }
 
 .is-hidden {
@@ -533,6 +534,19 @@ tbody tr:last-child td {
   background: #fff;
   color: #333;
   appearance: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.label-small {
+  font-size: .9rem;
+  opacity: .8;
+  margin-top: 8px;
 }
 
 .modal-content input:focus,

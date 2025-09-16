@@ -1,0 +1,53 @@
+:root{
+	--sidebar-width: 260px;
+	--transition-speed: 250ms;
+}
+
+.toggle-btn{ background:transparent; border:none; font-size:1.2rem; cursor:pointer; box-shadow: #222;}
+.toggle-btn i{ transition: transform var(--transition-speed) ease; transform-origin:center; }
+.toggle-btn i.rotate{ transform: rotate(180deg); }
+
+.brand-link{ font-weight:700; color:#222; text-decoration:none }
+
+/* Layout helper: ensure views using .layout get the same two-column behavior */
+.layout { display: grid; grid-template-columns: var(--sidebar-width) 1fr; column-gap: 100px; row-gap: 24px; padding: 24px; }
+.main-content, #mainContent, .container { min-width: 0; }
+
+/* make the topbar span the full width of the grid so the sidebar appears on the left */
+.topbar {
+	grid-column: 1 / -1;
+	z-index: 1100;
+}
+
+/* Main content shift when sidebar closed */
+#mainContent.sidebar-hidden,
+.container.sidebar-hidden,
+main.sidebar-hidden {
+	margin-left:0 !important;
+	margin-right: 10px !important;
+	transition: margin-left var(--transition-speed) ease;
+}
+
+#mainContent,
+.container,
+main {
+		margin-left: 0; /* default: full width */
+		transition: margin-left var(--transition-speed) ease;
+}
+
+/* when sidebar is open, push the main content */
+.sidebar.open ~ #mainContent,
+.sidebar.open ~ .container,
+.sidebar.open ~ main,
+#sidebar.open + #mainContent,
+#sidebar.open + main {
+	/* grid handles spacing; avoid extra margin push */
+	margin-left: 0;
+	transition: none;
+}
+
+@media (max-width: 90px){
+	#mainContent,
+	.container,
+	main{ margin-left: 0; }
+}

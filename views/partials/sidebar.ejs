@@ -1,0 +1,16 @@
+<aside id="sidebar" class="sidebar <%= (currentPath && currentPath.startsWith('/estoque')) ? '' : 'open' %>">
+  <nav class="open">
+    <ul>
+      <li><a href="/dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+      <li><a href="/estoque"><i class="fas fa-boxes"></i> Estoque</a></li>
+      <li><a href="/funcionarios"><i class="fas fa-user"></i> Funcionários</a></li>
+      <li><a href="/financeiro"><i class="fas fa-wallet"></i> Financeiro</a></li>
+      <li><a href="/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+      <li><a href="/menu"><i class="fas fa-utensils"></i> Cardápio</a></li>
+      <li><a href="/fornecedores"><i class="fas fa-truck"></i> Fornecedores</a></li>
+    </ul>
+  </nav>
+
+  <link rel="stylesheet" href="/sidebar/sidebar.css" nonce="<%= cspNonce %>">
+    <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</aside>

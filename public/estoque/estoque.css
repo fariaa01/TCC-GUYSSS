@@ -19,16 +19,21 @@
   display: none !important;
 }
 
+
+
 body {
   background: #ECF0F1;
   padding: 30px;
+  display: block;
 }
  
 
 .container {
-  max-width: 1200px;
+  max-width: 100%;
   margin: auto;
+  
 }
+
 
 h2 {
   font-size: 28px;
@@ -584,6 +589,8 @@ td.saving::after {
 }
 
 
+
+
 @keyframes fadeLoop {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -750,4 +757,8 @@ td.saving::after {
 .swal2-actions .btn:hover,
 .swal2-actions .btn:active {
   transform:none !important; /* evita subir/descer e quebrar alinhamento */
+}
+.sidebar {
+  position: fixed;
+
 }

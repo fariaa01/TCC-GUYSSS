@@ -188,6 +188,11 @@ tbody tr:hover {
   background: #16a085;
 }
 
+.thumb-circle {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .close {
   position: absolute;
   top: 12px;

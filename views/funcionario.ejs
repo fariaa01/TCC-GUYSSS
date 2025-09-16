@@ -8,21 +8,27 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 <body>
-  <div class="container">
-    <h2>Gestão de Funcionários</h2>
+  <div class="layout">
 
-    <div class="search-add-bar">
-  <div class="search-bar">
-    <i class="fas fa-search search-icon"></i>
-    <input type="text" placeholder="Buscar funcionário..." />
-  </div>
-  <button class="btn-add" id="btnNovoFuncionario">
-    <i class="fas fa-user-plus"></i> Adicionar Funcionário
-  </button>
-</div>
+    <%- include('partials/navbar') %>
+    <%- include('partials/sidebar') %>
 
+    <main class="main-content" id="mainContent">
 
-    <table>
+      <div class="search-add-bar">
+        <div class="search-bar">
+          <i class="fas fa-search search-ico"></i>
+          <input type="text" placeholder="Buscar funcionário..." />
+        </div>
+
+        <div class="actions">
+          <button class="btn-add" id="btnNovoFuncionario">
+            <i class="fas fa-user-plus"></i> Adicionar Funcionário
+          </button>
+        </div>
+      </div>
+
+      <table>
       <thead>
         <tr>
           <th>Foto</th>
@@ -42,7 +48,7 @@
           <tr>
             <td data-label="Foto">
   <% if (f.foto) { %>
-    <img src="/uploads/<%= f.foto %>" alt="Foto" width="40" height="40" style="border-radius: 50%; object-fit: cover;">
+    <img src="/uploads/<%= f.foto %>" alt="Foto" width="40" height="40" class="thumb-circle">
   <% } else { %>
     <span>Sem foto</span>
   <% } %>
@@ -56,7 +62,7 @@
             <td data-label="Admissão"><%= f.data_admissao.toISOString().split('T')[0] %></td>
             <td data-label="Estado"><%= f.estado %></td>
             <td data-label="Ações">
-              <a href="/funcionario/delete/<%= f.id %>" class="btn-excluir" onclick="confirmarExclusao('<%= f.id %>')">
+              <a href="/funcionario/delete/<%= f.id %>" class="btn-excluir" data-role="excluir" data-id="<%= f.id %>">
                 <i class="fas fa-trash-alt"></i>
               </a>
             </td>
@@ -65,7 +71,8 @@
       </tbody>
     </table>
 
-    <a href="/dashboard" class="btn-voltar">⬅ Voltar</a>
+    <!-- botão voltar removido: navbar já fornece navegação -->
+    </main>
   </div>
 
   <div id="modalFuncionario" class="modal">

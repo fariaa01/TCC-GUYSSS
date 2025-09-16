@@ -163,32 +163,11 @@
       }
     });
 
-     document.addEventListener('DOMContentLoaded', () => {
-    const toggleBtn = document.getElementById('toggleSidebar');
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.getElementById('mainContent');
-    const icon = toggleBtn.querySelector('i');
-
-    toggleBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('open');
-      mainContent.classList.toggle('sidebar-hidden');
-
-      // troca o ícone entre "bars" e "times"
-      if (sidebar.classList.contains('open')) {
-        icon.classList.remove('fa-bars');
-        icon.classList.add('fa-times');
-      } else {
-        icon.classList.remove('fa-times');
-        icon.classList.add('fa-bars');
-      }
-      
-      icon.classList.add('rotate');
-      setTimeout(() => icon.classList.remove('rotate'), 400);
-    });
-  });
+  // toggle agora centralizado em /public/navbar/navbar.js
   </script>
 
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="/navbar/navbar.js" defer nonce="<%= cspNonce %>"></script>
   <script nonce="<%= cspNonce %>">AOS.init({ duration: 800, once: true });</script>
 </body>
 </html>

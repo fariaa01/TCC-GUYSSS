@@ -41,7 +41,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(tourFlag);
 
+// popular variáveis usadas pelas views
 app.use((req, res, next) => {
+  res.locals.currentPath = req.path || req.originalUrl || '/';
   res.locals.usuarioId   = req.session.userId || null;
   res.locals.clienteId   = req.session.clienteId || null;
   res.locals.empresaNome = (req.session?.empresa?.nome)
@@ -68,6 +70,7 @@ app.use('/gastos-fixos', require('./routes/gastos-fixo'));
 app.use('/pedidos', require('./routes/pedido'));
 app.use('/carrinho', require('./routes/carrinho'));
 app.use('/', require('./routes/clienteAuthRoutes'));
+
 
 app.get('/checkout', requireCliente, (req, res) => {
   res.render('checkout', {

@@ -41,9 +41,8 @@ module.exports = helmet({
         "https://fonts.googleapis.com",
         "https://unpkg.com",
       ],
-      // Opcional: deixa claro que style="..." NÃO é permitido
-      // (se você já removeu estilos inline, é seguro habilitar)
-      styleSrcAttr: ["'none'"],
+      // Requer nonce para estilos em atributos/elementos (evita 'unsafe-inline')
+      styleSrcAttr: [(req, res) => `'nonce-${res.locals.cspNonce}'`],
 
       fontSrc: [
         "'self'",
@@ -52,7 +51,7 @@ module.exports = helmet({
         "data:",
       ],
       imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
+  connectSrc: ["'self'", "https://cdn.jsdelivr.net"],
       workerSrc: ["'self'", "blob:"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],

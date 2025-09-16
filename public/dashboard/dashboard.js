@@ -108,15 +108,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  const toggleBtn   = document.getElementById('toggleSidebar');
-  const sidebar     = document.getElementById('sidebar');
-  const mainContent = document.getElementById('mainContent');
-  const icon        = toggleBtn.querySelector('i');
-
-  toggleBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    mainContent.classList.toggle('sidebar-hidden');
-    icon.classList.add('rotate');
-    setTimeout(() => icon.classList.remove('rotate'), 400);
-  });
+  // toggle do sidebar agora centralizado em /public/navbar/navbar.js
 });

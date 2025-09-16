@@ -18,6 +18,8 @@
     justify-content: center;
     margin: 30px auto 2rem auto;
     max-width: 1500px;
+    align-content: space-between;
+    column-gap: 2rem;
   }
 
   .card {
@@ -28,13 +30,19 @@
     width: calc(25% - 1.5rem);
     display: flex;
     flex-direction: column;
-    align-items: center;
     font-size: 1.1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: center;
+    margin: 10px auto 0.10rem auto;
+  
+    align-content: space-between;
+    column-gap: 2rem;
   }
 
   .card i {
     font-size: 2.2rem;
-    margin-bottom: 0.5rem;
     color: #007bff;
   }
 
@@ -202,6 +210,15 @@
   margin: 0 auto;
 }
 
+.text-green { color: green; }
+.text-red { color: red; }
+.text-gray { color: gray; }
+
+.grafico-title { text-align: center; margin-bottom: 1rem; }
+.grafico-lucro-canvas { height: 400px !important; }
+
+.empty-category-msg { text-align: center; margin-top: 20px; font-weight: bold; }
+
   .filtros-container {
       background: #ffffff;
       padding: 20px;
@@ -244,4 +261,8 @@
 
     .filtros-form .btn-filtrar:hover {
       background: #215e9c;
+    }
+    #main-contend{
+      padding: 0px;
+      align-items: center;
     }

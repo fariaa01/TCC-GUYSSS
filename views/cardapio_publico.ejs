@@ -12,7 +12,7 @@
       <div class="container">
         <header class="topbar">
           <h1><%= empresaNome %></h1>
-          <div style="display:flex; gap:10px; align-items:center;">
+          <div class="top-actions top-actions--aligned">
             <a href="/restaurantes" class="btn-ghost">Trocar restaurante</a>
             <button type="button" id="btnToggleCart" class="btn-carrinho" aria-label="Ver carrinho" data-endpoint-listar="/carrinho">
               <span class="icon" aria-hidden="true">
@@ -97,12 +97,12 @@
            data-endpoint-remover="/carrinho/remover"
            data-endpoint-atualizar="/carrinho/atualizar"
            data-endpoint-finalizar="/carrinho/finalizar">
-      <header class="cart-header" style="display:flex; align-items:center; gap:10px;">
-        <h2 style="margin:0;">Meu Pedido</h2>
+      <header class="cart-header">
+        <h2>Meu Pedido</h2>
         <button type="button" class="cart-close" id="closeCart" aria-label="Fechar">✕</button>
       </header>
 
-      <div class="tabs" style="margin-top:8px;">
+  <div class="tabs">
         <button class="tab active"  type="button" data-mode="dine">Comer no local</button>
         <button class="tab"         type="button" data-mode="pickup">Retirar</button>
         <button class="tab"         type="button" data-mode="delivery">Entrega</button>

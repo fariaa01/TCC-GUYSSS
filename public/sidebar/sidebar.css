@@ -1,0 +1,217 @@
+@import "https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css";
+@import "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css";
+
+:root {
+  --sidebar-width: 260px;
+  --sidebar-gap: 8px;
+  --bg: #f6f8f7;
+  --panel: #ffffff;
+  --text: #2b3a2f;
+  --muted: #8aa095;
+  --brand: #2fa36b;
+  --brand-700: #258b5b;
+  --brand-50: #e9f6ee;
+  --accent: #f5f8f6;
+  --border: #e7ece9;
+  --shadow: 0 10px 24px rgba(16, 24, 40, .06);
+  --radius: 18px;
+  
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; margin: 0; }
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at -10% -10%, #eaf3ee 0%, transparent 45%),
+    var(--bg);
+    display: inline flex;
+    flex-direction: column;
+}
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  padding: 24px;
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  height: 100%;
+
+  top: 24px;
+  left: 24px;
+  height: calc(100svh - 48px);
+  background: linear-gradient(180deg, var(--brand) 0%, #2c9b66 100%);
+  border-radius: 22px;
+  color: #e9fff3;
+  box-shadow: var(--shadow);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: var(--sidebar-width);
+  transition: all .25s ease;
+
+}
+
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+/* move toggle next to open sidebar on desktop */
+@media (min-width: 721px) {
+  body.sidebar-open .toggle-btn {
+    left: calc(24px + 260px + 8px); /* left offset + sidebar width + gap */
+  }
+}
+  margin: 0;
+}
+
+.sidebar h2 {
+  margin: 4px 0 10px;
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sidebar nav a {
+  display: block;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  color: #eafff3;
+  text-decoration: none;
+  border-radius: 12px;
+  opacity: .95;
+  transition: all .2s ease;
+}
+
+.sidebar nav a i { width: 18px; text-align: center; opacity: .9; }
+.sidebar nav a:hover { background: rgba(255, 255, 255, .12); transform: translateY(-1px); }
+.sidebar nav a.active { background: rgba(255, 255, 255, .18); }
+.sidebar .logout { margin-top: auto; }
+
+/* Estado fechado */
+.sidebar:not(.open) {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Main */
+.main-content {
+  min-height: 100%;
+  padding: 8px 6px 6px 0;
+  transform: translateX(calc(var(--sidebar-width) + var(--sidebar-gap)));
+  transition: transform .25s ease;
+}
+
+/* when sidebar is closed reduce transform */
+.sidebar:not(.open) ~ .main-content {
+  transform: translateX(calc(var(--sidebar-gap) + 0px)); /* quase sem deslocamento */
+}
+
+/* if body has explicit state, prefer that (used by JS) */
+body.sidebar-open .main-content {
+  transform: translateX(calc(var(--sidebar-width) + var(--sidebar-gap)));
+}
+body:not(.sidebar-open) .main-content {
+  transform: translateX(calc(var(--sidebar-gap) + 0px));
+}
+
+.main-content header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Toggle button */
+.toggle-btn {
+  position: absolute;   /* fixo na tela */
+  top: 36px;         /* ajusta conforme sua sidebar */
+  left: 36px;
+  border: 0;
+  background: var(--panel);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  z-index: 1001;  transition: transform .15s ease;
+   /* maior que sidebar */
+   
+}
+
+.toggle-btn i { font-size: 18px; color: var(--brand-700); }
+.toggle-btn:active { transform: scale(.98); }
+
+/* when sidebar is open, move the button beside the open sidebar */
+/* when sidebar is open, the position was previously unchanged; keep default */
+
+/* Botão sair */
+.btn-sair {
+  display: block;
+  border: 0;
+  background: var(--brand);
+  color: #fff;
+  padding: 10px ;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(47, 163, 107, .28);
+  transition: filter .15s ease, transform .15s ease;
+}
+.btn-sair:hover { filter: brightness(.98); }
+.btn-sair:active { transform: translateY(1px); }
+
+/* Geral */
+h1 { margin: 8px 0 14px; font-size: 22px; font-weight: 700; color: #1f2a23; }
+.rotate { animation: spin .4s ease; }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(180deg); } }
+
+html, body { overscroll-behavior-y: contain; }
+.main-content { overflow-x: hidden; }
+
+@media (max-width: 560px) {
+  .card p { word-wrap: break-word; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 360px) {
+  .layout { gap: 16px; }
+  .toggle-btn, .btn-sair { flex: 0 0 auto; }
+}
+
+/* mobile: keep toggle in the top-left corner (overlay behaviour) */
+@media (max-width: 720px) {
+  .toggle-btn { left: 1px; top: 14px; }
+  /* when open in mobile, keep the toggle visible but don't move it horizontally */
+  body.sidebar-open .toggle-btn { left: 16px; }
+}

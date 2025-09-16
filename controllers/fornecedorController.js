@@ -81,4 +81,30 @@ module.exports = {
         : res.redirect('/estoque?ok=0&msg=' + encodeURIComponent(msg));
     }
   }
+
+  , update: async (req, res) => {
+    try{
+      const usuarioId = req.session.userId;
+
+      if (!usuarioId) {
+        if (wantsJSON(req)) return res.status(401).json({ error: 'Não autenticado.' });
+        return res.redirect('/login');
+      }
+
+      await Fornecedor.update(req.params.id, req.body, usuarioId);
+      
+      if(req.xhr || req.headers.accept?.includes('json')){
+        return res.json({ ok: true, message: 'Registro atualizado' });
+      }
+
+      return res.redirect('/estoque?ok=1&msg=Registro atualizado');
+    }catch(err){
+      console.error('Erro ao atualizar fornecedor:', err);
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(500).json({ ok: false, message: 'Erro ao atualizar' });
+      }
+
+      return res.redirect('/estoque?ok=0&msg=Não foi possível atualizar o registro');
+    }
+  },
 };

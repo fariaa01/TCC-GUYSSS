@@ -285,7 +285,6 @@ window.__produtoFiltroAtivo = false;
     const alvoProd = norm(selProd?.value || '');
     if (alvoProd && dProd !== alvoProd) return false;
 
-    const dCat = norm(tr.dataset.categoria);
     const alvoCat = norm(selCat?.value || '');
     if (alvoCat && dCat !== alvoCat) return false;
 

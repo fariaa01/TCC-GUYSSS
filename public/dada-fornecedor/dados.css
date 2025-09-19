@@ -17,8 +17,6 @@ body {
   --shadow: 0 8px 24px rgba(0, 0, 0, .08);
 }
 
-
-
 .container {
   max-width: 1200px;
   margin: auto;
@@ -169,6 +167,8 @@ tbody tr:hover {
   border-radius: 14px;
   width: 95%;
   max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
   position: relative;
   animation: fadeIn 0.4s ease-in-out;
 }
@@ -178,12 +178,23 @@ tbody tr:hover {
   color: #2c3e50;
 }
 
-.modal-content input {
+.modal-content input,
+.modal-content select {
   width: 100%;
   margin: 10px 0;
   padding: 12px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 15px;
+  background: white;
+  transition: border 0.3s;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+  border-color: #1abc9c;
+  outline: none;
 }
 
 .modal-content button {
@@ -234,21 +245,6 @@ tbody tr:hover {
 
 .deletar-btn:hover,
 .modal-content .deletar-btn:hover {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background .25s, color .25s, border-color .25s, transform .15s, box-shadow .2s;
-  box-shadow: 0 4px 10px rgba(0,0,0,.08);
-  user-select: none;
-  text-decoration: none;
   background: var(--primary-hover);
 }
 
@@ -277,21 +273,6 @@ tbody tr:hover {
 
 .editar-btn:hover,
 .container .editar-btn:hover {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .5rem;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  font-weight: 600;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background .25s, color .25s, border-color .25s, transform .15s, box-shadow .2s;
-  box-shadow: 0 4px 10px rgba(0,0,0,.08);
-  user-select: none;
-  text-decoration: none;
   color: var(--primary-hover);
   border-color: var(--primary-hover); 
 }
@@ -334,4 +315,36 @@ tbody tr:hover {
     font-weight: bold;
     color: #555;
   }
+}
+
+
+.vermais-btn,
+.modal-content .vermais-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .25s, color .25s, border-color .25s, transform .15s, box-shadow .2s;
+  box-shadow: 0 4px 10px rgba(52,137,221,0.08);
+  user-select: none;
+  text-decoration: none;
+  background: #3489dd;        
+  color: #fff;
+}
+
+.vermais-btn i {
+  font-size: 16px;
+}
+
+.vermais-btn:hover,
+.modal-content .vermais-btn:hover {
+  background: #215e9c;     
+  color: #fff;
 }

@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fornecedores</title>
@@ -13,9 +10,14 @@
 </head>
 <body>
   <div class="container">
-  <h1>Gestão de Fornecedores</h1>  
-  <a href="/dashboard"  class="btn-voltar">⬅ Voltar</a>
+    <h1>Gestão de Fornecedores</h1>  
+    <a href="/dashboard" class="btn-voltar">⬅ Voltar</a>
   </div>
+
+  <div id="modalContainer" class="modal-container">
+    <button id="btnAdicionarFornecedor" class="btn-adicionar">+ Adicionar Fornecedor</button>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -23,6 +25,8 @@
         <th>Email</th>
         <th>CNPJ</th>
         <th>Telefone</th>
+        <th>Telefone Alternativo</th>
+        <th>Pessoa Responsável</th>
         <th>Ações</th>
       </tr>
     </thead>
@@ -34,7 +38,15 @@
           <td><%= fornecedor.cnpj %></td>
           <td><%= fornecedor.telefone %></td>
           <td>
-            <button class="editar-btn" data-id="<%= fornecedor.id %>">Editar</button>
+            <% if (fornecedor.telefone_alternativo && fornecedor.telefone_alternativo.trim() !== '') { %>
+              <%= fornecedor.telefone_alternativo %>
+            <% } else { %>
+              Sem telefone alternativo
+            <% } %>
+          </td>
+          <td><%= fornecedor.pessoa_responsavel %></td>
+          <td>
+            <a href="/fornecedores/<%= fornecedor.id %>" class="vermais-btn">Ver +</a>
             <button class="deletar-btn" data-id="<%= fornecedor.id %>">Deletar</button>
           </td>
         </tr>
@@ -42,6 +54,41 @@
     </tbody>
   </table>
 
+  <div id="modalFornecedor" class="modal">
+    <div class="modal-content">
+      <span class="close" id="fecharModalFornecedor">&times;</span>
+      <h2>Adicionar Fornecedor</h2>
+      <form id="formFornecedor" method="POST" action="/fornecedores/create">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required>
 
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email">
+
+        <label for="cnpj">CNPJ:</label>
+        <input type="text" id="cnpj" name="cnpj">
+
+        <label for="telefone">Telefone:</label>
+        <input type="text" id="telefone" name="telefone">
+
+        <label for="temTelefoneAlternativoCreate">Possui telefone alternativo?</label>
+        <select id="temTelefoneAlternativoCreate" name="temTelefoneAlternativo">
+          <option value="nao" selected>Não</option>
+          <option value="sim">Sim</option>
+        </select>
+
+        <input type="text" id="telefoneAlternativoCreate" name="telefone_alternativo" maxlength="15" placeholder="Telefone alternativo" style="display: none; margin-top: 5px;">
+
+        <label for="pessoa_responsavel">Pessoa responsável:</label>
+        <input type="text" id="pessoa_responsavel" name="pessoa_responsavel">
+
+        <button type="submit" class="btn-salvar">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
+  <script nonce="<%= cspNonce %>" src="/dada-fornecedor/dados-fornecedor.js"></script>
 </body>
 </html>

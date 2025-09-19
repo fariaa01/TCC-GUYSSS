@@ -27,7 +27,44 @@
          (filtrosAtuais?.status && filtrosAtuais.status !== '') ||
          false; %>
 
-         <div class="filtros-container filtros-modern">
+    <% if (totalAlerts > 0) { %>
+      <section class="alert-panel" aria-label="Alertas de estoque e validade">
+        <% if (cntVencidos > 0) { %>
+          <a class="alert-card alert-danger" href="/estoque?validade=vencido" title="Ver itens vencidos">
+            <div class="alert-icon"><i class="fa-solid fa-calendar-xmark" aria-hidden="true"></i></div>
+            <div class="alert-content">
+              <strong><%= cntVencidos %></strong>
+              <span>itens vencidos</span>
+            </div>
+            <i class="fa-solid fa-chevron-right alert-arrow" aria-hidden="true"></i>
+          </a>
+        <% } %>
+
+        <% if (cntProx7 > 0) { %>
+          <a class="alert-card alert-warn" href="/estoque?validade=proximo" title="Ver itens que vencem em 7 dias">
+            <div class="alert-icon"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i></div>
+            <div class="alert-content">
+              <strong><%= cntProx7 %></strong>
+              <span>vencem em 7 dias</span>
+            </div>
+            <i class="fa-solid fa-chevron-right alert-arrow" aria-hidden="true"></i>
+          </a>
+        <% } %>
+
+        <% if (cntBaixo > 0) { %>
+          <a class="alert-card alert-alert" href="/estoque?status=abaixoMinimo" title="Ver itens abaixo do mínimo">
+            <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
+            <div class="alert-content">
+              <strong><%= cntBaixo %></strong>
+              <span>abaixo do mínimo</span>
+            </div>
+            <i class="fa-solid fa-chevron-right alert-arrow" aria-hidden="true"></i>
+          </a>
+        <% } %>
+      </section>
+    <% } %>
+
+    <div class="filtros-container filtros-modern">
       <form method="GET" action="/estoque" class="filtros-form">
         <div class="filtro-group">
           <label for="f-prod">Produto</label>
@@ -47,7 +84,7 @@
             <select id="f-cat" name="categoria">
               <option value="">Todas as Categorias</option>
               <% (categoriasUnicas || []).forEach(c => { %>
-                <option value="<%= c.trim().toLowerCase() %>" <%= filtrosAtuais?.categoria === c ? "selected" : "" %>><%= c %></option>
+                <option value="<%= c %>" <%= filtrosAtuais?.categoria === c ? "selected" : "" %>><%= c %></option>
               <% }) %>
             </select>
           </div>
@@ -147,7 +184,7 @@
           <tr class="<%= classeLinha.trim() %>"
               data-id="<%= p.id %>"
               data-produto="<%= p.produto %>"
-              data-categoria="<%= (p.categoria || '').trim().toLowerCase() %>"
+              data-categoria="<%= p.categoria || '' %>"
               data-quantidade="<%= p.quantidade %>"
               data-quantidade_minima="<%= p.quantidade_minima %>"
               data-unidade_medida="<%= p.unidade_medida %>"

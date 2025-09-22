@@ -1,0 +1,60 @@
+.historico-compras {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(30, 41, 59, 0.07);
+  overflow: hidden;
+  margin-top: 12px;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+.historico-compras thead {
+  background: #f5f7fa;
+}
+
+.historico-compras th, .historico-compras td {
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.historico-compras th {
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.historico-compras tbody tr {
+  transition: background 0.18s;
+}
+
+.historico-compras tbody tr:hover {
+  background: #f0f5ff;
+}
+
+.historico-compras td {
+  color: #52525b;
+  font-size: 0.97rem;
+  border-bottom: 1px solid #f1f2f6;
+}
+
+.historico-compras tr:last-child td {
+  border-bottom: none;
+}
+
+.historico-compras td[colspan="4"] {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.99rem;
+}
+
+@media (max-width: 700px) {
+  .historico-compras th, .historico-compras td {
+    padding: 10px 8px;
+    font-size: 0.93rem;
+  }
+}

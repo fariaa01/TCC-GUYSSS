@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Detalhes do Fornecedor</title>
+  <link rel="stylesheet" href="/detalhes-fornecedor/detalhes-fornecedor.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Dados do Fornecedor</h2>
+    <form method="POST" action="/fornecedores/<%= fornecedor.id %>/update">
+
+      <fieldset>
+        <legend>Dados de contato</legend>
+        <div class="grid-2">
+          <div>
+            <label>Nome:</label>
+            <input type="text" name="nome" placeholder="Ex: Comercial Silva Ltda" value="<%= fornecedor.nome || '' %>" required />
+          </div>
+          <div>
+            <label>Email:</label>
+            <input type="email" name="email" placeholder="Ex: contato@fornecedor.com.br" value="<%= fornecedor.email || '' %>" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Telefone:</label>
+            <input type="text" name="telefone" placeholder="Ex: (11) 91234-5678" value="<%= fornecedor.telefone || '' %>" />
+          </div>
+          <div>
+            <label>Telefone Alternativo:</label>
+            <input type="text" name="telefone_alternativo" placeholder="Ex: (11) 99876-5432" value="<%= fornecedor.telefone_alternativo || '' %>" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Pessoa Responsável:</label>
+            <input type="text" name="pessoa_responsavel" placeholder="Ex: João da Silva" value="<%= fornecedor.pessoa_responsavel || '' %>" />
+          </div>
+          <div>
+            <label>Website:</label>
+            <input type="text" name="website" placeholder="Ex: www.fornecedor.com.br" value="<%= fornecedor.website || '' %>" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dados de endereço</legend>
+        <div class="grid-3">
+          <div>
+            <label>CEP:</label>
+            <input type="text" name="cep" placeholder="Ex: 01001-000" value="<%= fornecedor.cep || '' %>" />
+          </div>
+          <div>
+            <label>Rua:</label>
+            <input type="text" name="rua" placeholder="Ex: Av. Paulista" value="<%= fornecedor.rua || '' %>" />
+          </div>
+          <div>
+            <label>Número:</label>
+            <input type="text" name="numero" placeholder="Ex: 1234" value="<%= fornecedor.numero || '' %>" />
+          </div>
+        </div>
+        <div class="grid-4">
+          <div>
+            <label>Complemento:</label>
+            <input type="text" name="complemento" placeholder="Ex: Sala 101" value="<%= fornecedor.complemento || '' %>" />
+          </div>
+          <div>
+            <label>Bairro:</label>
+            <input type="text" name="bairro" placeholder="Ex: Centro" value="<%= fornecedor.bairro || '' %>" />
+          </div>
+          <div>
+            <label>Cidade:</label>
+            <input type="text" name="cidade" placeholder="Ex: São Paulo" value="<%= fornecedor.cidade || '' %>" />
+          </div>
+          <div>
+            <label>Estado:</label>
+            <input type="text" name="estado" placeholder="Ex: SP" value="<%= fornecedor.estado || '' %>" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dados fiscais</legend>
+        <div class="grid-2">
+          <div>
+            <label>CNPJ:</label>
+            <input type="text" name="cnpj" placeholder="Ex: 12.345.678/0001-99" value="<%= fornecedor.cnpj || '' %>" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dados financeiros</legend>
+        <div class="grid-2">
+          <div>
+            <label>Limite de Crédito:</label>
+            <input type="number" step="0.01" name="limite_credito" placeholder="Ex: 5000.00" value="<%= fornecedor.limite_credito || '' %>" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Forma de Pagamento</legend>
+        <div>
+          <label>Forma de Pagamento:</label>
+          <select name="formas_pagamento" required>
+            <option value="">Selecione</option>
+            <option value="Dinheiro" <%= fornecedor.formas_pagamento === 'Dinheiro' ? 'selected' : '' %>>Dinheiro</option>
+            <option value="Cartão de Crédito" <%= fornecedor.formas_pagamento === 'Cartão de Crédito' ? 'selected' : '' %>>Cartão de Crédito</option>
+            <option value="Cartão de Débito" <%= fornecedor.formas_pagamento === 'Cartão de Débito' ? 'selected' : '' %>>Cartão de Débito</option>
+            <option value="Boleto" <%= fornecedor.formas_pagamento === 'Boleto' ? 'selected' : '' %>>Boleto</option>
+            <option value="Transferência Bancária" <%= fornecedor.formas_pagamento === 'Transferência Bancária' ? 'selected' : '' %>>Transferência Bancária</option>
+            <option value="Pix" <%= fornecedor.formas_pagamento === 'Pix' ? 'selected' : '' %>>Pix</option>
+            <option value="Cheque" <%= fornecedor.formas_pagamento === 'Cheque' ? 'selected' : '' %>>Cheque</option>
+            <option value="Outros" <%= fornecedor.formas_pagamento === 'Outros' ? 'selected' : '' %>>Outros</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dados Bancários para Pagamento</legend>
+        <div class="grid-2">
+          <div>
+            <label>Banco:</label>
+            <select name="banco">
+              <option value="">Selecione</option>
+              <option value="Itaú" <%= fornecedor.banco === 'Itaú' ? 'selected' : '' %>>Itaú</option>
+              <option value="Bradesco" <%= fornecedor.banco === 'Bradesco' ? 'selected' : '' %>>Bradesco</option>
+              <option value="Caixa" <%= fornecedor.banco === 'Caixa' ? 'selected' : '' %>>Caixa</option>
+              <option value="Nubank" <%= fornecedor.banco === 'Nubank' ? 'selected' : '' %>>Nubank</option>
+              <option value="Banco do Brasil" <%= fornecedor.banco === 'Banco do Brasil' ? 'selected' : '' %>>Banco do Brasil</option>
+              <option value="Santander" <%= fornecedor.banco === 'Santander' ? 'selected' : '' %>>Santander</option>
+              <option value="Outro" <%= fornecedor.banco === 'Outro' ? 'selected' : '' %>>Outro</option>
+            </select>
+          </div>
+          <div>
+            <label>Agência:</label>
+            <input type="text" name="agencia" maxlength="4" placeholder="Ex: 1234" value="<%= fornecedor.agencia || '' %>" />
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Conta:</label>
+            <input type="text" name="conta" placeholder="Ex: 12345-6" value="<%= fornecedor.conta || '' %>" />
+          </div>
+          <div>
+            <label>Tipo de Conta:</label>
+            <select name="tipo_conta">
+              <option value="">Selecione</option>
+              <option value="Corrente" <%= fornecedor.tipo_conta === 'Corrente' ? 'selected' : '' %>>Corrente</option>
+              <option value="Poupança" <%= fornecedor.tipo_conta === 'Poupança' ? 'selected' : '' %>>Poupança</option>
+              <option value="Salário" <%= fornecedor.tipo_conta === 'Salário' ? 'selected' : '' %>>Salário</option>
+              <option value="PJ" <%= fornecedor.tipo_conta === 'PJ' ? 'selected' : '' %>>PJ</option>
+              <option value="Outro" <%= fornecedor.tipo_conta === 'Outro' ? 'selected' : '' %>>Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label>Chave Pix:</label>
+            <input type="text" name="chave_pix" placeholder="Ex: 123.456.789-00 ou email@exemplo.com" value="<%= fornecedor.chave_pix || '' %>" />
+          </div>
+          <div>
+            <label>Favorecido (Titular da Conta):</label>
+            <input type="text" name="favorecido" placeholder="Ex: Maria Oliveira" value="<%= fornecedor.favorecido || '' %>" />
+          </div>
+        </div>
+      </fieldset>
+
+      <div>
+        <label>Histórico de Compras:</label>
+        <table class="historico-compras">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (historicoCompras && historicoCompras.length > 0) { %>
+              <% historicoCompras.forEach(compra => { %>
+                <tr>
+                  <td>
+                    <%= compra.data_compra ? new Date(compra.data_compra).toLocaleDateString('pt-BR') : '-' %>
+                  </td>
+                  <td><%= compra.produto %></td>
+                  <td><%= compra.quantidade %></td>
+                  <td>
+                    R$ 
+                    <%= (typeof compra.valor === 'number' 
+                          ? compra.valor 
+                          : parseFloat(compra.valor || 0)
+                        ).toFixed(2) %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="4" style="text-align:center;">Nenhum histórico de compra encontrado.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <button id="btnSalvarAlteracoes" type="submit" style="display:none;">Salvar Alterações</button>
+    </form>
+    <a href="/fornecedores" class="btn-voltar">⬅ Voltar</a>
+  </div>
+
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
+  <script nonce="<%= cspNonce %>" src="/detalhes-fornecedor/script.js"></script>
+</body>
+</html>

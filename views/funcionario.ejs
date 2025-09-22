@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão de Funcionários</title>
+  <link rel="stylesheet" href="/funcionario/funcionario.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Gestão de Funcionários</h2>
+
+    <div class="search-add-bar">
+  <div class="search-bar">
+    <i class="fas fa-search search-icon"></i>
+    <input type="text" placeholder="Buscar funcionário..." />
+  </div>
+  <button class="btn-add" id="btnNovoFuncionario">
+    <i class="fas fa-user-plus"></i> Adicionar Funcionário
+  </button>
+</div>
+
+
+    <table>
+      <thead>
+        <tr>
+          <th>Foto</th>
+          <th>Nome</th>
+          <th>CPF</th>
+          <th>Função</th>
+          <th>Telefone</th>
+          <th>Email</th>
+          <th>Salário</th>
+          <th>Data de Admissão</th>
+          <th>Estado</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% funcionarios.forEach(f => { %>
+          <tr>
+            <td data-label="Foto">
+  <% if (f.foto) { %>
+    <img src="/uploads/<%= f.foto %>" alt="Foto" width="40" height="40" style="border-radius: 50%; object-fit: cover;">
+  <% } else { %>
+    <span>Sem foto</span>
+  <% } %>
+</td>
+            <td data-label="Nome"><%= f.nome %></td>
+            <td data-label="CPF"><%= f.cpf %></td>
+            <td data-label="Função"><%= f.cargo %></td>
+            <td data-label="Telefone"><%= f.telefone %></td>
+            <td data-label="Email"><%= f.email %></td>
+            <td data-label="Salário">R$ <%= f.salario %></td>
+            <td data-label="Admissão"><%= new Date(f.data_admissao).toLocaleDateString('pt-BR') %></td>
+            <td data-label="Estado"><%= f.estado %></td>
+            <td data-label="Ações">
+              <button class="btn-editar" 
+                      data-id="<%= f.id %>"
+                      data-nome="<%= f.nome %>"
+                      data-cargo="<%= f.cargo %>"
+                      data-email="<%= f.email %>"
+                      data-data_admissao="<%= f.data_admissao %>"
+                      data-salario="<%= f.salario %>"
+                      data-cpf="<%= f.cpf %>"
+                      data-telefone="<%= f.telefone %>"
+                      data-estado="<%= f.estado %>">
+                <i class="fas fa-edit"></i>
+              </button>
+              <a href="/funcionario/delete/<%= f.id %>" class="btn-excluir" onclick="confirmarExclusao('<%= f.id %>')">
+                <i class="fas fa-trash-alt"></i>
+              </a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+
+    <a href="/dashboard" class="btn-voltar">⬅ Voltar</a>
+  </div>
+
+  <div id="modalFuncionario" class="modal">
+    <div class="modal-content">
+      <span id="fecharModal" class="close">&times;</span>
+      <h3>Novo Funcionário</h3>
+      <form method="POST" action="/funcionarios/create" class="form-box" enctype="multipart/form-data">
+        <input type="text" name="nome" placeholder="Nome" required />
+        <input type="text" name="cargo" placeholder="Cargo" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input type="date" id="dataAdmissao" name="data_admissao">
+        <input type="number" name="salario" placeholder="Salário" required />
+        <input type="text" name="cpf" id="cpf" placeholder="CPF" required />
+        <input type="text" name="telefone" id="telefone" placeholder="Telefone" required />
+        <select name="estado" required>
+          <option value="Contratado" selected>Contratado</option>
+          <option value="Demitido">Demitido</option>
+        </select>
+        <input type="file" name="foto" accept="image/*" />
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalEditarFuncionario" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <form action="/funcionarios/{id}/update" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="id" id="editarId" />
+        <input type="text" name="nome" id="editarNome" placeholder="Nome" required />
+        <input type="text" name="cargo" id="editarCargo" placeholder="Cargo" required />
+        <input type="email" name="email" id="editarEmail" placeholder="Email" required />
+        <input type="date" name="data_admissao" id="editarDataAdmissao" required />
+        <input type="number" name="salario" id="editarSalario" placeholder="Salário" required />
+        <input type="text" name="cpf" id="editarCpf" placeholder="CPF" required />
+        <input type="text" name="telefone" id="editarTelefone" placeholder="Telefone" required />
+        <select name="estado" id="editarEstado" required>
+          <option value="Contratado">Contratado</option>
+          <option value="Demitido">Demitido</option>
+       </select>
+        <input type="file" name="foto" accept="image/*" />
+        <button type="submit">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
+  <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script nonce="<%= cspNonce %>" src="/funcionario/funcionario.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios</title>
+    <link rel="stylesheet" href="/relatorio/relatorio.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <main class="main-content" id="mainContent">
+
+     <div class="botao">
+       <a href="/dashboard" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+     </div>
+
+      <h1>Relatórios Financeiros</h1>
+      <div class="filtros-container">
+      <form class="filtros-form" method="get" action="/relatorios">
+        <div class="campo-select">
+          <label for="periodo">Período:</label>
+          <select name="periodo" id="periodo" onchange="this.form.submit()">
+            <option value="mes" <%= periodo === 'mes' ? 'selected' : '' %>>Mês</option>
+            <option value="dia" <%= periodo === 'dia' ? 'selected' : '' %>>Dia</option>
+            <option value="semana" <%= periodo === 'semana' ? 'selected' : '' %>>Semana</option>
+            <option value="ano" <%= periodo === 'ano' ? 'selected' : '' %>>Ano</option>
+          </select>
+        </div>
+
+        <div class="campo-select">
+          <label for="mes">Mês:</label>
+          <select name="mes" id="mes" onchange="this.form.submit()">
+            <option value="1" <%= mes == 1 ? 'selected' : '' %>>Janeiro</option>
+            <option value="2" <%= mes == 2 ? 'selected' : '' %>>Fevereiro</option>
+            <option value="3" <%= mes == 3 ? 'selected' : '' %>>Março</option>
+            <option value="4" <%= mes == 4 ? 'selected' : '' %>>Abril</option>
+            <option value="5" <%= mes == 5 ? 'selected' : '' %>>Maio</option>
+            <option value="6" <%= mes == 6 ? 'selected' : '' %>>Junho</option>
+            <option value="7" <%= mes == 7 ? 'selected' : '' %>>Julho</option>
+            <option value="8" <%= mes == 8 ? 'selected' : '' %>>Agosto</option>
+            <option value="9" <%= mes == 9 ? 'selected' : '' %>>Setembro</option>
+            <option value="10" <%= mes == 10 ? 'selected' : '' %>>Outubro</option>
+            <option value="11" <%= mes == 11 ? 'selected' : '' %>>Novembro</option>
+            <option value="12" <%= mes == 12 ? 'selected' : '' %>>Dezembro</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-filtrar">Filtrar</button>
+      </form>
+    </div>
+      <div class="cards" data-aos="zoom-in-left">
+  <div class="card">
+    <i class="fas fa-dollar-sign"></i>
+    <p>Vendas do Mês<br><strong>R$ <%= total_entrada %></strong></p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-wallet"></i>
+    <p>Gastos do Mês<br><strong>R$ <%= total_saida %></strong></p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-chart-line"></i>
+    <p>
+      Variação de Vendas<br>
+      <% if (variacaoEntrada > 0) { %>
+        <strong style="color:green;">+<%= variacaoEntrada %>%</strong> em relação ao mês anterior
+      <% } else if (variacaoEntrada < 0) { %>
+        <strong style="color:red;"><%= variacaoEntrada %>%</strong> em relação ao mês anterior
+      <% } else { %>
+        <strong style="color:gray;">Sem variação</strong>
+      <% } %>
+    </p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-chart-bar"></i>
+    <p>
+      Variação de Gastos<br>
+      <% if (variacaoSaida > 0) { %>
+        <strong style="color:red;">+<%= variacaoSaida %>%</strong> em relação ao mês anterior
+      <% } else if (variacaoSaida < 0) { %>
+        <strong style="color:green;"><%= variacaoSaida %>%</strong> em relação ao mês anterior
+      <% } else { %>
+        <strong style="color:gray;">Sem variação</strong>
+      <% } %>
+    </p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-box-open"></i>
+    <p>Produtos em Estoque<br><strong><%= total_estoque %> itens</strong></p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-user-check"></i>
+    <p>Funcionários Ativos<br><strong><%= total_func %> funcionários</strong></p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-money-bill-wave"></i>
+    <p>Lucro Líquido<br><strong>R$ <%= lucro_liquido %></strong></p>
+  </div>
+
+  <div class="card">
+    <i class="fas fa-receipt"></i>
+    <p>Ticket Médio<br><strong>R$ <%= ticket_medio %></strong></p>
+  </div>
+</div>
+
+      <hr class="separador">
+
+
+<div class="grafico-container" data-aos="zoom-in-left">
+    <form id="formDatasGrafico" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; text-align: center; justify-content: center;">
+        <label for="data_inicio_grafico">Data inicial:</label>
+        <input type="date" id="data_inicio_grafico" name="data_inicio_grafico">
+
+        <label for="data_fim_grafico">Data final:</label>
+        <input type="date" id="data_fim_grafico" name="data_fim_grafico">
+
+        <button type="button" onclick="filtrarGraficoPorData()" class="btn-filtrar">Filtrar</button>
+    </form>
+    <canvas id="grafico"></canvas>
+
+  <div class="graficos-lado-a-lado" data-aos="zoom-in-left">
+  <div class="grafico-container">
+    <h2 style="text-align: center; margin-bottom: 1rem;">Lucro Mensal</h2>
+    <canvas id="graficoLucroMensal" style="height: 400px;"></canvas>
+  </div>
+
+  <div class="grafico-container">
+    <h2 style="text-align: center; margin-bottom: 1rem;">Distribuição por Categoria</h2>
+    <canvas id="graficoCategoria" class="grafico-pizza-wrapper"></canvas>
+  </div>
+</div>
+</div>
+
+  
+<script nonce="<%= cspNonce %>">
+  const dadosEntradasOriginais = JSON.parse('<%= JSON.stringify(entradas) %>');
+  const dadosSaidasOriginais = JSON.parse('<%= JSON.stringify(saidas) %>');
+  const labelsOriginais = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  let chartInstance;
+
+  function criarGrafico(labels, entradas, saidas) {
+    const ctx = document.getElementById('grafico').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Entradas',
+            data: entradas,
+            borderColor: 'green',
+            backgroundColor: 'rgba(0, 128, 0, 0.2)',
+            tension: 0.3,
+            fill: true
+          },
+          {
+            label: 'Saídas',
+            data: saidas,
+            borderColor: 'red',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.3,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              font: { size: 14 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                if (context.parsed.y !== null) {
+                  label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  }
+
+  criarGrafico(labelsOriginais, dadosEntradasOriginais, dadosSaidasOriginais);
+
+  function filtrarGraficoPorData() {
+    const dataInicio = document.getElementById('data_inicio_grafico').value;
+    const dataFim = document.getElementById('data_fim_grafico').value;
+
+    if (!dataInicio && !dataFim) {
+      criarGrafico(labelsOriginais, dadosEntradasOriginais, dadosSaidasOriginais);
+      return;
+    }
+
+    let inicio = 0;
+    let fim = labelsOriginais.length - 1;
+    if (dataInicio) inicio = Math.max(0, new Date(dataInicio).getMonth());
+    if (dataFim) fim = Math.min(labelsOriginais.length - 1, new Date(dataFim).getMonth());
+
+    const labelsFiltradas = labelsOriginais.slice(inicio, fim + 1);
+    const entradasFiltradas = dadosEntradasOriginais.slice(inicio, fim + 1);
+    const saidasFiltradas = dadosSaidasOriginais.slice(inicio, fim + 1);
+
+    criarGrafico(labelsFiltradas, entradasFiltradas, saidasFiltradas);
+  
+
+ }
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('toggleSidebar');
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const icon = toggleBtn.querySelector('i');
+
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        mainContent.classList.toggle('sidebar-hidden');
+
+        icon.classList.add('rotate');
+        setTimeout(() => icon.classList.remove('rotate'), 400);
+        
+      });
+    });
+
+    const lucrosMensais = dadosEntradasOriginais.map((e, i) => e - dadosSaidasOriginais[i]);
+
+  new Chart(document.getElementById('graficoLucroMensal').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: labelsOriginais,
+      datasets: [{
+        label: 'Lucro Mensal (R$)',
+        data: lucrosMensais,
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+   const categorias = JSON.parse(`<%- JSON.stringify(categorias_totais || []) %>`);
+
+  if (categorias.length > 0) {
+  const coresFixas = {
+  Alimento: '#3498db',  
+  Bebida: '#2ecc71',   
+  Transporte: '#f1c40f',   
+  Outros: '#9b59b6'        
+};
+
+const backgroundColors = categorias.map(c => coresFixas[c.categoria] || '#95a5a6');
+
+    new Chart(document.getElementById('graficoCategoria').getContext('2d'), {
+      type: 'pie',
+      data: {
+        labels: categorias.map(c => c.categoria),
+        datasets: [{
+          label: 'Distribuição por Categoria',
+          data: categorias.map(c => c.total),
+          backgroundColor: backgroundColors
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `${context.label}: R$ ${context.parsed.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  } else {
+    document.getElementById('graficoCategoria').parentElement.innerHTML += `
+      <p style="text-align:center; margin-top:20px; font-weight:bold;">Nenhum dado de categoria disponível para este mês.</p>
+    `;
+  }
+  </script>
+</body>
+</html>

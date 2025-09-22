@@ -34,10 +34,12 @@ body {
 
 /* Layout */
 .layout {
+  margin-top: auto 5px;
+  margin: 10px auto;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 24px;
-  padding: 24px;
+  gap: auto 24px;
+  padding: auto 24px;
 }
 
 @media (max-width: 720px) {
@@ -50,22 +52,22 @@ body {
 /* Sidebar */
 .sidebar {
   height: 100%;
-
-  top: 24px;
+  top: 24px auto;
   left: 24px;
   height: calc(100svh - 48px);
-  background: linear-gradient(180deg, var(--brand) 0%, #2c9b66 100%);
+  background: linear-gradient(180deg, var(--brand) 0%, #215e9c 250%);
   border-radius: 22px;
   color: #e9fff3;
   box-shadow: var(--shadow);
   padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
   width: var(--sidebar-width);
   transition: all .25s ease;
 
 }
+
 
 .sidebar ul {
   list-style-type: none;
@@ -154,14 +156,14 @@ body:not(.sidebar-open) .main-content {
 /* Toggle button */
 .toggle-btn {
   position: absolute;   /* fixo na tela */
-  top: 36px;         /* ajusta conforme sua sidebar */
+  top:  1.5%;         /* ajusta conforme sua sidebar */
   left: 36px;
   border: 0;
   background: var(--panel);
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  display: grid;
+
   place-items: center;
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -215,3 +217,22 @@ html, body { overscroll-behavior-y: contain; }
   /* when open in mobile, keep the toggle visible but don't move it horizontally */
   body.sidebar-open .toggle-btn { left: 16px; }
 }
+
+
+.sidebar nav a i { width: 18px; text-align: center; opacity: .9; }
+
+.sidebar nav a:hover { background: rgba(255, 255, 255, .12); transform: translateY(-1px); }
+
+.sidebar nav a.active { background: rgba(255, 255, 255, .18); }
+
+.sidebar .logout { margin-top: auto; }
+
+.sidebar:not(.open) { width: 0px; padding: 0px; height: 0; overflow: hidden; }
+
+.sidebar:not(.open) h2 { opacity: 0; height: 0; margin: 0; overflow: hidden; }
+
+.sidebar:not(.open) nav a { justify-content: center; gap: 0; font-size: 0; }
+
+.sidebar:not(.open) nav a i { font-size: 0px; }
+
+.main-content { min-height: 100%; padding: 8px 6px 6px 0; }

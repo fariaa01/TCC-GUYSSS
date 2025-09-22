@@ -336,4 +336,6 @@ window.__produtoFiltroAtivo = false;
     e.preventDefault();
     aplicarFiltros();
   });
+
+  
 })();

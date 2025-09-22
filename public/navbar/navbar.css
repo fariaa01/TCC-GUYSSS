@@ -16,7 +16,7 @@
 /* make the topbar span the full width of the grid so the sidebar appears on the left */
 .topbar {
 	grid-column: 1 / -1;
-	z-index: 1100;
+	z-index: 100;
 }
 
 /* Main content shift when sidebar closed */

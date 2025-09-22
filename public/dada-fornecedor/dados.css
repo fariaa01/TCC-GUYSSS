@@ -253,7 +253,7 @@ tbody tr:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
+  gap: 1.5rem;
   padding: 10px 16px;
   border-radius: 10px;
   border: 1.5px solid transparent;
@@ -308,6 +308,7 @@ tbody tr:hover {
     display: flex;
     justify-content: space-between;
     padding: 10px;
+    
   }
 
   td::before {
@@ -323,7 +324,7 @@ tbody tr:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: .5rem;
+  gap: 1rem;
   padding: 10px 16px;
   border-radius: 10px;
   border: 1.5px solid transparent;
@@ -341,6 +342,8 @@ tbody tr:hover {
 
 .vermais-btn i {
   font-size: 16px;
+  margin-right: 50px;
+  margin-top: 25px;
 }
 
 .vermais-btn:hover,

@@ -114,16 +114,5 @@ module.exports = {
     const sql = `DELETE FROM estoque WHERE id = ? AND usuario_id = ?`;
     const [result] = await pool.query(sql, [Number(id), usuarioId]);
     return result.affectedRows > 0;
-  },
-
-  async getHistoricoComprasPorFornecedor(fornecedor, usuarioId) {
-    const sql = `
-      SELECT produto, categoria, quantidade, valor, validade, data_compra
-      FROM estoque
-      WHERE fornecedor = ? AND usuario_id = ?
-      ORDER BY data_compra DESC
-    `;
-    const [rows] = await pool.query(sql, [fornecedor, usuarioId]);
-    return rows;
   }
 };

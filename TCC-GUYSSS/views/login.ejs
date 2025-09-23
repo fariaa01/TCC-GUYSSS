@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Sistema de Gestão</title>
+    <link rel="stylesheet" href="/login/login.css" />
+  </head>
+
+  <body>
+    <div class="container" id="container">
+      <div class="painel-azul">
+        <h1 id="tituloPainel">Login</h1>
+        <p id="textoPainel">Bem-vindo de volta!</p>
+      </div>
+
+      <div class="secao-formulario formulario-login">
+        <div class="conteudo-formulario">
+          <h1>Login</h1>
+          <form method="POST" action="/login">
+            <input type="email" name="email" placeholder="Email" required />
+
+            <div class="input-group">
+              <input type="password" name="senha" id="senhaLogin" placeholder="Senha" required />
+              <button type="button" class="toggle-password" aria-label="Mostrar senha" aria-pressed="false" data-for="senhaLogin" title="Mostrar senha">
+                <svg class="icon-eye" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5c5.5 0 9.5 3.6 11 7-1.5 3.4-5.5 7-11 7S2.5 15.4 1 12c1.5-3.4 5.5-7 11-7Zm0 2C7.9 7 4.6 9.6 3.3 12 4.6 14.4 7.9 17 12 17s7.4-2.6 8.7-5c-1.3-2.4-4.6-5-8.7-5Zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5Zm0-1.5a4 4 0 1 1-4 4 4 4 0 0 1 4-4Z"/></svg>
+                <svg class="icon-eye-off" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3.3 1.9 2 3.2l3 3C3.5 7.2 2 8.4 1 10c1.5 3.4 5.5 7 11 7 2 0 3.9-.5 5.5-1.3l3.2 3.2 1.3-1.3ZM12 7c-1 0-2 .2-2.8.7l1.6 1.6A2.9 2.9 0 0 1 12 9a3 3 0 0 1 3 3c0 .4-.1.8-.3 1.2l1.6 1.6c.5-.8.7-1.8.7-2.8a5 5 0 0 0-5-5Zm8.7 1.3c1 .6 1.9 1.5 2.3 2.7-1.5 3.4-5.5 7-11 7-1.6 0-3.1-.3-4.5-.8l1.8-1.8c.8.3 1.8.6 2.7.6 4.1 0 7.4-2.6 8.7-5-.3-.6-.8-1.2-1.3-1.7Z"/></svg>
+              </button>
+            </div>
+
+            <div class="botoes-formulario">
+              <button type="submit">Entrar</button>
+            </div>
+          </form>
+          <div class="text-alternative">
+            <span>Não tem login? <a href="#" id="linkCadastro">Cadastre-se</a></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="secao-formulario formulario-cadastro">
+        <div class="conteudo-formulario">
+          <form method="POST" action="/register" novalidate>
+            <input type="text" name="nome" placeholder="Nome" required />
+            <input type="email" name="email" placeholder="Email" required />
+
+            <div class="input-group">
+              <input
+                type="password"
+                name="senha"
+                id="senhaCadastro"
+                placeholder="Senha"
+                required
+                minlength="8"
+                autocomplete="new-password"
+                aria-describedby="pwdLabel pwdHints"
+              />
+              <button type="button" class="toggle-password" aria-label="Mostrar senha" aria-pressed="false" data-for="senhaCadastro" title="Mostrar senha">
+                <svg class="icon-eye" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5c5.5 0 9.5 3.6 11 7-1.5 3.4-5.5 7-11 7S2.5 15.4 1 12c1.5-3.4 5.5-7 11-7Zm0 2C7.9 7 4.6 9.6 3.3 12 4.6 14.4 7.9 17 12 17s7.4-2.6 8.7-5c-1.3-2.4-4.6-5-8.7-5Zm0 2.5A2.5 2.5 0 1 1 9.5 12 2.5 2.5 0 0 1 12 9.5Zm0-1.5a4 4 0 1 1-4 4 4 4 0 0 1 4-4Z"/></svg>
+                <svg class="icon-eye-off" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3.3 1.9 2 3.2l3 3C3.5 7.2 2 8.4 1 10c1.5 3.4 5.5 7 11 7 2 0 3.9-.5 5.5-1.3l3.2 3.2 1.3-1.3ZM12 7c-1 0-2 .2-2.8.7l1.6 1.6A2.9 2.9 0 0 1 12 9a3 3 0 0 1 3 3c0 .4-.1.8-.3 1.2l1.6 1.6c.5-.8.7-1.8.7-2.8a5 5 0 0 0-5-5Zm8.7 1.3c1 .6 1.9 1.5 2.3 2.7-1.5 3.4-5.5 7-11 7-1.6 0-3.1-.3-4.5-.8l1.8-1.8c.8.3 1.8.6 2.7.6 4.1 0 7.4-2.6 8.7-5-.3-.6-.8-1.2-1.3-1.7Z"/></svg>
+              </button>
+            </div>
+
+            <div class="password-meter" aria-live="polite">
+              <div class="meter-bar" aria-hidden="true">
+                <span id="pwdBar" class="w0 c-weak"></span>
+              </div>
+              <div id="pwdLabel" class="meter-label">Força: —</div>
+              <ul id="pwdHints" class="pwd-hints">
+                <li data-req="len">Mín. 8 caracteres</li>
+                <li data-req="lower">Letra minúscula</li>
+                <li data-req="upper">Letra maiúscula</li>
+                <li data-req="num">Número</li>
+                <li data-req="sym">Símbolo</li>
+              </ul>
+            </div>
+
+            <div class="input-group">
+              <input
+                type="password"
+                name="senhaConfirmacao"
+                id="senhaConfirmacao"
+                placeholder="Repita a senha"
+                required
+                autocomplete="new-password"
+                aria-describedby="pwdMatchMsg"
+              />
+            </div>
+            <div id="pwdMatchMsg" class="match-msg">Repita a senha.</div>
+
+            <div class="botoes-formulario">
+              <button type="submit" id="btnCadastrar" disabled>Cadastrar</button>
+            </div>
+          </form>
+
+          <div class="text-alternative">
+            <span>Já tem conta? <a href="#" id="linkLogin">Fazer login</a></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script nonce="<%= cspNonce %>" src="/login/login.js"></script>
+  </body>
+</html>

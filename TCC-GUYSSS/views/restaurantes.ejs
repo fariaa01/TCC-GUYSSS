@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Escolher restaurante</title>
+  <link rel="stylesheet" href="/restaurante/restaurante.css"> 
+</head>
+<body>
+  <header class="navbar">
+    <div class="container navbar__inner">
+      <a href="/" class="navbar__brand" aria-label="Página inicial">
+        <span class="brand__logo" aria-hidden="true">🍔</span>
+        <span class="brand__text">Foodtruck</span>
+      </a>
+      <div class="navbar__actions">
+      </div>
+    </div>
+  </header>
+
+  <main class="container page">
+    <header class="page__header">
+      <h1 class="page__title">Escolher restaurante</h1>
+      <p class="page__subtitle">Busque sua empresa e acesse o cardápio.</p>
+    </header>
+
+    <section class="card">
+      <form method="GET" action="/restaurantes" class="form" novalidate>
+        <label for="q" class="label">Buscar por nome (opcional)</label>
+        <div class="input-group">
+          <span class="input-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="icon">
+              <path d="M10.5 3a7.5 7.5 0 0 1 5.917 12.187l4.198 4.197a1 1 0 0 1-1.414 1.415l-4.197-4.198A7.5 7.5 0 1 1 10.5 3m0 2a5.5 5.5 0 1 0 0 11a5.5 5.5 0 0 0 0-11Z"/>
+            </svg>
+          </span>
+          <input
+            id="q"
+            class="input"
+            type="text"
+            name="q"
+            value="<%= (typeof q !== 'undefined' && q) ? q : '' %>"
+            placeholder="Digite parte do nome"
+            autocomplete="off"
+          />
+          <button type="submit" class="btn btn--primary">Buscar</button>
+          <a href="/restaurantes" class="btn btn--ghost">Limpar</a>
+        </div>
+        <p class="muted" aria-live="polite">
+          <%= (typeof q !== 'undefined' && q) ? `Mostrando resultados para “${q}”.` : 'Dica: deixe em branco para listar tudo.' %>
+        </p>
+      </form>
+
+      <% if (!resultados || !resultados.length) { %>
+        <div class="empty">
+          <p class="empty__title">Nenhum restaurante encontrado</p>
+          <p class="muted">Tente outro termo ou clique em <strong>Limpar</strong>.</p>
+        </div>
+      <% } else { %>
+        <form method="POST" action="/restaurantes/ir" class="form" novalidate>
+          <label for="usuarioId" class="label">Restaurante</label>
+          <div class="select-wrap">
+            <select id="usuarioId" name="usuarioId" required class="select">
+              <% resultados.forEach(r => { %>
+                <option value="<%= r.id %>"><%= r.nome_empresa %></option>
+              <% }) %>
+            </select>
+            <span class="select-caret" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="icon"><path d="M6 9l6 6 6-6z"/></svg>
+            </span>
+          </div>
+
+          <div class="row row--between">
+            <small class="muted"><%= resultados.length %> <%= resultados.length === 1 ? 'empresa encontrada' : 'empresas encontradas' %></small>
+            <button type="submit" class="btn btn--primary">Ver cardápio</button>
+          </div>
+        </form>
+      <% } %>
+    </section>
+
+    <footer class="page__footer">
+      <p class="muted">© <%= new Date().getFullYear() %> • Sistema de Gestão Foodtruck</p>
+    </footer>
+  </main>
+</body>
+</html>

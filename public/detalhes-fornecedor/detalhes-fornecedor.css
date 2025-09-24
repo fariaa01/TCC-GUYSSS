@@ -52,6 +52,19 @@
   font-size: 0.99rem;
 }
 
+.historico-compras .total-row td {
+  background: #f5f7fa !important;
+  font-weight: 600;
+  border-top: 2px solid #e5e7eb !important;
+  color: #374151;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+}
+
+.historico-compras .total-row:hover td {
+  background: #f5f7fa !important;
+}
+
 @media (max-width: 700px) {
   .historico-compras th, .historico-compras td {
     padding: 10px 8px;

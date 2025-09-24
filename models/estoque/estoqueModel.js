@@ -22,6 +22,27 @@ function buildFilters({ categoria, fornecedor, validade, usuarioId }) {
 }
 
 function normStr(v) {
+  let sql = `SELECT 
+      id, produto, categoria, quantidade, quantidade_minima,
+      unidade_medida, valor, validade, fornecedor, usuario_id
+    FROM estoque
+    WHERE usuario_id = ?`;
+  const params = [usuarioId];
+
+  if (categoria) { sql += ` AND categoria = ?`; params.push(categoria); }
+  if (fornecedor) { sql += ` AND fornecedor = ?`; params.push(fornecedor); }
+  if (validade === 'vencido') {
+    sql += ` AND validade IS NOT NULL AND validade < CURRENT_DATE()`;
+  } else if (validade === 'proximo') {
+    sql += ` AND validade IS NOT NULL 
+             AND validade BETWEEN CURRENT_DATE() AND DATE_ADD(CURRENT_DATE(), INTERVAL 7 DAY)`;
+  }
+
+  sql += ` ORDER BY produto ASC`;
+  return { sql, params };
+}
+
+function normStr(v) {
   if (v === undefined) return undefined;
   if (v === null) return null;
   const s = String(v).trim();
@@ -43,6 +64,9 @@ function parseDateOrNull(v) {
 }
 
 module.exports = {
+  }
+
+module.exports = {
   async getFiltrado({ categoria, fornecedor, validade, usuarioId }) {
     const { sql, params } = buildFilters({ categoria, fornecedor, validade, usuarioId });
     const [rows] = await pool.query(sql, params);
@@ -50,26 +74,59 @@ module.exports = {
   },
 
   async create(body, usuarioId) {
-    const sql = `
-      INSERT INTO estoque
-        (produto, categoria, quantidade, quantidade_minima, unidade_medida, valor, validade, fornecedor, usuario_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+    const connection = await pool.getConnection();
+    
+    try {
+      await connection.beginTransaction();
 
-    const params = [
-      normStr(body.produto),
-      normStr(body.categoria),
-      parseNum(body.quantidade, 0),
-      parseNum(body.quantidade_minima, 0),
-      normStr(body.unidade_medida),
-      parseMoney(body.valor, 0),
-      parseDateOrNull(body.validade),
-      normStr(body.fornecedor),
-      usuarioId
-    ];
+      // 1. Inserir no estoque
+      const sqlEstoque = `
+        INSERT INTO estoque
+          (produto, categoria, quantidade, quantidade_minima, unidade_medida, valor, validade, fornecedor, usuario_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
 
-    const [result] = await pool.query(sql, params);
-    return result.insertId;
+      const paramsEstoque = [
+        normStr(body.produto),
+        normStr(body.categoria),
+        parseNum(body.quantidade, 0),
+        parseNum(body.quantidade_minima, 0),
+        normStr(body.unidade_medida),
+        parseMoney(body.valor, 0),
+        parseDateOrNull(body.validade),
+        normStr(body.fornecedor),
+        usuarioId
+      ];
+
+      const [resultEstoque] = await connection.query(sqlEstoque, paramsEstoque);
+
+      const valorTotal = parseMoney(body.valor, 0);
+      
+      if (valorTotal > 0) {
+        const sqlFinanceiro = `
+          INSERT INTO financeiro (usuario_id, tipo, categoria, valor, data)
+          VALUES (?, ?, ?, ?, CURDATE())
+        `;
+
+        const paramsFinanceiro = [
+          usuarioId,
+          'saida',
+          'Compra de Estoque', 
+          valorTotal 
+        ];
+
+        await connection.query(sqlFinanceiro, paramsFinanceiro);
+      }
+
+      await connection.commit();
+      return resultEstoque.insertId;
+      
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   },
 
   async update(id, body, usuarioId) {

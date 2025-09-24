@@ -204,6 +204,22 @@
                 <td colspan="4" style="text-align:center;">Nenhum histórico de compra encontrado.</td>
               </tr>
             <% } %>
+            
+            <% if (historicoCompras && historicoCompras.length > 0) { %>
+              <tr class="total-row">
+                <td colspan="3" style="text-align: right; font-weight: 600; background: #f5f7fa; border-top: 2px solid #e5e7eb;">
+                  <strong>TOTAL GASTO:</strong>
+                </td>
+                <td style="font-weight: 600; font-size: 1rem; color: #374151; background: #f5f7fa; border-top: 2px solid #e5e7eb;">
+                  <strong>R$ <%= historicoCompras.reduce((total, compra) => {
+                    const valor = typeof compra.valor === 'number' 
+                                ? compra.valor 
+                                : parseFloat(compra.valor || 0);
+                    return total + valor;
+                  }, 0).toFixed(2) %></strong>
+                </td>
+              </tr>
+            <% } %>
           </tbody>
         </table>
       </div>

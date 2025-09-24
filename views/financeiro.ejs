@@ -32,11 +32,11 @@
     <section class="cards">
       <div class="card kpi entrada">
         <span class="kpi-label">Total de Entradas</span>
-        <span class="kpi-value">R$ <%= Number(totalEntradas || 0).toFixed(2) %></span>
+        <span class="kpi-value">R$ <%= Number(totalEntradas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
       </div>
       <div class="card kpi saida">
         <span class="kpi-label">Total de Saídas</span>
-        <span class="kpi-value">R$ <%= Number(totalSaidas || 0).toFixed(2) %></span>
+        <span class="kpi-value">R$ <%= Number(totalSaidas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
       </div>
       <div class="card kpi registros">
         <span class="kpi-label">Lançamentos</span>
@@ -52,11 +52,11 @@
       %>
       <div class="card kpi fixos">
         <span class="kpi-label">Gastos Fixos</span>
-        <span class="kpi-value">R$ <%= _totalFixos.toFixed(2) %></span>
+        <span class="kpi-value">R$ <%= _totalFixos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
       </div>
       <div class="card kpi saldo">
         <span class="kpi-label">Saldo Final (com fixos)</span>
-        <span class="kpi-value">R$ <%= _saldoComFixos.toFixed(2) %></span>
+        <span class="kpi-value">R$ <%= _saldoComFixos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
       </div>
     </section>
 
@@ -145,7 +145,7 @@
                     <%= d.tipo %>
                   </span>
                 </td>
-                <td data-col="valor">R$ <%= Number(d.valor || 0).toFixed(2) %></td>
+                <td data-col="valor">R$ <%= Number(d.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                 <td class="center">
                   <button type="button" class="btn btn--danger btn--icon" title="Excluir" onclick="confirmarExclusaoLancamento('<%= d.id %>')">
                     <i class="fas fa-trash-alt"></i>
@@ -208,7 +208,7 @@
             %>
               <tr>
                 <td data-col="nome"><%= f.nome %></td>
-                <td data-col="valor">R$ <%= Number(f.valor || 0).toFixed(2) %></td>
+                <td data-col="valor">R$ <%= Number(f.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                 <td data-col="recorrencia" class="cap"><%= f.recorrencia %></td>
                 <td data-col="inicio"><%= diFmt %></td>
                 <td data-col="fim"><%= dfFmt %></td>
@@ -268,7 +268,6 @@
     </div>
   </div>
 
-  <!-- Modal Gasto Fixo -->
   <div id="modalGastoFixo" class="modal">
     <div class="modal-content">
       <button id="fecharModalFixo" class="close" aria-label="Fechar">&times;</button>

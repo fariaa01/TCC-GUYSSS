@@ -60,7 +60,7 @@ body {
   color: #e9fff3;
   box-shadow: var(--shadow);
   padding: 22px;
-  display: flex;
+  display: block;
   flex-direction: column;
   gap: 22px;
   width: var(--sidebar-width);
@@ -94,7 +94,7 @@ body {
 }
 
 .sidebar nav {
-  display: flex;
+  display: block;
   flex-direction: column;
   gap: 6px;
   margin-top: 6px;
@@ -146,7 +146,7 @@ body:not(.sidebar-open) .main-content {
 }
 
 .main-content header {
-  display: flex;
+  display: block;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -155,7 +155,7 @@ body:not(.sidebar-open) .main-content {
 
 /* Toggle button */
 .toggle-btn {
-  position: absolute;   /* fixo na tela */
+  position: block;   /* fixo na tela */
   top:  1.5%;         /* ajusta conforme sua sidebar */
   left: 36px;
   border: 0;
@@ -163,7 +163,6 @@ body:not(.sidebar-open) .main-content {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-
   place-items: center;
   box-shadow: var(--shadow);
   cursor: pointer;

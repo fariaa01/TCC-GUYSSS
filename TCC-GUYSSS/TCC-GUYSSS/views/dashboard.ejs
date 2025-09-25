@@ -44,7 +44,7 @@
         <div class="card"><i class="fas fa-dollar-sign"></i> <p>Vendas do Mês<br><strong>R$ <%= total_entrada %></strong></p></div>
         <div class="card"><i class="fas fa-wallet"></i> <p>Gastos do Mês<br><strong>R$ <%= total_saida %></strong></p></div>
         <div class="card"><i class="fas fa-box-open"></i> <p>Produtos em Baixa<br><strong><%= produtos_em_baixa %> itens</strong></p></div>
-        <div class="card"><i class="fas fa-user-check"></i> <p>Funcionários Ativos<br><strong><%= total_func %> funcionários</strong></p></div>
+        <div class="card"><a href="/estoque/?validade=proximo"><i class="fa-solid fa-calendar-days"></i> <p>Vencimento Proximo<br><strong><%= total_func %> Produtos</strong></a></p></div>
       </div>
 
       <hr class="separador">

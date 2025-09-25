@@ -78,6 +78,21 @@ h2 {
   transform: translateY(-2px);
 }
 
+.btn-adicionar{
+  display: flex;
+  align-items: #1abc9c;
+  gap: 8px;
+  background: #1abc9c;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-left: 790px;
+}
+
 table {
   width: 100%;
   margin-top: 20px;

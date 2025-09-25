@@ -25,6 +25,11 @@ body {
     var(--bg);
 }
 
+a{
+  text-decoration: none;
+  color: #4b5a51;
+}
+
 .layout {
   display: grid;
   grid-template-columns: auto 1fr;

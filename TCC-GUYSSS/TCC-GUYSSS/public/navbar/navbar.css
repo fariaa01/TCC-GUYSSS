@@ -23,7 +23,7 @@
 #mainContent.sidebar-hidden,
 .container.sidebar-hidden,
 main.sidebar-hidden {
-	margin-left:0 !important;
+	margin-left:100px !important;
 	margin-right: 10px !important;
 	transition: margin-left var(--transition-speed) ease;
 }

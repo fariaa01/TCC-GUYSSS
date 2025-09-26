@@ -10,6 +10,11 @@ body {
   
 }
 
+main-content {
+  padding: 20px;
+  min-height: 100vh;
+}
+
   .cards {
     display: flex;
     flex-wrap: wrap;

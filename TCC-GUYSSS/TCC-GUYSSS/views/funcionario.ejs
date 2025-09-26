@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,72 +8,91 @@
   <link rel="stylesheet" href="/funcionario/funcionario.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
-<body>
-  <div class="layout">
 
-    <%- include('partials/navbar') %>
+<body>
+   <div class="layout">
+
     <%- include('partials/sidebar') %>
 
-    <main class="main-content" id="mainContent">
+      <main class="main-content" id="mainContent">
 
-      <div class="search-add-bar">
-        <div class="search-bar">
-          <i class="fas fa-search search-ico"></i>
-          <input type="text" placeholder="Buscar funcionário..." />
+        <header>
+          <%- include('partials/navbar') %>
+        </header>
+
+        <div class="search-add-bar">
+          <div class="search-bar">
+            <input type="text" placeholder="Buscar funcionário..." />
+          </div>
+
+          <div class="actions">
+            <button class="btn-add" id="btnNovoFuncionario">
+              <i class="fas fa-user-plus"></i> Adicionar Funcionário
+            </button>
+          </div>
         </div>
 
-        <div class="actions">
-          <button class="btn-add" id="btnNovoFuncionario">
-            <i class="fas fa-user-plus"></i> Adicionar Funcionário
-          </button>
-        </div>
-      </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Foto</th>
+              <th>Nome</th>
+              <th>CPF</th>
+              <th>Função</th>
+              <th>Telefone</th>
+              <th>Email</th>
+              <th>Salário</th>
+              <th>Data de Admissão</th>
+              <th>Estado</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% funcionarios.forEach(f=> { %>
+              <tr>
+                <td data-label="Foto">
+                  <% if (f.foto) { %>
+                    <img src="/uploads/<%= f.foto %>" alt="Foto" width="40" height="40" class="thumb-circle">
+                    <% } else { %>
+                      <span>Sem foto</span>
+                      <% } %>
+                </td>
+                <td data-label="Nome">
+                  <%= f.nome %>
+                </td>
+                <td data-label="CPF">
+                  <%= f.cpf %>
+                </td>
+                <td data-label="Função">
+                  <%= f.cargo %>
+                </td>
+                <td data-label="Telefone">
+                  <%= f.telefone %>
+                </td>
+                <td data-label="Email">
+                  <%= f.email %>
+                </td>
+                <td data-label="Salário">R$ <%= f.salario %>
+                </td>
+                <td data-label="Admissão">
+                  <%= f.data_admissao.toISOString().split('T')[0] %>
+                </td>
+                <td data-label="Estado">
+                  <%= f.estado %>
+                </td>
+                <td data-label="Ações">
+                  <a href="/funcionario/delete/<%= f.id %>" class="btn-excluir" data-role="excluir"
+                    data-id="<%= f.id %>">
+                    <i class="fas fa-trash-alt"></i>
+                  </a>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
 
-      <table>
-      <thead>
-        <tr>
-          <th>Foto</th>
-          <th>Nome</th>
-          <th>CPF</th>
-          <th>Função</th>
-          <th>Telefone</th>
-          <th>Email</th>
-          <th>Salário</th>
-          <th>Data de Admissão</th>
-          <th>Estado</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% funcionarios.forEach(f => { %>
-          <tr>
-            <td data-label="Foto">
-  <% if (f.foto) { %>
-    <img src="/uploads/<%= f.foto %>" alt="Foto" width="40" height="40" class="thumb-circle">
-  <% } else { %>
-    <span>Sem foto</span>
-  <% } %>
-</td>
-            <td data-label="Nome"><%= f.nome %></td>
-            <td data-label="CPF"><%= f.cpf %></td>
-            <td data-label="Função"><%= f.cargo %></td>
-            <td data-label="Telefone"><%= f.telefone %></td>
-            <td data-label="Email"><%= f.email %></td>
-            <td data-label="Salário">R$ <%= f.salario %></td>
-            <td data-label="Admissão"><%= f.data_admissao.toISOString().split('T')[0] %></td>
-            <td data-label="Estado"><%= f.estado %></td>
-            <td data-label="Ações">
-              <a href="/funcionario/delete/<%= f.id %>" class="btn-excluir" data-role="excluir" data-id="<%= f.id %>">
-                <i class="fas fa-trash-alt"></i>
-              </a>
-            </td>
-          </tr>
-        <% }) %>
-      </tbody>
-    </table>
-
-    <!-- botão voltar removido: navbar já fornece navegação -->
-    </main>
+        <!-- botão voltar removido: navbar já fornece navegação -->
+      </main>
   </div>
 
   <div id="modalFuncionario" class="modal">
@@ -98,6 +118,5 @@
   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script nonce="<%= cspNonce %>" src="/funcionario/funcionario.js"></script>
 </body>
+
 </html>
-
-

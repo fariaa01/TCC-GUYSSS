@@ -34,6 +34,10 @@ body {
 
 }
 
+.grid-cards{
+  display: flex;
+}
+
 
 .topbar {
   display: flex;
@@ -134,7 +138,7 @@ body {
 }
 
   .cards {
-     display: flex;
+    display: flex;
     flex-wrap: wrap;
     gap: 2rem;
     justify-content: center;
@@ -281,6 +285,10 @@ body {
 .btn:hover {
   opacity: .92;
   transform: translateY(-1px);
+}
+
+.btn adicionar-carrinho{
+  width: 10px;
 }
 
 .vazio {

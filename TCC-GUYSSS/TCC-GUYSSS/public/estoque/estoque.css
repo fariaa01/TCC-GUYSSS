@@ -41,6 +41,7 @@ body {
 .sidebar-hidden{
   display: block;
   max-width: 400%;
+
   min-width: 100px;
   height: auto;
 }

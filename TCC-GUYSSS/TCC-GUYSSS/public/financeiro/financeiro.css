@@ -30,18 +30,35 @@ body {
   --border: #e5e9f0;
   --radius: 16px;
   --shadow: 0 8px 24px rgba(0, 0, 0, .08);
+  --sidebar-width: 260px;
+  --sidebar-gap: 24px;
+  --transition-speed: 250ms;
 }
 
 body {
   background: var(--bg);
   padding: 30px;
   color: var(--text);
+  height: 100%;
+  width: 100%;
+  display: flex;
 }
 
 .container {
   max-width: 1200px;
+  width: 100%;
   margin: auto;
 }
+
+sidebar-open {
+  display: block;
+  max-width: 100%;
+  margin-right: 50%;
+  min-width: 100px;
+  width: 100%;
+}
+
+
 
 h1,
 h2 {
@@ -57,7 +74,7 @@ h2 {
 }
 
 .page-head {
-  display: flex;
+  display: block;
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;

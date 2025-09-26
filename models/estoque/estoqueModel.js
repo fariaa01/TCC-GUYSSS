@@ -60,7 +60,7 @@ function parseMoney(v, fallback = 0) {
 function parseDateOrNull(v) {
   if (v === undefined) return undefined;
   if (v === null || v === '') return null;
-  return v; // assume YYYY-MM-DD já válido
+  return v;
 }
 
 module.exports = {
@@ -79,7 +79,6 @@ module.exports = {
     try {
       await connection.beginTransaction();
 
-      // 1. Inserir no estoque
       const sqlEstoque = `
         INSERT INTO estoque
           (produto, categoria, quantidade, quantidade_minima, unidade_medida, valor, validade, fornecedor, usuario_id)
@@ -103,6 +102,7 @@ module.exports = {
       const valorTotal = parseMoney(body.valor, 0);
       
       if (valorTotal > 0) {
+        const nomeProduto = normStr(body.produto) || 'Produto';
         const sqlFinanceiro = `
           INSERT INTO financeiro (usuario_id, tipo, categoria, valor, data)
           VALUES (?, ?, ?, ?, CURDATE())
@@ -111,7 +111,7 @@ module.exports = {
         const paramsFinanceiro = [
           usuarioId,
           'saida',
-          'Compra de Estoque', 
+          `Compra de ${nomeProduto}`,
           valorTotal 
         ];
 

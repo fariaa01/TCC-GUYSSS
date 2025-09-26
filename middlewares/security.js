@@ -47,7 +47,7 @@ module.exports = helmet({
         "https://cdnjs.cloudflare.com",
         "data:",
       ],
-      imgSrc: ["'self'", "data:", "blob:"],
+      imgSrc: ["'self'", "data:", "blob:", "https://api.qrserver.com"],
       connectSrc: [
         "'self'",
         "https://unpkg.com",

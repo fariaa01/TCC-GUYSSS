@@ -754,7 +754,6 @@ td.saving::after {
   margin:0 !important;
 }
 
-/* padroniza os botões (altura, largura e sem “pular” no hover) */
 .swal2-actions .btn{
   min-width:140px !important;
   padding:12px 18px !important;
@@ -788,4 +787,38 @@ td.saving::after {
 .pagination button:hover {
   background: #007bff;
   color: #fff;
+}
+
+.btn-qr {
+  background: var(--info);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.btn-qr:hover {
+  background: var(--info-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 137, 221, 0.3);
+}
+
+.btn-qr:active {
+  transform: translateY(0);
+}
+
+.btn-qr i {
+  font-size: 16px;
+}
+
+.qr-code-cell {
+  text-align: center;
+  white-space: nowrap;
 }

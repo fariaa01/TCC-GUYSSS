@@ -69,6 +69,9 @@ app.use('/pedidos', require('./routes/pedido'));
 app.use('/carrinho', require('./routes/carrinho'));
 app.use('/', require('./routes/clienteAuthRoutes'));
 
+// Rota global para visualizar produtos via QR Code
+app.get('/produto/:id', require('./controllers/estoque/estoqueController').visualizar);
+
 app.get('/checkout', requireCliente, (req, res) => {
   res.render('checkout', {
     clienteId: req.session.clienteId

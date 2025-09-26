@@ -88,6 +88,10 @@
       </div>
 
       <div class="actions">
+        <button class="btn-add" id="btnEscanearQR" title="Escanear QR Code">
+          <i class="fas fa-qrcode"></i> Escanear QR
+        </button>
+
         <button class="btn-add" id="btnCadastrarProduto" title="Cadastrar Produto">
           <i class="fas fa-plus-circle"></i> Cadastrar Produto
         </button>
@@ -429,11 +433,37 @@
     </div>
   </div>
 
+  <div id="modalLeitorQR" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <span id="fecharModalLeitor" class="close" aria-label="Fechar">&times;</span>
+      <h3>Escanear QR Code</h3>
+      
+      <div id="qr-reader" style="width: 100%; margin: 20px 0;"></div>
+      
+      <div id="qr-reader-results" style="margin-top: 20px; text-align: center; color: #666;">
+        <p>Aponte a câmera para o QR Code do produto</p>
+      </div>
+      
+      <div style="text-align: center; margin-top: 20px;">
+        <button type="button" class="btn-secondary" id="pararLeitorQR">Parar Scanner</button>
+      </div>
+    </div>
+  </div>
+
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/html5-qrcode"></script>
+  
+  <% if (editId) { %>
+  <script nonce="<%= cspNonce %>">
+    window.editId = '<%= editId %>';
+  </script>
+  <% } %>
+  
   <script nonce="<%= cspNonce %>" src="/estoque/js/estoque.js"></script>
   <script nonce="<%= cspNonce %>" src="/estoque/js/edicaoRapida.js"></script>
   <script nonce="<%= cspNonce %>" src="/estoque/js/qrcode.js"></script>
+  <script nonce="<%= cspNonce %>" src="/estoque/js/qr-scanner.js"></script>
 </body>
 </html>

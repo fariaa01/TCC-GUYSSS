@@ -73,6 +73,20 @@ module.exports = {
     return rows;
   },
 
+  // Buscar produto por ID específico
+  async getById(id) {
+    const sql = `
+      SELECT 
+        id, produto, categoria, quantidade, quantidade_minima,
+        unidade_medida, valor, validade, fornecedor, usuario_id,
+        DATE_FORMAT(validade, '%d/%m/%Y') as validade_formatada
+      FROM estoque 
+      WHERE id = ?
+    `;
+    const [rows] = await pool.query(sql, [Number(id)]);
+    return rows.length > 0 ? rows[0] : null;
+  },
+
   async create(body, usuarioId) {
     const connection = await pool.getConnection();
     

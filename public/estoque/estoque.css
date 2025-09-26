@@ -822,3 +822,93 @@ td.saving::after {
   text-align: center;
   white-space: nowrap;
 }
+
+/* Estilos para QR Scanner */
+#qr-reader {
+  border: 2px dashed #1abc9c;
+  border-radius: 10px;
+  padding: 10px;
+  background: #f8f9fa;
+}
+
+#qr-reader video {
+  border-radius: 8px;
+  width: 100% !important;
+  height: auto !important;
+}
+
+#qr-reader-results {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal de Ações Rápidas */
+.info-produto {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border: 1px solid #dee2e6;
+  border-left: 4px solid var(--primary);
+}
+
+.produto-info-grid {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.produto-info-grid > div {
+  padding: 5px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.produto-info-grid > div:last-child {
+  border-bottom: none;
+}
+
+.acoes-movimentacao h4 {
+  color: var(--primary);
+  font-size: 1.1rem;
+  border-bottom: 2px solid var(--primary);
+  padding-bottom: 5px;
+}
+
+/* Botões do modal de ações */
+.btn-info {
+  background: var(--info);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-info:hover {
+  background: var(--info-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 137, 221, 0.3);
+}
+
+/* Responsividade para modais */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 10% 10px;
+    padding: 20px;
+  }
+  
+  .acoes-produto {
+    flex-direction: column;
+  }
+  
+  .produto-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  #qr-reader {
+    margin: 10px 0;
+  }
+}

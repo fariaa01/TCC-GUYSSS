@@ -244,7 +244,6 @@ window.__produtoFiltroAtivo = false;
 
 window.__produtoFiltroAtivo = false;
 
-// FILTRO: Só filtra ao clicar em "Filtrar"
 (function(){
   const form   = document.querySelector('.filtros-form');
   const tbody  = document.querySelector('tbody');
@@ -391,3 +390,40 @@ function formatarDataBR(dataISO) {
       setTimeout(() => showPage(1));
     });
   })();
+
+function abrirModalPorId(produtoId) {
+  const tr = document.querySelector(`tr[data-id="${produtoId}"]`);
+  if (tr) {
+    const btnEditar = tr.querySelector('[data-role="editar"]');
+    if (btnEditar) {
+      abrirEditarEstoque(btnEditar);
+      return true;
+    }
+  }
+  return false;
+}
+
+window.abrirModalPorId = abrirModalPorId;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('edit');
+  const serverEditId = typeof window.editId !== 'undefined' ? window.editId : null;
+  
+  const produtoIdParaEditar = editId || serverEditId;
+  
+  if (produtoIdParaEditar) {
+    setTimeout(() => {
+      const sucesso = abrirModalPorId(produtoIdParaEditar);
+      if (sucesso) {
+        console.log('Modal de edição aberto via QR Code para produto ID:', produtoIdParaEditar);
+        if (editId) {
+          const novaUrl = window.location.pathname + (window.location.search.replace(/[?&]edit=[^&]*/, '').replace(/^\?&/, '?').replace(/^\?$/, ''));
+          window.history.replaceState({}, '', novaUrl);
+        }
+      } else {
+        console.warn('Não foi possível encontrar o produto com ID:', produtoIdParaEditar);
+      }
+    }, 100);
+  }
+});

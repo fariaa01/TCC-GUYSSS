@@ -165,7 +165,6 @@
 
       selectEditProduto?.addEventListener('change', syncProdutoToFields);
 
-      // Abrir modal e preencher com dados da linha
       document.querySelectorAll('button.btn-editar[data-role="editar"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const tr = e.currentTarget.closest('tr');

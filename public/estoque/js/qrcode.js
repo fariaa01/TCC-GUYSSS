@@ -21,7 +21,6 @@
           return;
         }
         
-        // URL do QR Code
         const qrData = `${window.location.origin}/produto/${produtoId}`;
         console.log('URL para QR Code:', qrData);
         
@@ -90,9 +89,8 @@
             showCloseButton: true,
             width: 450,
             didOpen: () => {
-              console.log('Modal aberto com QR Code alternativo'); // Debug
+              console.log('Modal aberto com QR Code alternativo');
               
-              // Adicionar event listener para o botão de download
               const downloadBtn = document.getElementById('downloadBtn');
               if (downloadBtn) {
                 downloadBtn.addEventListener('click', function() {

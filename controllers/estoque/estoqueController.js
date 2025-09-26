@@ -101,6 +101,9 @@ module.exports = {
 
       const { cntVencidos, cntProx7, cntBaixo, totalAlerts } = calcularAlertas(todos);
 
+      // Verificar se há um produto para editar (vindo do QR Code)
+      const editId = req.query.edit || null;
+
       return res.render('estoque', {
         produtos,
         nomesProdutos,
@@ -113,6 +116,7 @@ module.exports = {
         cntProx7,
         cntBaixo,
         totalAlerts,
+        editId,
         cspNonce: res.locals.cspNonce
       });
     } catch (err) {
@@ -126,10 +130,29 @@ module.exports = {
       const usuarioId = req.session.userId;
       if (!usuarioId) return res.redirect('/login');
 
-      await Estoque.create(req.body, usuarioId);
+      // Criar o produto no estoque e obter o ID único
+      const produtoId = await Estoque.create(req.body, usuarioId);
+      
+      // Se a requisição é AJAX/JSON, retornar o ID para uso no QR Code
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.json({ 
+          success: true, 
+          id: produtoId, 
+          message: 'Produto adicionado ao estoque',
+          qrUrl: `${req.protocol}://${req.get('host')}/produto/${produtoId}`
+        });
+      }
       return res.redirect('/estoque?ok=1&msg=Produto adicionado ao estoque');
     } catch (err) {
       console.error('[Estoque.criar] Erro:', err);
+
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Não foi possível adicionar o produto' 
+        });
+      }
+      
       return res.redirect('/estoque?ok=0&msg=Não foi possível adicionar o produto');
     }
   },
@@ -172,6 +195,88 @@ module.exports = {
     } catch (err) {
       console.error('[Estoque.deletar] Erro:', err);
       return res.redirect('/estoque?ok=0&msg=Não foi possível excluir o registro');
+    }
+  },
+
+  visualizar: async (req, res) => {
+    try {
+      const produtoId = req.params.id;
+      const produto = await Estoque.getById(produtoId);
+      
+      if (!produto) {
+        return res.status(404).json({ 
+          error: 'Produto não encontrado',
+          id: produtoId 
+        });
+      }
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.json({
+          success: true,
+          produto: produto,
+          qrUrl: `${req.protocol}://${req.get('host')}/produto/${produtoId}`
+        });
+      }
+
+      return res.redirect(`/estoque?edit=${produtoId}`);
+      
+    } catch (err) {
+      console.error('[Estoque.visualizar] Erro:', err);
+      
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(500).json({ 
+          error: 'Erro interno do servidor' 
+        });
+      }
+
+      return res.redirect('/estoque?error=produto_nao_encontrado');
+    }
+  },
+
+  movimento: async (req, res) => {
+    try {
+      const produtoId = req.params.id;
+      const usuarioId = req.session.userId;
+      const { quantidade, tipo } = req.body;
+      
+      if (!usuarioId) {
+        return res.status(401).json({ error: 'Não autenticado' });
+      }
+
+      if (!quantidade || !tipo) {
+        return res.status(400).json({ error: 'Quantidade e tipo são obrigatórios' });
+      }
+
+      // Buscar produto atual
+      const produto = await Estoque.getById(produtoId);
+      if (!produto) {
+        return res.status(404).json({ error: 'Produto não encontrado' });
+      }
+
+      // Calcular nova quantidade
+      const quantidadeAtual = Number(produto.quantidade);
+      const movimentacao = Number(quantidade);
+      const novaQuantidade = quantidadeAtual + movimentacao;
+
+      if (novaQuantidade < 0) {
+        return res.status(400).json({ error: 'Quantidade insuficiente em estoque' });
+      }
+
+      // Atualizar quantidade no banco
+      await Estoque.update(produtoId, { quantidade: novaQuantidade }, usuarioId);
+
+      // Registrar movimentação (opcional - pode implementar tabela de histórico depois)
+      console.log(`Movimento aplicado: Produto ${produtoId}, ${tipo}, quantidade: ${movimentacao}, nova quantidade: ${novaQuantidade}`);
+
+      return res.json({ 
+        success: true, 
+        message: 'Movimento aplicado com sucesso',
+        quantidadeAnterior: quantidadeAtual,
+        quantidadeNova: novaQuantidade
+      });
+
+    } catch (err) {
+      console.error('[Estoque.movimento] Erro:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
     }
   }
 };

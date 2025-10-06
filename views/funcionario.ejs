@@ -105,7 +105,8 @@
   <div id="modalEditarFuncionario" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <form action="/funcionarios/{id}/update" method="POST" enctype="multipart/form-data">
+      <h3>Editar Funcionário</h3>
+      <form method="POST" enctype="multipart/form-data">
         <input type="hidden" name="id" id="editarId" />
         <input type="text" name="nome" id="editarNome" placeholder="Nome" required />
         <input type="text" name="cargo" id="editarCargo" placeholder="Cargo" required />
@@ -117,7 +118,7 @@
         <select name="estado" id="editarEstado" required>
           <option value="Contratado">Contratado</option>
           <option value="Demitido">Demitido</option>
-       </select>
+        </select>
         <input type="file" name="foto" accept="image/*" />
         <button type="submit">Salvar Alterações</button>
       </form>
@@ -125,7 +126,7 @@
   </div>
 
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
-  <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>  
   <script nonce="<%= cspNonce %>" src="/funcionario/funcionario.js"></script>
 </body>
 </html>

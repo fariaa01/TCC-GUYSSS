@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const telAltInputCreate = document.getElementById('telefoneAlternativoCreate');
   if(telAltInputCreate) IMask(telAltInputCreate, { mask: '(00) 00000-0000' });
 
+  const selectPessoaRespCreate = document.getElementById('temPessoaResponsavelCreate');
+  const pessoaRespInputCreate = document.getElementById('pessoaResponsavelCreate');
+
   if(selectTelAltCreate && telAltInputCreate) {
     selectTelAltCreate.addEventListener('change', function() {
       if(this.value === 'sim') {
@@ -16,6 +19,17 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         telAltInputCreate.style.display = 'none';
         telAltInputCreate.value = '';
+      }
+    });
+  }
+
+  if(selectPessoaRespCreate && pessoaRespInputCreate) {
+    selectPessoaRespCreate.addEventListener('change', function() {
+      if(this.value === 'sim') {
+        pessoaRespInputCreate.style.display = 'block';
+      } else {
+        pessoaRespInputCreate.style.display = 'none';
+        pessoaRespInputCreate.value = '';
       }
     });
   }
@@ -29,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
     formCreate.reset();
     selectTelAltCreate.value = 'nao';
     telAltInputCreate.style.display = 'none';
+    selectPessoaRespCreate.value = 'nao';
+    pessoaRespInputCreate.style.display = 'none';
     modalCreate.style.display = 'flex';
   });
 

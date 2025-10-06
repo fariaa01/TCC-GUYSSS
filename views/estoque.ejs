@@ -23,7 +23,7 @@
     <div class="filtros-container filtros-modern">
       <form  action="/estoque" class="filtros-form">
         <div class="filtro-group">
-          <label for="f-prod">Produto</label>
+          <label for="f-prod">Nome do Produto</label>
           <div class="select-modern">
             <select id="f-prod" name="produto">
               <option value="">Todos os Produtos</option>
@@ -35,7 +35,7 @@
         </div>
 
         <div class="filtro-group">
-          <label for="f-cat">Categoria</label>
+          <label for="f-cat">Selecione a Categoria</label>
           <div class="select-modern">
             <select id="f-cat" name="categoria">
               <option value="">Todas as Categorias</option>
@@ -47,7 +47,7 @@
         </div>
 
         <div class="filtro-group">
-          <label for="f-for">Fornecedor</label>
+          <label for="f-for">Selecione o Fornecedor</label>
           <div class="select-modern">
             <select id="f-for" name="fornecedor">
               <option value="">Todos os Fornecedores</option>
@@ -59,7 +59,7 @@
         </div>
 
         <div class="filtro-group">
-          <label for="f-val">Validade</label>
+          <label for="f-val">Validade até</label>
           <div class="select-modern">
             <select id="f-val" name="validade">
               <option value="">Todas as Validades</option>
@@ -71,7 +71,7 @@
 
         <div class="filtro-actions">
           <button type="submit" class="btn btn-filtrar">
-            <i class="fa fa-filter"></i> Filtrar
+            <i class="fa fa-filter"></i> Aplicar filtros
           </button>
 
           <% if (filtrosAtivos) { %>
@@ -89,25 +89,25 @@
 
       <div class="actions">
         <button class="btn-add" id="btnEscanearQR" title="Escanear QR Code">
-          <i class="fas fa-qrcode"></i> Escanear QR
+          <i class="fas fa-qrcode"></i> Ler QR Code
         </button>
 
         <button class="btn-add" id="btnCadastrarProduto" title="Cadastrar Produto">
-          <i class="fas fa-plus-circle"></i> Cadastrar Produto
+          <i class="fas fa-plus-circle"></i> Cadastrar Novo Produto
         </button>
 
         <button class="btn-add" id="btnNovoProduto" title="Adicionar ao Estoque">
-          <i class="fas fa-plus"></i> Adicionar Produto
+          <i class="fas fa-plus"></i> Adicionar Novo Produto
         </button>
 
         <button class="btn-add" id="btnCadastrarFornecedor" title="Cadastrar Fornecedor">
-          <i class="fas fa-truck"></i> Cadastrar Fornecedor
+          <i class="fas fa-truck"></i> Cadastrar Novo Fornecedor
         </button>
       </div>
     </div>
 
     <div id="resumoProduto" class="resumo-produto is-hidden">
-      <span class="resumo-titulo">Total de "<span id="resumoNome"></span>"</span>
+      <span class="resumo-titulo">Quantidade Total: "<span id="resumoNome"></span>"</span>
       <span class="resumo-quantidade"><strong id="resumoQtd"></strong> <span id="resumoUnid"></span></span>
       <span class="resumo-valor is-hidden" id="resumoValorWrap"> | Valor total: R$ <strong id="resumoValor"></strong></span>
     </div>
@@ -463,6 +463,7 @@
   
   <script nonce="<%= cspNonce %>" src="/estoque/js/estoque.js"></script>
   <script nonce="<%= cspNonce %>" src="/estoque/js/edicaoRapida.js"></script>
+  <script nonce="<%= cspNonce %>" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script nonce="<%= cspNonce %>" src="/estoque/js/qrcode.js"></script>
   <script nonce="<%= cspNonce %>" src="/estoque/js/qr-scanner.js"></script>
 </body>

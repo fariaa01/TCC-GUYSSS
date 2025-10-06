@@ -46,6 +46,10 @@ class QRCodeScanner {
 
   iniciarScanner() {
     if (this.isScanning) return;
+    const qrReader = document.getElementById('qr-reader');
+    if (qrReader) {
+      qrReader.innerHTML = '';
+    }
     
     const config = {
       fps: 10,
@@ -67,6 +71,7 @@ class QRCodeScanner {
     );
 
     this.isScanning = true;
+    console.log('Scanner QR Code iniciado');
     
     setTimeout(() => {
       const readerResults = document.getElementById('qr-reader-results');
@@ -113,15 +118,17 @@ class QRCodeScanner {
   }
 
   async onScanSuccess(decodedText, decodedResult) {
+    console.log('QR Code escaneado:', decodedText);
     this.pararScanner();
-    this.fecharScanner();
-
+    
     let produtoId = this.extrairIdDoCodigo(decodedText);
     
     if (produtoId) {
       const produtoExiste = document.querySelector(`tr[data-id="${produtoId}"]`);
       
       if (produtoExiste) {
+        this.fecharScanner();
+        
         setTimeout(() => {
           if (window.abrirModalPorId) {
             const sucesso = window.abrirModalPorId(produtoId);
@@ -133,13 +140,19 @@ class QRCodeScanner {
                 timer: 1500,
                 showConfirmButton: false
               });
+            } else {
+              console.warn('Falha ao abrir modal para produto:', produtoId);
             }
           }
-        }, 300);
+        }, 500);
       } else {
-        window.location.href = `/estoque?edit=${produtoId}`;
+        this.fecharScanner();
+        setTimeout(() => {
+          window.location.href = `/estoque?edit=${produtoId}`;
+        }, 200);
       }
     } else {
+      this.fecharScanner();
       Swal.fire('Erro', 'QR Code não reconhecido como produto válido.', 'error');
     }
   }
@@ -173,20 +186,46 @@ class QRCodeScanner {
 
   pararScanner() {
     if (this.html5QrcodeScanner && this.isScanning) {
-      this.html5QrcodeScanner.clear();
-      this.html5QrcodeScanner = null;
-      this.isScanning = false;
-      
-      const readerResults = document.getElementById('qr-reader-results');
-      if (readerResults) {
-        readerResults.innerHTML = '<p>Aponte a câmera para o QR Code do produto</p>';
-      }
+      this.html5QrcodeScanner.clear().then(() => {
+        this.html5QrcodeScanner = null;
+        this.isScanning = false;
+        console.log('Scanner QR Code parado');
+  
+        const qrReader = document.getElementById('qr-reader');
+        if (qrReader) {
+          qrReader.innerHTML = '';
+        }
+        
+        const readerResults = document.getElementById('qr-reader-results');
+        if (readerResults) {
+          readerResults.innerHTML = '<p>Aponte a câmera para o QR Code do produto</p>';
+        }
+      }).catch(error => {
+        console.warn('Erro ao parar scanner:', error);
+        this.html5QrcodeScanner = null;
+        this.isScanning = false;
+        
+        const qrReader = document.getElementById('qr-reader');
+        if (qrReader) {
+          qrReader.innerHTML = '';
+        }
+      });
     }
   }
 
   fecharScanner() {
     this.pararScanner();
-    this.modalLeitor?.classList.remove('is-open');
+    if (this.modalLeitor) {
+      this.modalLeitor.classList.remove('is-open');
+    }
+
+    setTimeout(() => {
+      this.currentProdutoId = null;
+      const qrReader = document.getElementById('qr-reader');
+      if (qrReader) {
+        qrReader.innerHTML = '';
+      }
+    }, 100);
   }
 }
 

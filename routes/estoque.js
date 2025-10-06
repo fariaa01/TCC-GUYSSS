@@ -8,7 +8,6 @@ router.post('/:id/update', estoqueCtrl.atualizar);
 router.post('/:id/movimento', estoqueCtrl.movimento);
 router.get('/delete/:id', estoqueCtrl.deletar);
 
-// Rota para visualizar produto pelo ID (usado pelo QR Code)
 router.get('/produto/:id', estoqueCtrl.visualizar);
 
 module.exports = router;

@@ -49,13 +49,13 @@ module.exports = {
         }
       }
 
-      res.redirect('/funcionarios?success=1');
+      res.redirect('/funcionarios?ok=1&msg=' + encodeURIComponent('Funcionário cadastrado com sucesso!'));
     } catch (error) {
       if (error.message === 'CPF_DUPLICADO') {
-        return res.redirect('/funcionarios?erro=cpf');
+        return res.redirect('/funcionarios?ok=0&msg=' + encodeURIComponent('Este CPF já está vinculado a um funcionário.'));
       }
       console.error('Erro ao criar funcionário:', error);
-      res.redirect('/funcionarios?erro=1');
+      res.redirect('/funcionarios?ok=0&msg=' + encodeURIComponent('Ocorreu um erro ao cadastrar o funcionário.'));
     }
   },
 
@@ -65,7 +65,13 @@ module.exports = {
       const id = req.params.id;
 
       const antes = await Funcionario.getById(id, userId);
-      await Funcionario.update(id, req.body, userId);
+      
+      const dados = { ...req.body };
+      if (req.file) {
+        dados.foto = req.file.filename;
+      }
+      
+      await Funcionario.update(id, dados, userId);
 
       const nomeNovo = req.body.nome || (antes && antes.nome);
       const salarioNovo = req.body.salario !== undefined ? Number(req.body.salario) : (antes ? Number(antes.salario || 0) : 0);
@@ -110,10 +116,10 @@ module.exports = {
         }
       }
 
-      res.redirect('/funcionarios');
+      res.redirect('/funcionarios?ok=1&msg=' + encodeURIComponent('Funcionário atualizado com sucesso!'));
     } catch (error) {
       console.error('Erro ao atualizar funcionário:', error);
-      res.redirect('/funcionarios?erro=1');
+      res.redirect('/funcionarios?ok=0&msg=' + encodeURIComponent('Ocorreu um erro ao atualizar o funcionário.'));
     }
   },
 
@@ -132,10 +138,10 @@ module.exports = {
         }
       }
 
-      res.redirect('/funcionarios');
+      res.redirect('/funcionarios?ok=1&msg=' + encodeURIComponent('Funcionário excluído com sucesso!'));
     } catch (error) {
       console.error('Erro ao deletar funcionário:', error);
-      res.redirect('/funcionarios?erro=1');
+      res.redirect('/funcionarios?ok=0&msg=' + encodeURIComponent('Ocorreu um erro ao excluir o funcionário.'));
     }
   }
 };

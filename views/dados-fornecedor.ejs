@@ -44,7 +44,13 @@
               Sem telefone alternativo
             <% } %>
           </td>
-          <td><%= fornecedor.pessoa_responsavel %></td>
+          <td>
+            <% if (fornecedor.pessoa_responsavel && fornecedor.pessoa_responsavel.trim() !== '') { %>
+              <%= fornecedor.pessoa_responsavel %>
+            <% } else { %>
+              Nenhum responsável
+            <% } %>
+          </td>
           <td>
             <a href="/fornecedores/<%= fornecedor.id %>" class="vermais-btn">Ver +</a>
             <button class="deletar-btn" data-id="<%= fornecedor.id %>">Deletar</button>

@@ -25,6 +25,7 @@ module.exports = helmet({
 
       styleSrc: [
         "'self'",
+        "'unsafe-inline'",
         (req, res) => `'nonce-${res.locals.cspNonce}'`,
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
@@ -33,13 +34,20 @@ module.exports = helmet({
       ],
       styleSrcElem: [
         "'self'",
+        "'unsafe-inline'",
         (req, res) => `'nonce-${res.locals.cspNonce}'`,
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://fonts.googleapis.com",
         "https://unpkg.com",
+        "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='",
+        "'sha256-nmbYH9QL932nGzG6pP3juQVw3fieOoiq7lDMU409Uyk='"
       ],
-      styleSrcAttr: ["'none'"],
+      styleSrcAttr: [
+        "'unsafe-inline'",
+        "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='",
+        "'sha256-nmbYH9QL932nGzG6pP3juQVw3fieOoiq7lDMU409Uyk='"
+      ],
 
       fontSrc: [
         "'self'",

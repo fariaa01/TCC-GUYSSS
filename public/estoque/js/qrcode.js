@@ -1,10 +1,7 @@
 
     function gerarQRCodeAlternativo(text) {
       const size = 200;
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=                // Para PDF, precisamos usar jsPDF
-                if (typeof jsPDF !== 'undefined' || (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF)) {
-                  const { jsPDF: PDF } = window.jspdf || { jsPDF };
-                  const pdf = new (PDF || jsPDF)();ncodeURIComponent(text)}&format=png&margin=10`;
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}&format=png&margin=10`;
       return qrCodeUrl;
     }
     

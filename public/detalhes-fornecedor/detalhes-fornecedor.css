@@ -65,6 +65,43 @@
   background: #f5f7fa !important;
 }
 
+.telefone-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.telefone-container input {
+  flex: 1;
+  margin: 0;
+}
+
+.whatsapp-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: #25D366;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.whatsapp-link:hover {
+  background-color: #128C7E;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp-link i {
+  margin: 0;
+}
+
 @media (max-width: 700px) {
   .historico-compras th, .historico-compras td {
     padding: 10px 8px;

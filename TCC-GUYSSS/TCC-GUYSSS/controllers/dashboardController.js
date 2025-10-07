@@ -1,3 +1,4 @@
+// ...existing code...
 const db = require('../db');
 const Empresa = require('../models/empresaModel');
 
@@ -7,40 +8,74 @@ module.exports = {
       const usuarioId = req.session.userId;
       if (!usuarioId) return res.redirect('/login');
 
-      const [[{ total_func }]] = await db.query(
+      const [rowsTotalFunc] = await db.query(
         'SELECT COUNT(*) as total_func FROM funcionarios WHERE usuario_id = ?',
         [usuarioId]
       );
+      const total_func = rowsTotalFunc[0]?.total_func || 0;
 
-      const [[{ total_estoque }]] = await db.query(
+      const [rowsTotalEstoque] = await db.query(
         'SELECT COUNT(*) as total_estoque FROM estoque WHERE usuario_id = ?',
         [usuarioId]
       );
+      const total_estoque = rowsTotalEstoque[0]?.total_estoque || 0;
 
-      const [[{ produtos_em_baixa }]] = await db.query(
+      const [rowsProdutosBaixa] = await db.query(
         'SELECT COUNT(*) as produtos_em_baixa FROM estoque WHERE usuario_id = ? AND quantidade < quantidade_minima',
         [usuarioId]
       );
+      const produtos_em_baixa = rowsProdutosBaixa[0]?.produtos_em_baixa || 0;
 
-      const [[{ total_entrada }]] = await db.query(
+      // conta produtos vencidos e próximos (detecção de coluna de validade)
+      let total_vencidos = 0;
+      let total_proximos = 0;
+      try {
+        const [cols] = await db.query("SHOW COLUMNS FROM estoque");
+        const colNames = cols.map(c => c.Field);
+        const cand = colNames.find(n => /validade|venc|data.*venc|data_valid|data_vencimento|data_venc/i.test(n));
+
+        if (cand) {
+          const diasProximo = 30; // ajuste o intervalo conforme necessário
+
+          const [rowsVencidos] = await db.query(
+            `SELECT COUNT(*) as total_vencidos FROM estoque WHERE usuario_id = ? AND \`${cand}\` < CURDATE()`,
+            [usuarioId]
+          );
+          const [rowsProximos] = await db.query(
+            `SELECT COUNT(*) as total_proximos FROM estoque WHERE usuario_id = ? AND \`${cand}\` BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL ? DAY)`,
+            [usuarioId, diasProximo]
+          );
+
+          total_vencidos = rowsVencidos[0]?.total_vencidos || 0;
+          total_proximos = rowsProximos[0]?.total_proximos || 0;
+        } else {
+          console.warn("Nenhuma coluna de validade encontrada em 'estoque'. Verifique DESCRIBE estoque.");
+        }
+      } catch (e) {
+        console.warn("Falha ao detectar coluna de validade em 'estoque':", e.message);
+      }
+
+      const [rowsEntrada] = await db.query(
         `SELECT SUM(valor) as total_entrada 
          FROM financeiro 
          WHERE usuario_id = ? 
          AND tipo = 'entrada' 
-         AND MONTH(data) = MONTH(CURRENT_DATE()) 
-         AND YEAR(data) = YEAR(CURRENT_DATE())`,
+         AND MONTH(data) = MONTH(CURDATE()) 
+         AND YEAR(data) = YEAR(CURDATE())`,
         [usuarioId]
       );
+      const total_entrada = rowsEntrada[0]?.total_entrada || 0;
 
-      const [[{ total_saida }]] = await db.query(
+      const [rowsSaida] = await db.query(
         `SELECT SUM(valor) as total_saida 
          FROM financeiro 
          WHERE usuario_id = ? 
          AND tipo = 'saida' 
-         AND MONTH(data) = MONTH(CURRENT_DATE()) 
-         AND YEAR(data) = YEAR(CURRENT_DATE())`,
+         AND MONTH(data) = MONTH(CURDATE()) 
+         AND YEAR(data) = YEAR(CURDATE())`,
         [usuarioId]
       );
+      const total_saida = rowsSaida[0]?.total_saida || 0;
 
       const [resultados] = await db.query(`
         SELECT 
@@ -68,11 +103,13 @@ module.exports = {
         total_func,
         total_estoque,
         produtos_em_baixa,
+        total_vencidos,
+        total_proximos,
         total_entrada: (parseFloat(total_entrada) || 0).toFixed(2),
         total_saida: (parseFloat(total_saida) || 0).toFixed(2),
         entradas,
         saidas,
-        userId: usuarioId 
+        userId: usuarioId
       });
 
     } catch (err) {

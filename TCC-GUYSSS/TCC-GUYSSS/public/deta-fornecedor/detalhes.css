@@ -55,6 +55,48 @@ fieldset {
     
 
 }
+
+.endereço{
+     width: 88%;
+     
+    margin-left: 5% ;
+    margin-bottom: 20px;
+    padding: 20px;
+  
+     border: 1px none #ebebeb;
+
+       display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.endereço input{
+    height: 32.5px;
+    width: 99%;
+}
+
+.endereço #CEP{
+    height: 32.5px;
+    width: 55%;
+}
+
+.endereço #número{
+    height: 32.5px;
+    width: 50%;
+}
+
+.endereço fieldset{
+    display: block;
+}
+
+.deladin{
+    display: grid;
+    grid-template-columns: 120px 120px 120px;
+    gap: 5px;
+}
+
 input:hover{
     background-color: #28a7465a;
     color: white;
@@ -66,9 +108,10 @@ label {
     display: block;
 }
 .historico-compras {
-    width: 100%;
+    width: 88%;
     margin-top: 20px;
-    border-collapse: collapse;
+    margin-left: 5% ;
+    
 }
 select {
     width: 100%;
@@ -86,9 +129,9 @@ select:hover {
 }
 
 .btn-voltar {
-    background-color: #007bff;
+   background-color: #007bff;
     color: white;
-    padding: 10px 20px;
+    padding: 10px 10px;
     border: none;
     border-radius: 5px;
     font-size: 16px;
@@ -103,6 +146,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
+    
 }
 
 th, td {
@@ -119,4 +163,14 @@ h2 {
     text-align: center;
     margin-bottom: 20px;
     color: #333;
+}
+
+.buttons{
+   
+    margin-left: 76%;
+    margin-top: 1%;
+}
+
+.corpo{
+    background-color: #f2f2f2;
 }

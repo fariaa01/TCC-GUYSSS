@@ -1,3 +1,4 @@
+
 const modal = document.getElementById("modalFuncionario");
   const btnAbrir = document.getElementById("btnNovoFuncionario");
   const btnFechar = document.getElementById("fecharModal");
@@ -55,3 +56,15 @@ const modal = document.getElementById("modalFuncionario");
   IMask(telInput, {
     mask: '(00) 00000-0000'
   });
+
+  
+document.addEventListener('DOMContentLoaded', function() {
+	const toggleButton = document.querySelector('.toggle-btn');
+	const sidebar = document.querySelector('.sidebar');
+
+	toggleButton.addEventListener('click', function() {
+		sidebar.classList.toggle('hidden');
+		toggleButton.querySelector('i').classList.toggle('rotate');
+	});
+});
+

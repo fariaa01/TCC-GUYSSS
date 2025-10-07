@@ -10,6 +10,7 @@
   --border: #e7ece9;
   --shadow: 0 10px 24px rgba(16, 24, 40, .06);
   --radius: 18px;
+  --sidebar-width: 260px;
 }
 
 * { box-sizing: border-box; }
@@ -25,25 +26,40 @@ body {
     var(--bg);
 }
 
-a{
+a {
   text-decoration: none;
   color: #4b5a51;
 }
 
+/* Layout: padrão desktop mostra sidebar; em mobile a sidebar fica ocultada */
 .layout {
   display: grid;
-  grid-template-columns: auto 1fr;
   gap: 24px;
   padding: 24px;
+  transition: grid-template-columns .25s ease;
+  grid-template-columns: var(--sidebar-width) 1fr; /* desktop padrão com sidebar aberta */
 }
 
-@media (max-width: 720px) {
-  .layout {
-    grid-template-columns: 1fr;
-    padding: 14px;
+/* Desktop: quando a classe no body indica sidebar fechada, esconde a coluna */
+@media (min-width: 721px) {
+  body:not(.sidebar-open) .layout {
+    grid-template-columns: 0 1fr; /* sidebar oculta, conteúdo ocupa toda largura */
+  }
+  body.sidebar-open .layout {
+    grid-template-columns: var(--sidebar-width) 1fr; /* sidebar visível */
   }
 }
 
+/* Mobile: sidebar não empurra o conteúdo — coluna 0 por padrão */
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 0 1fr;
+    padding: 14px;
+  }
+  /* se o JS quiser que a sidebar sobreponha, ele pode apenas adicionar .sidebar.open e controlar posicionamento */
+}
+
+/* Sidebar */
 .sidebar {
   position: sticky;
   top: 24px;
@@ -56,20 +72,46 @@ a{
   display: flex;
   flex-direction: column;
   gap: 18px;
-  width: 260px;
-  transition: width .25s ease, padding .25s ease;
+  width: var(--sidebar-width);
+  transition: width .25s ease, padding .25s ease, opacity .15s ease;
+  z-index: 1;
 }
 
-.sidebar li {
-  list-style-type: none;
+/* Permite também o controle via .sidebar.open caso o JS use essa convenção */
+.sidebar:not(.open) {
+  width: 0;
   padding: 0;
-/* move toggle next to open sidebar on desktop */
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+.sidebar:not(.open) h2 {
+  opacity: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.sidebar:not(.open) nav a {
+  justify-content: center;
+  gap: 0;
+  font-size: 0;
+}
+.sidebar:not(.open) nav a i { font-size: 0px; }
+
+.main-content {
+  min-height: 100%;
+  padding: 8px 6px 6px 0;
+  position: relative;
+  z-index: 2; /* garante que o conteúdo apareça acima da sidebar */
+}
+
+.sidebar li { list-style-type: none; padding: 0; margin: 0; }
+
+/* move toggle next to open sidebar on desktop (ajuste se necessário) */
 @media (min-width: 721px) {
   body.sidebar-open .toggle-btn {
-    left: calc(24px + 260px + 8px); /* left offset + sidebar width + gap */
+    left: calc(24px + var(--sidebar-width) + 8px);
   }
-}
-  margin: 0;
 }
 
 .sidebar h2 {
@@ -111,24 +153,6 @@ a{
 
 .sidebar .logout { margin-top: auto; }
 
-.sidebar:not(.open) { width: 0px; padding: 0px; height: 0; overflow: hidden; }
-
-.sidebar:not(.open) h2 { opacity: 0; height: 0; margin: 0; overflow: hidden; }
-
-.sidebar:not(.open) nav a { justify-content: center; gap: 0; font-size: 0; }
-
-.sidebar:not(.open) nav a i { font-size: 0px; }
-
-.main-content { min-height: 100%; padding: 8px 6px 6px 0; }
-
-.main-content header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .toggle-btn {
   border: 0;
   background: var(--panel);
@@ -140,6 +164,7 @@ a{
   box-shadow: var(--shadow);
   cursor: pointer;
   transition: transform .15s ease;
+  position: relative; /* ajuste para permitir deslocamento com left se necessário */
 }
 
 .toggle-btn i { font-size: 18px; color: var(--brand-700); }
@@ -153,7 +178,7 @@ a{
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(47, 163, 107, .28);
+  box-shadow: 0 6px 16px rgba(47,163,107, .28);
   transition: filter .15s ease, transform .15s ease;
 }
 .btn-sair:hover { filter: brightness(.98); }
@@ -163,9 +188,9 @@ h1 { margin: 8px 0 14px; font-size: 22px; font-weight: 700; color: #1f2a23; }
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 4fr);
   gap: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 @media (max-width: 1100px) {
   .cards { grid-template-columns: repeat(2, 1fr); }
@@ -196,6 +221,55 @@ h1 { margin: 8px 0 14px; font-size: 22px; font-weight: 700; color: #1f2a23; }
   border-radius: 50%;
   background: var(--brand-50);
 }
+
+.card1 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.card1::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #8c15153b;
+}
+
+.card2 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.card2::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #8b983927;
+}
+
 .card i {
   width: 44px;
   height: 44px;
@@ -210,11 +284,39 @@ h1 { margin: 8px 0 14px; font-size: 22px; font-weight: 700; color: #1f2a23; }
 .card p { margin: 0; z-index: 1; color: #4b5a51; }
 .card strong { display: block; font-size: 22px; color: #17231c; margin-top: 2px; }
 
+.card1 i {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background:#8c15153b;
+  color:  #8c1515;
+  font-size: 18px;
+  z-index: 1;
+}
+.card1 p { margin: 0; z-index: 1; color: #4b5a51; }
+.card1 strong { display: block; font-size: 22px; color: #17231c; margin-top: 2px; }
+
+.card2 i {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background:#8b983927;
+  color: #7c8c15;
+  font-size: 18px;
+  z-index: 1;
+}
+.card2 p { margin: 0; z-index: 1; color: #4b5a51; }
+.card2 strong { display: block; font-size: 22px; color: #17231c; margin-top: 2px; }
+
 .separador {
   border: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border), transparent);
-  margin: 6px 0 10px;
+  margin: 8px 0;
 }
 
 .grafico-container {
@@ -225,19 +327,21 @@ h1 { margin: 8px 0 14px; font-size: 22px; font-weight: 700; color: #1f2a23; }
   box-shadow: var(--shadow);
   min-height: 320px;
   position: relative;
+  margin-top: 10px;
 }
 .grafico-container::before {
-  content: "Sales Analytics";
+  content: "Analise de Vendas";
   position: absolute;
   top: 16px;
   left: 18px;
   font-size: 14px;
   font-weight: 600;
   color: #2a362f;
+  height: 50px;
 }
 .grafico-container canvas {
   width: 100% !important;
-  height: 340px !important;
+  height: 140px !important;
 }
 
 .btn-voltar {
@@ -276,3 +380,130 @@ html, body { overscroll-behavior-y: contain; }
   .layout { gap: 16px; }
   .toggle-btn, .btn-sair { flex: 0 0 auto; }
 }
+@media (max-width: 300px) {
+  .toggle-btn { width: 38px; height: 38px; }
+  .toggle-btn i { font-size: 16px; }
+  .btn-sair { padding: 8px 20px; font-size: 14px; }
+}
+
+/* header: layout flex para posicionar toggle à esquerda e botão sair à direita */
+.main-content header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* manter toggle à esquerda */
+  gap: 12px;
+  padding: 10px 0;
+  position: relative; /* necessário para posicionamento absoluto do form */
+  min-height: 64px;    /* garante espaço vertical para alinhar os botões */
+}
+
+/* garante que o toggle fique na esquerda e não use left absoluto que desloca layout */
+.toggle-btn {
+  position: relative;
+  left: auto !important;
+  margin: 0;
+  z-index: 6;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+/* form do logout alinhado à direita da header (mesma altura do toggle) */
+.main-content header form {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  z-index: 6;
+}
+
+/* aumenta destaque do botão sair e garante espaçamento à direita */
+.btn-sair {
+  margin-left: 12px;
+  z-index: 6;
+  padding: 10px 18px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+/* Aumenta o tamanho do gráfico para desktop */
+.grafico-container {
+  min-height: 260px; /* maior área visível */
+  padding: 24px;
+}
+
+.grafico-container canvas {
+  width: 100% !important;
+  height: 520px !important; /* altura maior para a análise */
+}
+
+/* adaptações para telas menores */
+@media (max-width: 1024px) {
+  .grafico-container {
+    min-height: 480px;
+    padding: 18px;
+  }
+  .grafico-container canvas {
+    height: 440px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  /* no mobile a header volta ao fluxo normal e o botão sair fica inline */
+  .main-content header {
+    justify-content: space-between;
+    min-height: auto;
+    padding: 8px 0;
+  }
+  .main-content header form {
+    position: static;
+    transform: none;
+  }
+
+  .grafico-container {
+    min-height: 320px;
+    padding: 14px;
+  }
+  .grafico-container canvas {
+    height: 320px !important;
+  }
+
+  .toggle-btn { z-index: 8; }
+  .btn-sair { margin-left: 8px; }
+}
+
+/* Ajustes finais na altura do gráfico */
+.grafico-container {
+  min-height: 360px; /* menor que antes, mantém espaço para título e padding */
+  padding: 20px;
+}
+
+.grafico-container canvas {
+  width: 100% !important;
+  height: 360px !important; /* altura principal reduzida */
+}
+
+/* adaptações responsivas: menor altura em telas médias e pequenas */
+@media (max-width: 1024px) {
+  .grafico-container {
+    min-height: 320px;
+    padding: 16px;
+  }
+  .grafico-container canvas {
+    height: 300px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .grafico-container {
+    min-height: 260px;
+    padding: 12px;
+  }
+  .grafico-container canvas {
+    height: 240px !important;
+  }
+}
+
+

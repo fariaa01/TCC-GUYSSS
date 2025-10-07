@@ -257,3 +257,11 @@
     });
   };
 
+  const layout = document.querySelector('.layout');
+const toggleBtn = document.querySelector('#btnToggleSidebar');
+
+toggleBtn.addEventListener('click', () => {
+  layout.classList.toggle('sidebar-open');
+  layout.classList.toggle('sidebar-hidden');
+});
+

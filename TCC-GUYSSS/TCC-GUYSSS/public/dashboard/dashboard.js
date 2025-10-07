@@ -110,3 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // toggle do sidebar agora centralizado em /public/navbar/navbar.js
 });
+
+// TODO: implementar funcao proximoAoVencimento
+
+

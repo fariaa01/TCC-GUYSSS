@@ -12,6 +12,7 @@
     <h2>Dados do Fornecedor</h2>
     <form method="POST" action="/fornecedores/<%= fornecedor.id %>/update">
 
+      <div class="endereço">
       <fieldset>
         <legend>Dados de contato</legend>
         <div class="grid-2">
@@ -49,24 +50,27 @@
       <fieldset>
         <legend>Dados de endereço</legend>
         <div class="grid-3">
+          <div class="deladin">
           <div>
             <label>CEP:</label>
-            <input type="text" name="cep" placeholder="Ex: 01001-000" value="<%= fornecedor.cep || '' %>" />
+            <input type="text" name="cep" placeholder="Ex: 01001-000" value="<%= fornecedor.cep || '' %>"  id="CEP"/>
           </div>
+          <div>
+            <label>Número:</label>
+            <input type="text" name="numero" placeholder="Ex: 1234" value="<%= fornecedor.numero || '' %>" id="número"/>
+          </div>
+          <div>
+            <label>Complemento:</label>
+            <input type="text" name="complemento" placeholder="Ex: Sala 101" value="<%= fornecedor.complemento || '' %>" />
+          </div></div>
           <div>
             <label>Rua:</label>
             <input type="text" name="rua" placeholder="Ex: Av. Paulista" value="<%= fornecedor.rua || '' %>" />
           </div>
-          <div>
-            <label>Número:</label>
-            <input type="text" name="numero" placeholder="Ex: 1234" value="<%= fornecedor.numero || '' %>" />
-          </div>
+          
         </div>
         <div class="grid-4">
-          <div>
-            <label>Complemento:</label>
-            <input type="text" name="complemento" placeholder="Ex: Sala 101" value="<%= fornecedor.complemento || '' %>" />
-          </div>
+          
           <div>
             <label>Bairro:</label>
             <input type="text" name="bairro" placeholder="Ex: Centro" value="<%= fornecedor.bairro || '' %>" />
@@ -81,7 +85,9 @@
           </div>
         </div>
       </fieldset>
+      
 
+   
       <fieldset>
         <legend>Dados fiscais</legend>
         <div class="grid-2">
@@ -118,7 +124,7 @@
             <option value="Outros" <%= fornecedor.formas_pagamento === 'Outros' ? 'selected' : '' %>>Outros</option>
           </select>
         </div>
-      </fieldset>
+      </fieldset></div></div>
 
       <fieldset>
         <legend>Dados Bancários para Pagamento</legend>
@@ -168,10 +174,12 @@
             <input type="text" name="favorecido" placeholder="Ex: Maria Oliveira" value="<%= fornecedor.favorecido || '' %>" />
           </div>
         </div>
-      </fieldset>
 
+      </fieldset>
+    
+      <fieldset>
+        <legend>Histórico De Compras</legend>
       <div class="historico-compras">
-        <label>Histórico de Compras:</label>
         <table class="historico-compras">
           <thead>
             <tr>
@@ -206,12 +214,13 @@
             <% } %>
           </tbody>
         </table>
-      </div>
+      </div></fieldset>
 
+      <div class="buttons">
       <button id="btnSalvarAlteracoes" type="submit" class="btn-primary">Salvar Alterações</button>
     </form>
-    <a href="/fornecedores" class="btn-voltar">Voltar</a>
-  </div>
+    <a href="/fornecedores" class="btn-voltar">Voltar</a></div>
+  </div></div>
 
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/imask"></script>
   <script nonce="<%= cspNonce %>" src="/detalhes-fornecedor/script.js"></script>

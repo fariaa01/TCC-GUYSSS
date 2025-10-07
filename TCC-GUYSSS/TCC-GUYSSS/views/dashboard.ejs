@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,22 +10,25 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 
   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   <script nonce="<%= cspNonce %>" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
   <div class="layout" data-aos="zoom-in-left">
     <aside id="sidebar" class="sidebar">
-      <h2 id="nomeEmpresa"><%= nome_empresa || 'Meu Sistema' %></h2>
+      <h2 id="nomeEmpresa">
+        <%= nome_empresa || 'Meu Sistema' %>
+      </h2>
       <nav>
-         <li><a href="/dashboard"><i class="fa-solid fa-chart-simple"></i> dashboard</a></li>
-      <li><a href="/estoque"><i class="fas fa-boxes"></i> Estoque</a></li>
-      <li><a href="/funcionarios"><i class="fas fa-user"></i> Funcionários</a></li>
-      <li><a href="/financeiro"><i class="fas fa-wallet"></i> Financeiro</a></li>
-      <li><a href="/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
-      <li><a href="/menu"><i class="fas fa-utensils"></i> Cardápio</a></li>
-      <li><a href="/fornecedores"><i class="fas fa-truck"></i> Fornecedores</a></li>
+        <li><a href="/dashboard"><i class="fa-solid fa-chart-simple"></i> dashboard</a></li>
+        <li><a href="/estoque"><i class="fas fa-boxes"></i> Estoque</a></li>
+        <li><a href="/funcionarios"><i class="fas fa-user"></i> Funcionários</a></li>
+        <li><a href="/financeiro"><i class="fas fa-wallet"></i> Financeiro</a></li>
+        <li><a href="/relatorios"><i class="fas fa-chart-line"></i> Relatórios</a></li>
+        <li><a href="/menu"><i class="fas fa-utensils"></i> Cardápio</a></li>
+        <li><a href="/fornecedores"><i class="fas fa-truck"></i> Fornecedores</a></li>
       </nav>
     </aside>
 
@@ -41,17 +45,37 @@
       <h1>Visão Geral</h1>
 
       <div class="cards" data-aos="zoom-in-left">
-        <div class="card"><i class="fas fa-dollar-sign"></i> <p>Vendas do Mês<br><strong>R$ <%= total_entrada %></strong></p></div>
-        <div class="card"><i class="fas fa-wallet"></i> <p>Gastos do Mês<br><strong>R$ <%= total_saida %></strong></p></div>
-        <div class="card"><i class="fas fa-box-open"></i> <p>Produtos em Baixa<br><strong><%= produtos_em_baixa %> itens</strong></p></div>
-        <div class="card"><a href="/estoque/?validade=proximo"><i class="fa-solid fa-calendar-days"></i> <p>Vencimento Proximo<br><strong><%= total_func %> Produtos</strong></a></p></div>
-      </div>
+        <div class="card"><i class="fas fa-dollar-sign"></i>
+          <p>Vendas do Mês<br><strong>R$ <%= total_entrada %></strong></p>
+        </div>
+        <div class="card"><i class="fas fa-wallet"></i>
+          <p>Gastos do Mês<br><strong>R$ <%= total_saida %></strong></p>
+        </div>
+        <div class="card"><i class="fas fa-box-open"></i>
+          <p>Produtos em Baixa<br><strong><%= produtos_em_baixa %> itens</strong></p>
+        </div>
+
+        <div class="card1">
+          <i class="fa-solid fa-calendar-days"></i>
+          <a href="/estoque/?validade=vencido">
+            <p>Vencidos<br><strong><%= total_vencidos || 0 %> itens</strong></p>
+          </a>
+        </div>
+
+        <div class="card2">
+          <i class="fa-solid fa-calendar-days"></i>
+          <a href="/estoque/?validade=proximo">
+            <p>Próx. (30d): <strong><%= total_proximos || 0 %> itens</strong></p>
+          </a>
+        </div>
+      </div> <!-- fim .cards -->
 
       <hr class="separador">
 
       <div class="grafico-container" data-aos="zoom-in-left">
         <canvas id="grafico"></canvas>
       </div>
+
     </main>
   </div>
 
@@ -98,8 +122,8 @@
                 icon: 'error',
                 title: 'Erro',
                 text: 'Não foi possível salvar o nome.',
-                buttonsStyling: false,  
-                customClass: { confirmButton: 'btn btn-voltar', actions: 'swal2-actions' ,  }
+                buttonsStyling: false,
+                customClass: { confirmButton: 'btn btn-voltar', actions: 'swal2-actions', }
               });
             }
           } catch (e) {
@@ -122,7 +146,7 @@
     new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+        labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'],
         datasets: [
           {
             label: 'Entradas',
@@ -149,11 +173,11 @@
           legend: { labels: { font: { size: 14 } } },
           tooltip: {
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 let label = context.dataset.label || '';
                 if (label) label += ': ';
                 if (context.parsed.y !== null) {
-                  label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                  label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                 }
                 return label;
               }
@@ -164,11 +188,12 @@
       }
     });
 
-  // toggle agora centralizado em /public/navbar/navbar.js
+    // toggle agora centralizado em /public/navbar/navbar.js
   </script>
 
   <script nonce="<%= cspNonce %>" src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="/navbar/navbar.js" defer nonce="<%= cspNonce %>"></script>
   <script nonce="<%= cspNonce %>">AOS.init({ duration: 800, once: true });</script>
 </body>
+
 </html>

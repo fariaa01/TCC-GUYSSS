@@ -34,12 +34,31 @@ body {
 
 /* Layout */
 .layout {
-  margin-top: auto 5px;
-  margin: 10px auto;
+  /* 1. OBRIGATÓRIO: Fixa o elemento na tela (viewport) */
+  position: fixed; 
+
+  /* 2. OBRIGATÓRIO: Ancoragem no canto superior esquerdo */
+  left: 0;
+  top: 0;
+
+  /* 3. OPICIONAL: Define a altura total da tela para criar uma barra lateral (sidebar) */
+  height: 100vh;
+  
+  /* 4. OPICIONAL: Garante que ele fique acima de outros elementos na rolagem */
+  z-index: 1000; 
+
+  /* 5. Correção e Manutenção das Propriedades de Layout */
+  
+  /* **CORRIGIDO**: Substituído por valores válidos, removendo 'auto' em margens e padding. */
+  margin: 0; /* Remove a margem automática que centralizaria o elemento */
+  padding: 24px; /* Padding único. Ajuste se precisar de padding vertical diferente. */
+
+  /* Suas propriedades originais de Grid (MANTIDAS) */
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: auto 24px;
-  padding: auto 24px;
+  
+  /* MANTIDO, ajustado para um valor válido (se o original fosse para espaçamento) */
+  gap: 24px; 
 }
 
 @media (max-width: 720px) {

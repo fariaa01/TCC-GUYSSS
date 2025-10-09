@@ -8,6 +8,31 @@ module.exports = {
 
       const periodo = req.query.periodo || 'mes';
       const mes = parseInt(req.query.mes) || (new Date().getMonth() + 1);
+      const ano = parseInt(req.query.ano) || (new Date().getFullYear());
+      const dataInicio = req.query.dataInicio;
+      const dataFim = req.query.dataFim;
+
+      // Determinar condições de filtro baseado no tipo
+      let whereClause = '';
+      let whereParams = [];
+
+      if (periodo === 'intervalo' && dataInicio && dataFim) {
+        // Filtro por intervalo de datas
+        whereClause = 'AND data >= ? AND data <= ?';
+        whereParams = [dataInicio, dataFim];
+      } else if (periodo === 'ano') {
+        // Filtro por ano completo
+        whereClause = 'AND YEAR(data) = ?';
+        whereParams = [ano];
+      } else if (periodo === 'mes') {
+        // Filtro por mês específico
+        whereClause = 'AND MONTH(data) = ? AND YEAR(data) = ?';
+        whereParams = [mes, ano];
+      } else {
+        // Padrão: mês atual
+        whereClause = 'AND MONTH(data) = ? AND YEAR(data) = ?';
+        whereParams = [mes, ano];
+      }
 
       const [[{ total_func }]] = await db.query(
         'SELECT COUNT(*) as total_func FROM funcionarios WHERE usuario_id = ?',
@@ -24,9 +49,8 @@ module.exports = {
          FROM financeiro 
          WHERE usuario_id = ? 
          AND tipo = 'entrada' 
-         AND MONTH(data) = ? 
-         AND YEAR(data) = YEAR(CURRENT_DATE())`,
-        [usuarioId, mes]
+         ${whereClause}`,
+        [usuarioId, ...whereParams]
       );
 
       const [[{ total_saida }]] = await db.query(
@@ -34,9 +58,8 @@ module.exports = {
          FROM financeiro 
          WHERE usuario_id = ? 
          AND tipo = 'saida' 
-         AND MONTH(data) = ? 
-         AND YEAR(data) = YEAR(CURRENT_DATE())`,
-        [usuarioId, mes]
+         ${whereClause}`,
+        [usuarioId, ...whereParams]
       );
 
       const [[{ qtd_vendas }]] = await db.query(
@@ -44,9 +67,8 @@ module.exports = {
          FROM financeiro 
          WHERE usuario_id = ? 
          AND tipo = 'entrada' 
-         AND MONTH(data) = ? 
-         AND YEAR(data) = YEAR(CURRENT_DATE())`,
-        [usuarioId, mes]
+         ${whereClause}`,
+        [usuarioId, ...whereParams]
       );
 
       const valorEntrada = parseFloat(total_entrada) || 0;
@@ -118,10 +140,9 @@ module.exports = {
         FROM financeiro
         WHERE usuario_id = ?
         AND categoria IS NOT NULL
-        AND MONTH(data) = ?
-        AND YEAR(data) = YEAR(CURRENT_DATE())
+        ${whereClause}
         GROUP BY categoria
-      `, [usuarioId, mes]);
+      `, [usuarioId, ...whereParams]);
 
       res.render('sistema/relatorios', {
         total_func,
@@ -132,6 +153,9 @@ module.exports = {
         saidas,
         periodo,
         mes,
+        ano,
+        dataInicio,
+        dataFim,
         variacaoEntrada: variacaoEntrada.toFixed(2),
         total_entrada_anterior: (parseFloat(total_entrada_anterior) || 0).toFixed(2),
         variacaoSaida: variacaoSaida.toFixed(2),

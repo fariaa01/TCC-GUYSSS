@@ -56,6 +56,12 @@
             <td data-label="Admissão"><%= new Date(f.data_admissao).toLocaleDateString('pt-BR') %></td>
             <td data-label="Estado"><%= f.estado %></td>
             <td data-label="Ações">
+              <button class="btn-historico" 
+                      data-id="<%= f.id %>"
+                      data-nome="<%= f.nome %>"
+                      title="Histórico Salarial">
+                <i class="fas fa-history"></i>
+              </button>
               <button class="btn-editar" 
                       data-id="<%= f.id %>"
                       data-nome="<%= f.nome %>"
@@ -121,6 +127,77 @@
         </select>
         <input type="file" name="foto" accept="image/*" />
         <button type="submit">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalHistoricoSalarial" class="modal">
+    <div class="modal-content modal-historico">
+      <span class="close" id="fecharModalHistorico">&times;</span>
+      <h3 id="tituloHistorico">Histórico Salarial</h3>
+      
+      <div class="historico-header">
+        <button class="btn-add-reajuste" id="btnNovoReajuste">
+          <i class="fas fa-plus"></i> Adicionar Reajuste
+        </button>
+      </div>
+      
+      <div class="historico-container">
+        <div id="historicoContent">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalNovoReajuste" class="modal">
+    <div class="modal-content">
+      <span class="close" id="fecharModalReajuste">&times;</span>
+      <h3>Novo Reajuste Salarial</h3>
+      <form id="formNovoReajuste" method="POST" action="/funcionarios/reajuste" class="form-box">
+        <input type="hidden" name="funcionario_id" id="funcionarioIdReajuste" />
+        <input type="hidden" name="usuario_responsavel" value="<%= locals.user ? locals.user.nome || 'Administrador' : 'Sistema' %>" />
+        
+        <label for="tipoReajuste">Tipo de Reajuste:</label>
+        <select name="tipo" id="tipoReajuste" required>
+          <option value="">Selecione o tipo</option>
+          <option value="Aumento">Aumento Salarial</option>
+          <option value="Promoção">Promoção</option>
+          <option value="Reajuste">Reajuste por Inflação</option>
+          <option value="Bônus">Bônus/Gratificação</option>
+        </select>
+        
+        <label for="salarioAnterior">Salário Anterior:</label>
+        <input type="number" name="salario_anterior" id="salarioAnterior" placeholder="Salário anterior" readonly />
+        
+        <label for="salarioNovo" id="labelSalarioNovo">Novo Salário:</label>
+        <input type="number" name="salario_novo" id="salarioNovo" placeholder="Novo salário" required step="0.01" />
+        
+        <div id="duracaoBonusContainer" style="display: none;">
+          <label for="duracaoBonus">Duração do Bônus (meses):</label>
+          <select name="duracao_meses" id="duracaoBonus">
+            <option value="">Selecione a duração</option>
+            <option value="1">1 mês</option>
+            <option value="2">2 meses</option>
+            <option value="3">3 meses</option>
+            <option value="6">6 meses</option>
+            <option value="12">1 ano</option>
+            <option value="24">2 anos</option>
+          </select>
+        </div>
+        
+        <label for="cargoAnterior">Cargo Anterior:</label>
+        <input type="text" name="cargo_anterior" id="cargoAnterior" placeholder="Cargo anterior" readonly />
+        
+        <label for="cargoNovo">Novo Cargo:</label>
+        <input type="text" name="cargo_novo" id="cargoNovo" placeholder="Novo cargo (se houver mudança)" />
+        
+        <label for="dataReajuste">Data do Reajuste:</label>
+        <input type="date" name="data_reajuste" id="dataReajuste" required />
+        
+        <label for="motivoReajuste">Motivo/Observações:</label>
+        <textarea name="motivo" id="motivoReajuste" placeholder="Descreva o motivo do reajuste..." rows="3"></textarea>
+        
+        <button type="submit">Registrar Reajuste</button>
       </form>
     </div>
   </div>

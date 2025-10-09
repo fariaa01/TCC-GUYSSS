@@ -1,5 +1,6 @@
-const Funcionario = require('../../models/sistema/funcionarioModel');
+const Funcionario = require('../../models/sistema/funcionario/funcionarioModel');
 const GastosFixos = require('../../models/sistema/financeiro/gastos-fixosModel');
+const HistoricoSalarial = require('../../models/sistema/funcionario/historicoSalarialModel');
 
 function todayStr() {
   const d = new Date();
@@ -142,6 +143,122 @@ module.exports = {
     } catch (error) {
       console.error('Erro ao deletar funcionário:', error);
       res.redirect('/funcionarios?ok=0&msg=' + encodeURIComponent('Ocorreu um erro ao excluir o funcionário.'));
+    }
+  },
+
+  obterHistoricoSalarial: async (req, res) => {
+    try {
+      const { funcionario_id } = req.params;
+      console.log(`[obterHistoricoSalarial] Buscando histórico para funcionário ID: ${funcionario_id}`);
+      
+      const historico = await HistoricoSalarial.obterPorFuncionario(funcionario_id);
+      const estatisticas = await HistoricoSalarial.calcularEstatisticas(funcionario_id);
+      
+      console.log(`[obterHistoricoSalarial] Histórico encontrado:`, historico);
+      console.log(`[obterHistoricoSalarial] Estatísticas calculadas:`, estatisticas);
+      
+      res.json({
+        success: true,
+        historico,
+        estatisticas
+      });
+    } catch (error) {
+      console.error('Erro ao obter histórico salarial:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  },
+  
+  criarReajusteSalarial: async (req, res) => {
+    try {
+      const { funcionario_id, tipo, salario_anterior, salario_novo, cargo_anterior, cargo_novo, data_reajuste, motivo, duracao_meses } = req.body;
+      
+      console.log('Dados recebidos:', req.body);
+
+      if (!funcionario_id || !tipo || !salario_anterior || !salario_novo || !data_reajuste) {
+        console.log('Validação falhou:', { funcionario_id, tipo, salario_anterior, salario_novo, data_reajuste });
+        return res.status(400).json({
+          success: false,
+          message: 'Dados obrigatórios não fornecidos'
+        });
+      }
+      
+      // Validação específica para bônus
+      if (tipo === 'Bônus' && !duracao_meses) {
+        return res.status(400).json({
+          success: false,
+          message: 'Duração em meses é obrigatória para bônus'
+        });
+      }
+ 
+      const funcionario = await Funcionario.getById(funcionario_id, req.session.userId);
+      if (!funcionario) {
+        return res.status(404).json({
+          success: false,
+          message: 'Funcionário não encontrado'
+        });
+      }
+      
+      console.log('Funcionário encontrado:', funcionario.nome);
+
+      // Calcular salário novo baseado no tipo
+      let salarioNovoCalculado;
+      if (tipo === 'Bônus') {
+        // Para bônus, salario_novo é o valor do bônus que será somado ao salário atual
+        salarioNovoCalculado = parseFloat(salario_anterior) + parseFloat(salario_novo);
+        console.log(`Calculando bônus: ${salario_anterior} + ${salario_novo} = ${salarioNovoCalculado}`);
+      } else {
+        // Para outros tipos, salario_novo é o salário final
+        salarioNovoCalculado = parseFloat(salario_novo);
+      }
+
+      const dadosHistorico = {
+        funcionario_id: parseInt(funcionario_id),
+        tipo,
+        salario_anterior: parseFloat(salario_anterior),
+        salario_novo: salarioNovoCalculado,
+        cargo_anterior: cargo_anterior || funcionario.cargo,
+        cargo_novo: cargo_novo || cargo_anterior || funcionario.cargo,
+        data_reajuste,
+        motivo: motivo || null,
+        usuario_responsavel: req.session.userId || null,
+        duracao_meses: duracao_meses ? parseInt(duracao_meses) : null
+      };
+      
+      console.log('Criando histórico com dados:', dadosHistorico);
+      
+      await HistoricoSalarial.criar(dadosHistorico);
+      
+      console.log('Histórico criado com sucesso');
+      
+      const dadosAtualizacao = {
+        salario: salarioNovoCalculado
+      };
+
+      if (cargo_novo && cargo_novo !== cargo_anterior) {
+        dadosAtualizacao.cargo = cargo_novo;
+      }
+      
+      console.log('Atualizando funcionário:', dadosAtualizacao);
+      
+      await Funcionario.update(funcionario_id, dadosAtualizacao, req.session.userId);
+      
+      console.log('Funcionário atualizado com sucesso');
+      
+      res.json({
+        success: true,
+        message: 'Reajuste salarial registrado com sucesso'
+      });
+      
+    } catch (error) {
+      console.error('Erro detalhado ao criar reajuste salarial:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor: ' + error.message
+      });
     }
   }
 };

@@ -16,43 +16,107 @@
      </div>
 
       <h1>Relatórios Financeiros</h1>
-      <div class="filtros-container">
-      <form class="filtros-form" method="get" action="/relatorios">
-        <div class="campo-select">
-          <label for="periodo">Período:</label>
-          <select name="periodo" id="periodo" onchange="this.form.submit()">
-            <option value="mes" <%= periodo === 'mes' ? 'selected' : '' %>>Mês</option>
-            <option value="dia" <%= periodo === 'dia' ? 'selected' : '' %>>Dia</option>
-            <option value="semana" <%= periodo === 'semana' ? 'selected' : '' %>>Semana</option>
-            <option value="ano" <%= periodo === 'ano' ? 'selected' : '' %>>Ano</option>
-          </select>
+      <div class="filters-container">
+        <div class="filter-header">
+          <h2>Filtros de Relatório</h2>
         </div>
+        
+        <div class="filter-wizard">
+          <div class="filter-tabs">
+            <button type="button" class="tab-button active" id="periodTab">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 5.5 21 8.5Z" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Filtro por Período
+            </button>
+            
+            <button type="button" class="tab-button" id="daterangeTab">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 2V5M16 2V5M3.5 9.09H20.5M21 8.5V17C21 20 19.5 22 16 22H8C4.5 22 3 20 3 17V8.5C3 5.5 4.5 3.5 8 3.5H16C19.5 3.5 21 8.5 21 8.5Z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M11.995 13.7H12.005M8.295 13.7H8.305M8.295 17.7H8.305" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Intervalo de Datas
+            </button>
+          </div>
 
-        <div class="campo-select">
-          <label for="mes">Mês:</label>
-          <select name="mes" id="mes" onchange="this.form.submit()">
-            <option value="1" <%= mes == 1 ? 'selected' : '' %>>Janeiro</option>
-            <option value="2" <%= mes == 2 ? 'selected' : '' %>>Fevereiro</option>
-            <option value="3" <%= mes == 3 ? 'selected' : '' %>>Março</option>
-            <option value="4" <%= mes == 4 ? 'selected' : '' %>>Abril</option>
-            <option value="5" <%= mes == 5 ? 'selected' : '' %>>Maio</option>
-            <option value="6" <%= mes == 6 ? 'selected' : '' %>>Junho</option>
-            <option value="7" <%= mes == 7 ? 'selected' : '' %>>Julho</option>
-            <option value="8" <%= mes == 8 ? 'selected' : '' %>>Agosto</option>
-            <option value="9" <%= mes == 9 ? 'selected' : '' %>>Setembro</option>
-            <option value="10" <%= mes == 10 ? 'selected' : '' %>>Outubro</option>
-            <option value="11" <%= mes == 11 ? 'selected' : '' %>>Novembro</option>
-            <option value="12" <%= mes == 12 ? 'selected' : '' %>>Dezembro</option>
-          </select>
+          <form id="periodForm" method="get" action="/relatorios" class="filter-form tab-content active">
+            <div class="filter-step" id="step-period">
+              
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="periodo" class="form-label">Tipo de Período</label>
+                  <select id="periodo" name="periodo" class="form-select" onchange="showPeriodFields()">
+                    <option value="">Selecione o tipo de período...</option>
+                    <option value="mes" <%= periodo === 'mes' ? 'selected' : '' %>>Mensal</option>
+                    <option value="ano" <%= periodo === 'ano' ? 'selected' : '' %>>Anual</option>
+                  </select>
+                </div>
+
+                <div id="monthField" class="form-group" style="display: none;">
+                  <label for="mes" class="form-label">Mês</label>
+                  <select id="mes" name="mes" class="form-select">
+                    <option value="1" <%= mes == 1 ? 'selected' : '' %>>Janeiro</option>
+                    <option value="2" <%= mes == 2 ? 'selected' : '' %>>Fevereiro</option>
+                    <option value="3" <%= mes == 3 ? 'selected' : '' %>>Março</option>
+                    <option value="4" <%= mes == 4 ? 'selected' : '' %>>Abril</option>
+                    <option value="5" <%= mes == 5 ? 'selected' : '' %>>Maio</option>
+                    <option value="6" <%= mes == 6 ? 'selected' : '' %>>Junho</option>
+                    <option value="7" <%= mes == 7 ? 'selected' : '' %>>Julho</option>
+                    <option value="8" <%= mes == 8 ? 'selected' : '' %>>Agosto</option>
+                    <option value="9" <%= mes == 9 ? 'selected' : '' %>>Setembro</option>
+                    <option value="10" <%= mes == 10 ? 'selected' : '' %>>Outubro</option>
+                    <option value="11" <%= mes == 11 ? 'selected' : '' %>>Novembro</option>
+                    <option value="12" <%= mes == 12 ? 'selected' : '' %>>Dezembro</option>
+                  </select>
+                </div>
+
+                <div id="yearField" class="form-group" style="display: none;">
+                  <label for="ano" class="form-label">Ano</label>
+                  <select id="ano" name="ano" class="form-select">
+                    <% const anoAtual = new Date().getFullYear(); %>
+                    <% for(let i = anoAtual - 3; i <= anoAtual + 1; i++) { %>
+                      <option value="<%= i %>" <%= (ano == i || (!ano && i == anoAtual)) ? 'selected' : '' %>><%= i %></option>
+                    <% } %>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="resetFilter()">Limpar</button>
+                <button type="submit" class="btn-primary">Aplicar Filtro</button>
+              </div>
+            </div>
+          </form>
+
+          <form id="dateRangeForm" method="get" action="/relatorios" class="filter-form tab-content">
+            <div class="filter-step" id="step-daterange">
+              
+              <div class="date-range-grid">
+                <div class="form-group">
+                  <label for="dataInicio" class="form-label">Data de Início</label>
+                  <input type="date" id="dataInicio" name="dataInicio" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                  <label for="dataFim" class="form-label">Data Final</label>
+                  <input type="date" id="dataFim" name="dataFim" class="form-input">
+                </div>
+              </div>
+              
+              <input type="hidden" name="periodo" value="intervalo">
+              
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="resetFilter()">Limpar</button>
+                <button type="submit" class="btn-primary">Aplicar Filtro</button>
+              </div>
+            </div>
+          </form>
         </div>
-
-        <button type="submit" class="btn-filtrar">Filtrar</button>
-      </form>
-    </div>
+      </div>
       <div class="cards" data-aos="zoom-in-left">
   <div class="card">
     <i class="fas fa-dollar-sign"></i>
-    <p>Vendas do Mês<br><strong>R$ <%= total_entrada %></strong></p>
+    <p>Vendas do Mês<br><strong style="color: #2fa36b;">R$ <%= total_entrada %></strong></p>
   </div>
 
   <div class="card">
@@ -159,29 +223,26 @@
           {
             label: 'Entradas',
             data: entradas,
-            borderColor: 'green',
-            backgroundColor: 'rgba(0, 128, 0, 0.2)',
-            tension: 0.3,
-            fill: true
+            borderColor: '#2fa36b',
+            backgroundColor: 'rgba(47, 163, 107, 0.1)',
+            fill: true,
+            tension: 0.4
           },
           {
             label: 'Saídas',
             data: saidas,
-            borderColor: 'red',
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
-            tension: 0.3,
-            fill: true
+            borderColor: '#e74c3c',
+            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+            fill: true,
+            tension: 0.4
           }
         ]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,
         plugins: {
           legend: {
-            labels: {
-              font: { size: 14 }
-            }
+            position: 'top',
           },
           tooltip: {
             callbacks: {
@@ -189,7 +250,7 @@
                 let label = context.dataset.label || '';
                 if (label) label += ': ';
                 if (context.parsed.y !== null) {
-                  label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                  label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                 }
                 return label;
               }
@@ -226,41 +287,159 @@
     const saidasFiltradas = dadosSaidasOriginais.slice(inicio, fim + 1);
 
     criarGrafico(labelsFiltradas, entradasFiltradas, saidasFiltradas);
-  
+  }
 
- }
-    document.addEventListener('DOMContentLoaded', () => {
-      const toggleBtn = document.getElementById('toggleSidebar');
-      const sidebar = document.getElementById('sidebar');
-      const mainContent = document.getElementById('mainContent');
-      const icon = toggleBtn.querySelector('i');
-
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-        mainContent.classList.toggle('sidebar-hidden');
-
-        icon.classList.add('rotate');
-        setTimeout(() => icon.classList.remove('rotate'), 400);
-        
-      });
+  function showFilterTab(tab) {
+    console.log('Switching to tab:', tab);
+    
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.classList.remove('active');
     });
+    
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    
+    const selectedTab = document.getElementById(tab + 'Tab');
+    if (selectedTab) {
+      selectedTab.classList.add('active');
+    }
+    
+    if (tab === 'period') {
+      const periodForm = document.getElementById('periodForm');
+      if (periodForm) {
+        periodForm.classList.add('active');
+      }
+    } else if (tab === 'daterange') {
+      const dateRangeForm = document.getElementById('dateRangeForm');
+      if (dateRangeForm) {
+        dateRangeForm.classList.add('active');
+      }
+    }
+  }
+  
+  function showPeriodFields() {
+    const periodo = document.getElementById('periodo').value;
+    const monthField = document.getElementById('monthField');
+    const yearField = document.getElementById('yearField');
+    
+    monthField.style.display = 'none';
+    yearField.style.display = 'none';
+    
+    if (periodo) {
+      switch(periodo) {
+        case 'mes':
+          monthField.style.display = 'block';
+          yearField.style.display = 'block';
+          break;
+        case 'dia':
+        case 'semana':
+          yearField.style.display = 'block';
+          break;
+        case 'ano':
+          yearField.style.display = 'block';
+          break;
+      }
+    }
+  }
+  
+  function resetFilter() {
+    document.getElementById('periodo').value = '';
+    document.getElementById('mes').selectedIndex = 0;
+    document.getElementById('ano').selectedIndex = 0;
+    document.getElementById('dataInicio').value = '';
+    document.getElementById('dataFim').value = '';
+    
+    document.getElementById('monthField').style.display = 'none';
+    document.getElementById('yearField').style.display = 'none';
+    
+    window.location.href = '/relatorios';
+  }
 
-    const lucrosMensais = dadosEntradasOriginais.map((e, i) => e - dadosSaidasOriginais[i]);
+  // Initialize page with active filters
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, initializing filters');
+    
+    const periodoAtual = '<%= periodo %>' || '';
+    const mesAtual = '<%= mes %>' || '';
+    const anoAtual = '<%= ano %>' || '';
+    const dataInicioAtual = '<%= dataInicio %>' || '';
+    const dataFimAtual = '<%= dataFim %>' || '';
+    
+    console.log('Current period:', periodoAtual);
+    
+    document.getElementById('periodTab').removeAttribute('onclick');
+    document.getElementById('daterangeTab').removeAttribute('onclick');
+    
+    document.getElementById('periodTab').addEventListener('click', function(e) {
+      e.preventDefault();
+      showFilterTab('period');
+    });
+    
+    document.getElementById('daterangeTab').addEventListener('click', function(e) {
+      e.preventDefault();
+      showFilterTab('daterange');
+    });
+    
+    if (periodoAtual && periodoAtual !== 'undefined') {
+      if (periodoAtual === 'intervalo') {
+        showFilterTab('daterange');
+        
+        if (dataInicioAtual && dataInicioAtual !== 'undefined') {
+          document.getElementById('dataInicio').value = dataInicioAtual;
+        }
+        if (dataFimAtual && dataFimAtual !== 'undefined') {
+          document.getElementById('dataFim').value = dataFimAtual;
+        }
+      } else {
+        showFilterTab('period');
+        document.getElementById('periodo').value = periodoAtual;
+        showPeriodFields();
+
+        if (anoAtual && anoAtual !== 'undefined') {
+          const anoSelect = document.getElementById('ano');
+          for (let option of anoSelect.options) {
+            if (option.value === anoAtual) {
+              option.selected = true;
+              break;
+            }
+          }
+        }
+      }
+    } else {
+      showFilterTab('period');
+    }
+  });
+
+  const lucrosMensais = dadosEntradasOriginais.map((e, i) => e - dadosSaidasOriginais[i]);
 
   new Chart(document.getElementById('graficoLucroMensal').getContext('2d'), {
     type: 'bar',
     data: {
       labels: labelsOriginais,
       datasets: [{
-        label: 'Lucro Mensal (R$)',
+        label: 'Lucro Mensal',
         data: lucrosMensais,
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: lucrosMensais.map(lucro => lucro >= 0 ? 'var(--brand)' : '#e74c3c'),
+        borderColor: lucrosMensais.map(lucro => lucro >= 0 ? 'var(--brand-700)' : '#c0392b'),
         borderWidth: 1
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return 'Lucro: R$ ' + context.parsed.y.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            }
+          }
+        }
+      },
       scales: {
         y: {
           beginAtZero: true
@@ -268,17 +447,22 @@
       }
     }
   });
-   const categorias = JSON.parse(`<%- JSON.stringify(categorias_totais || []) %>`);
 
-  if (categorias.length > 0) {
-  const coresFixas = {
-  Alimento: '#3498db',  
-  Bebida: '#2ecc71',   
-  Transporte: '#f1c40f',   
-  Outros: '#9b59b6'        
-};
+  const categorias = JSON.parse('<%= JSON.stringify(categorias_totais) %>');
+  
+  if (categorias && categorias.length > 0) {
+    const coresFixas = {
+      'Alimentação': '#2fa36b',
+      'Transporte': '#3498db',
+      'Moradia': '#e67e22',
+      'Saúde': '#e74c3c',
+      'Educação': '#9b59b6',
+      'Lazer': '#f39c12',
+      'Vestuário': '#1abc9c',
+      'Outros': '#95a5a6'
+    };
 
-const backgroundColors = categorias.map(c => coresFixas[c.categoria] || '#95a5a6');
+    const backgroundColors = categorias.map(c => coresFixas[c.categoria] || '#95a5a6');
 
     new Chart(document.getElementById('graficoCategoria').getContext('2d'), {
       type: 'pie',
@@ -311,6 +495,6 @@ const backgroundColors = categorias.map(c => coresFixas[c.categoria] || '#95a5a6
       <p style="text-align:center; margin-top:20px; font-weight:bold;">Nenhum dado de categoria disponível para este mês.</p>
     `;
   }
-  </script>
+</script>
 </body>
 </html>

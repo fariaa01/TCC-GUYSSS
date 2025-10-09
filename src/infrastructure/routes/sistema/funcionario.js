@@ -8,4 +8,7 @@ router.post('/create', upload.single('foto'), funcionarioController.criar);
 router.post('/:id/update', upload.single('foto'), funcionarioController.atualizar);
 router.get('/delete/:id', funcionarioController.deletar);
 
+router.get('/historico/:funcionario_id', funcionarioController.obterHistoricoSalarial);
+router.post('/reajuste', funcionarioController.criarReajusteSalarial);
+
 module.exports = router;
